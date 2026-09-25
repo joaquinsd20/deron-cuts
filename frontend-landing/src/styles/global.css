@@ -292,33 +292,14 @@ ul {
 
 /* ---------- CTA bajo el video ---------- */
 
-.hero-cta {
+.barber-film__cta-wrap {
   text-align: center;
-  padding-block: 84px;
+  padding-block: 36px;
   border-bottom: 1px solid var(--line);
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1), transparent 55%),
-    var(--bg);
+  background: var(--bg);
 }
 
-.hero-cta__title {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 4.5vw, 3.2rem);
-  text-transform: uppercase;
-  line-height: 1;
-}
-
-.hero-cta__title span {
-  color: var(--neon);
-}
-
-.hero-cta__copy {
-  color: var(--muted);
-  margin: 16px auto 28px;
-  max-width: 46ch;
-}
-
-.hero-cta__btn {
+.barber-film__cta-wrap .btn {
   font-size: 0.95rem;
   padding: 15px 34px;
 }

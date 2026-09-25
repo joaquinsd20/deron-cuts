@@ -58,14 +58,8 @@ export default function Home() {
           />
           <div className="barber-film__scrim" aria-hidden="true" />
         </section>
-        <section className="hero-cta">
-          <h2 className="hero-cta__title">
-            Tu próximo corte te <span>espera</span>
-          </h2>
-          <p className="hero-cta__copy">
-            Elige el corte que quieras, elige la hora y deja el resto en manos de Yumpi.
-          </p>
-          <Link to="/reservar" className="btn btn--primary hero-cta__btn">
+        <section className="barber-film__cta-wrap">
+          <Link to="/reservar" className="btn btn--primary">
             Reserva YA!
           </Link>
         </section>
