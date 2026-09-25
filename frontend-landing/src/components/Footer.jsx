@@ -27,20 +27,10 @@ export default function Footer({ config }) {
               rel="noreferrer"
             >
               <IconInstagram />
-              Instagram
+            
             </a>
           )}
-          {tiktok && (
-            <a
-              className="btn btn--outline footer__social footer__social--tt"
-              href={tiktok}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <IconTikTok />
-              TikTok
-            </a>
-          )}
+        
           {wa && (
             <a
               className="btn btn--outline footer__social footer__social--wa"
@@ -49,7 +39,7 @@ export default function Footer({ config }) {
               rel="noreferrer"
             >
               <IconWhatsApp />
-              WhatsApp
+            
             </a>
           )}
         </div>

@@ -24,10 +24,7 @@ export default function LocationContact({ config }) {
     <section className="section" id="ubicacion">
       <div className="container">
         <span className="section-tag">Encuéntranos</span>
-        <h2 className="section-title">
-          Ubicación y <span className="acc">contacto</span>
-        </h2>
-
+   
         <div className="loc__grid">
           <div className="loc__map">
             <iframe
@@ -108,11 +105,7 @@ export default function LocationContact({ config }) {
                         <IconInstagram size={16} /> Instagram
                       </a>
                     )}
-                    {tiktok && (
-                      <a className="loc__social" href={tiktok} target="_blank" rel="noreferrer">
-                        <IconTikTok size={16} /> TikTok
-                      </a>
-                    )}
+               
                     {enlaceWa && (
                       <a className="loc__social" href={enlaceWa} target="_blank" rel="noreferrer">
                         <IconWhatsApp size={16} /> WhatsApp
