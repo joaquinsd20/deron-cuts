@@ -35,7 +35,7 @@ html {
 body {
   background-color: var(--bg);
   background-image:
-    linear-gradient(rgba(13, 13, 15, 0.86), rgba(13, 13, 15, 0.9)),
+    linear-gradient(rgba(13, 13, 15, 0.55), rgba(13, 13, 15, 0.62)),
     url('/fondo-opt.jpg');
   background-size: cover;
   background-position: center;
@@ -68,17 +68,6 @@ ul {
 .section {
   padding-block: 88px;
   scroll-margin-top: 72px;
-  background-image: linear-gradient(
-    to right,
-    transparent,
-    rgba(44, 44, 50, 0.22) 18%,
-    var(--line) 50%,
-    rgba(44, 44, 50, 0.22) 82%,
-    transparent
-  );
-  background-repeat: no-repeat;
-  background-position: bottom center;
-  background-size: 100% 1px;
 }
 
 .section-tag {
@@ -394,10 +383,6 @@ ul {
 }
 
 /* ---------- Services ---------- */
-
-.services {
-  background: var(--bg-soft);
-}
 
 .services__grid {
   display: grid;
@@ -1134,17 +1119,6 @@ ul {
 .footer {
   padding-block: 40px;
   background: var(--bg);
-  background-image: linear-gradient(
-    to right,
-    transparent,
-    rgba(44, 44, 50, 0.22) 18%,
-    var(--line) 50%,
-    rgba(44, 44, 50, 0.22) 82%,
-    transparent
-  );
-  background-repeat: no-repeat;
-  background-position: top center;
-  background-size: 100% 1px;
 }
 
 .footer__inner {
