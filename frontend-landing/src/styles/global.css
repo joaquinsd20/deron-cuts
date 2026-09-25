@@ -1002,11 +1002,11 @@ ul {
 
 .loc__map {
   position: relative;
-  border: 2px solid var(--neon);
-  box-shadow: var(--shadow-hard);
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: #101014;
+  background: #1a1a1e;
 }
 
 .loc__map iframe {
@@ -1016,6 +1016,7 @@ ul {
   height: 100%;
   border: 0;
   display: block;
+  filter: grayscale(1) contrast(1.05) brightness(0.92);
 }
 
 .loc__map-link {
@@ -1024,14 +1025,13 @@ ul {
   bottom: 12px;
   z-index: 1;
   background: var(--bg-soft);
-  border: 1px solid var(--neon);
+  border: 1px solid var(--line);
   color: var(--neon);
   font-family: var(--font-head);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.68rem;
   padding: 8px 12px;
-  box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.12);
 }
 
 .loc__map-link:hover {
@@ -1055,14 +1055,12 @@ ul {
   width: 44px;
   height: 44px;
   min-width: 44px;
-  background: var(--neon);
-  color: var(--white);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--neon);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-head);
-  font-weight: 700;
-  font-size: 1.05rem;
 }
 
 .loc__label {
