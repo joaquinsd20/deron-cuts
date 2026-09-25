@@ -1,0 +1,38 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: deron-cuts-backend
+  datasource:
+    url: ${DERON_DB_URL:jdbc:mysql://localhost:3306/deron_cuts?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DERON_DB_USER:deroncuts}
+    password: ${DERON_DB_PASSWORD:DeronApp2026}
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 5
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    # SECRETO - reemplazar en producción con una variable de entorno JWT_SECRET (mínimo 32 bytes)
+    secret: ${JWT_SECRET:deron-cuts-proyecto2026-clave-jwt-super-secreta-cambiar-en-produccion-1234567890}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  admin:
+    # Credencial por defecto para el usuario seed "yumpi" (SOLO demo, cambiar en producción).
+    default-password: ${APP_ADMIN_PASSWORD:Yumpi2026!}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5174}
+
+logging:
+  level:
+    com.deroncuts.barberia: INFO

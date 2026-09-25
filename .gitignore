@@ -1,0 +1,22 @@
+# Node / Vite
+node_modules/
+dist/
+*.log
+
+# Java / Maven / Spring Boot
+target/
+*.class
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# SO
+Thumbs.db
+.DS_Store
+
+# Env / secretos locales
+.env
+.env.*
+*.local
