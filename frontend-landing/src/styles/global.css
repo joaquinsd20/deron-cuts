@@ -941,6 +941,18 @@ ul {
   color: var(--neon);
 }
 
+.loc__socials {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.loc__social {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
 /* ---------- CTA final ---------- */
 
 .cta-final {
@@ -996,6 +1008,25 @@ ul {
 .footer__socials {
   display: flex;
   gap: 14px;
+}
+
+.footer__social svg {
+  color: var(--neon);
+}
+
+.footer__social--ig:hover svg,
+.footer__social--ig:hover {
+  color: #e4405f;
+}
+
+.footer__social--tt:hover svg,
+.footer__social--tt:hover {
+  color: #69c9d0;
+}
+
+.footer__social--wa:hover svg,
+.footer__social--wa:hover {
+  color: #25d366;
 }
 
 .footer__copy {

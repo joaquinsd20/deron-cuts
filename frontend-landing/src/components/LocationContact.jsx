@@ -1,4 +1,5 @@
 import { buildWhatsappLink } from '../config.js'
+import { IconWhatsApp, IconMail, IconLink, IconInstagram, IconTikTok } from './icons.jsx'
 
 const MAPA_EMBED =
   'https://www.google.com/maps?q=Valeriano%20362%2C%20V%C3%ADctor%20Larco%20Herrera%2013009&hl=es&z=17&output=embed'
@@ -17,6 +18,7 @@ export default function LocationContact({ config }) {
 
   const mensajeWa = `Hola ${nombreBarbero}, quiero agendar un corte en ${nombreNegocio}`
   const enlaceWa = buildWhatsappLink(telefono, mensajeWa)
+  const tiktok = config.tiktok
 
   return (
     <section className="section" id="ubicacion">
@@ -63,20 +65,13 @@ export default function LocationContact({ config }) {
 
             <div className="loc__item">
               <div className="loc__icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                  <path d="M4 5h16v13H4z" />
-                  <path d="m4 6 8 6 8-6" />
-                </svg>
+                <IconWhatsApp />
               </div>
               <div>
                 <div className="loc__label">WhatsApp / Teléfono</div>
                 <div className="loc__value">
-                  {buildWhatsappLink(telefono, `Hola ${nombreBarbero}, quiero agendar un corte en ${nombreNegocio}`) ? (
-                    <a
-                      href={buildWhatsappLink(telefono, `Hola ${nombreBarbero}, quiero agendar un corte en ${nombreNegocio}`)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
+                  {enlaceWa ? (
+                    <a href={enlaceWa} target="_blank" rel="noreferrer">
                       {telefono}
                     </a>
                   ) : (
@@ -88,7 +83,9 @@ export default function LocationContact({ config }) {
 
             {email && (
               <div className="loc__item">
-                <div className="loc__icon">@</div>
+                <div className="loc__icon">
+                  <IconMail />
+                </div>
                 <div>
                   <div className="loc__label">Correo</div>
                   <div className="loc__value">
@@ -98,20 +95,27 @@ export default function LocationContact({ config }) {
               </div>
             )}
 
-            {(instagram || enlaceWa) && (
+            {(instagram || tiktok || enlaceWa) && (
               <div className="loc__item">
-                <div className="loc__icon">#</div>
+                <div className="loc__icon">
+                  <IconLink />
+                </div>
                 <div>
                   <div className="loc__label">Redes</div>
-                  <div className="loc__value">
+                  <div className="loc__value loc__socials">
                     {instagram && (
-                      <a href={instagram} target="_blank" rel="noreferrer">
-                        Instagram{'  '}
+                      <a className="loc__social" href={instagram} target="_blank" rel="noreferrer">
+                        <IconInstagram size={16} /> Instagram
+                      </a>
+                    )}
+                    {tiktok && (
+                      <a className="loc__social" href={tiktok} target="_blank" rel="noreferrer">
+                        <IconTikTok size={16} /> TikTok
                       </a>
                     )}
                     {enlaceWa && (
-                      <a href={enlaceWa} target="_blank" rel="noreferrer">
-                        Whatsapp
+                      <a className="loc__social" href={enlaceWa} target="_blank" rel="noreferrer">
+                        <IconWhatsApp size={16} /> WhatsApp
                       </a>
                     )}
                   </div>

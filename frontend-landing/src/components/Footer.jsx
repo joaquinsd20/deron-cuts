@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { buildWhatsappLink } from '../config.js'
+import { IconInstagram, IconTikTok, IconWhatsApp } from './icons.jsx'
 
 export default function Footer({ config }) {
   const year = new Date().getFullYear()
   const instagram = config?.instagram
+  const tiktok = config?.tiktok
   const wa = buildWhatsappLink(
     config?.telefono,
     `Hola ${config?.nombreBarbero || 'Yumpi'}, quiero agendar un corte en ${config?.nombreNegocio || 'DERON CUTS'}`
@@ -18,13 +20,36 @@ export default function Footer({ config }) {
 
         <div className="footer__socials">
           {instagram && (
-            <a className="btn btn--outline" href={instagram} target="_blank" rel="noreferrer">
+            <a
+              className="btn btn--outline footer__social footer__social--ig"
+              href={instagram}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <IconInstagram />
               Instagram
             </a>
           )}
+          {tiktok && (
+            <a
+              className="btn btn--outline footer__social footer__social--tt"
+              href={tiktok}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <IconTikTok />
+              TikTok
+            </a>
+          )}
           {wa && (
-            <a className="btn btn--outline" href={wa} target="_blank" rel="noreferrer">
-              Whatsapp
+            <a
+              className="btn btn--outline footer__social footer__social--wa"
+              href={wa}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <IconWhatsApp />
+              WhatsApp
             </a>
           )}
         </div>
