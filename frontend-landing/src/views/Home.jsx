@@ -6,18 +6,16 @@ import AboutYumpi from '../components/AboutYumpi.jsx'
 import Schedule from '../components/Schedule.jsx'
 import LocationContact from '../components/LocationContact.jsx'
 import Footer from '../components/Footer.jsx'
-import { getConfiguracion, getServicios } from '../services/api.js'
+import { getConfiguracion } from '../services/api.js'
 
 export default function Home() {
   const [config, setConfig] = useState(null)
-  const [servicios, setServicios] = useState([])
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    Promise.all([getConfiguracion(), getServicios()])
-      .then(([cfg, svc]) => {
+    getConfiguracion()
+      .then((cfg) => {
         setConfig(cfg)
-        setServicios(svc)
       })
       .catch(() => setError(true))
   }, [])
@@ -62,7 +60,7 @@ export default function Home() {
             </Link>
           </div>
         </section>
-        <Services servicios={servicios} />
+        <Services />
         <AboutYumpi config={config} />
         <Schedule config={config} />
         <LocationContact config={config} />
