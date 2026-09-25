@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom'
+import { buildWhatsappLink } from '../config.js'
 
 export default function Footer({ config }) {
   const year = new Date().getFullYear()
   const instagram = config?.instagram
-  const tiktok = config?.tiktok
+  const wa = buildWhatsappLink(
+    config?.telefono,
+    `Hola ${config?.nombreBarbero || 'Yumpi'}, quiero agendar un corte en ${config?.nombreNegocio || 'DERON CUTS'}`
+  )
 
   return (
     <footer className="footer">
@@ -18,9 +22,9 @@ export default function Footer({ config }) {
               Instagram
             </a>
           )}
-          {tiktok && (
-            <a className="btn btn--outline" href={tiktok} target="_blank" rel="noreferrer">
-              TikTok
+          {wa && (
+            <a className="btn btn--outline" href={wa} target="_blank" rel="noreferrer">
+              Whatsapp
             </a>
           )}
         </div>

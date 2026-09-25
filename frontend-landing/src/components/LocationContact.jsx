@@ -1,5 +1,8 @@
 import { buildWhatsappLink } from '../config.js'
 
+const MAPA_EMBED =
+  'https://www.google.com/maps?q=Valeriano%20362%2C%20V%C3%ADctor%20Larco%20Herrera%2013009&hl=es&z=17&output=embed'
+
 export default function LocationContact({ config }) {
   if (!config) return null
   const {
@@ -8,10 +11,12 @@ export default function LocationContact({ config }) {
     telefono,
     email,
     instagram,
-    tiktok,
     nombreBarbero,
     nombreNegocio
   } = config
+
+  const mensajeWa = `Hola ${nombreBarbero}, quiero agendar un corte en ${nombreNegocio}`
+  const enlaceWa = buildWhatsappLink(telefono, mensajeWa)
 
   return (
     <section className="section" id="ubicacion">
@@ -22,14 +27,25 @@ export default function LocationContact({ config }) {
         </h2>
 
         <div className="loc__grid">
-          <a
-            className="loc__map"
-            href={enlaceMapa || '#'}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {enlaceMapa ? 'Ver en el mapa con tu GPS' : 'Mapa pendiente: actualiza la configuración'}
-          </a>
+          <div className="loc__map">
+            <iframe
+              title="Mapa de ubicación de DERON CUTS"
+              src={MAPA_EMBED}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            {enlaceMapa && (
+              <a
+                className="loc__map-link"
+                href={enlaceMapa}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Abrir en Google Maps
+              </a>
+            )}
+          </div>
 
           <div className="loc__items">
             <div className="loc__item">
@@ -82,7 +98,7 @@ export default function LocationContact({ config }) {
               </div>
             )}
 
-            {(instagram || tiktok) && (
+            {(instagram || enlaceWa) && (
               <div className="loc__item">
                 <div className="loc__icon">#</div>
                 <div>
@@ -93,9 +109,9 @@ export default function LocationContact({ config }) {
                         Instagram{'  '}
                       </a>
                     )}
-                    {tiktok && (
-                      <a href={tiktok} target="_blank" rel="noreferrer">
-                        TikTok
+                    {enlaceWa && (
+                      <a href={enlaceWa} target="_blank" rel="noreferrer">
+                        Whatsapp
                       </a>
                     )}
                   </div>

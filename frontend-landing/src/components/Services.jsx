@@ -8,14 +8,7 @@ export default function Services({ servicios = [] }) {
     <section className="section services" id="servicios">
       <div className="container">
         <span className="section-tag">El menú</span>
-        <h2 className="section-title">
-          Cortes que <span className="acc">hablan</span> por ti
-        </h2>
-        <p className="section-sub">
-          Precios y servicios gestionados desde el panel de Yumpi. Si un corte no está en la lista,
-          la máquina 0 siempre está lista para inventar uno.
-        </p>
-
+   
         <div className="services__grid">
           {servicios.map((svc) => (
             <article className="svc-card" key={svc.id}>

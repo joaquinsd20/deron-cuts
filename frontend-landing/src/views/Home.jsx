@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
-import Hero from '../components/Hero.jsx'
 import Services from '../components/Services.jsx'
 import Gallery from '../components/Gallery.jsx'
 import AboutYumpi from '../components/AboutYumpi.jsx'
-import HowToBook from '../components/HowToBook.jsx'
 import Schedule from '../components/Schedule.jsx'
 import LocationContact from '../components/LocationContact.jsx'
 import Footer from '../components/Footer.jsx'
@@ -48,11 +46,27 @@ export default function Home() {
     <>
       <Navbar />
       <main>
-        <Hero />
+        <section className="barber-film" aria-label="Video de barbería">
+          <video
+            className="barber-film__video"
+            src="/videos/corte.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          />
+          <div className="barber-film__scrim" aria-hidden="true" />
+          <div className="barber-film__overlay">
+            <Link to="/reservar" className="btn btn--primary barber-film__cta">
+              Reservar ahora
+            </Link>
+            <p className="barber-film__caption">El corte de hoy · Barber Studio</p>
+          </div>
+        </section>
         <Services servicios={servicios} />
         <Gallery />
         <AboutYumpi config={config} />
-        <HowToBook />
         <Schedule config={config} />
         <LocationContact config={config} />
         <section className="cta-final">

@@ -12,9 +12,7 @@ export default function Gallery() {
     <section className="section" id="trabajos">
       <div className="container">
         <span className="section-tag">El portafolio</span>
-        <h2 className="section-title">
-          Nuestros <span className="acc">trabajos</span>
-        </h2>
+
     
 
         <div className="gallery__grid">

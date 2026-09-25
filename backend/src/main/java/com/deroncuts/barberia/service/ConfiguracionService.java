@@ -52,17 +52,16 @@ public class ConfiguracionService {
 
     private ConfiguracionNegocio crearConfiguracionDefault() {
         ConfiguracionNegocio config = new ConfiguracionNegocio();
-        config.setTelefono("+51 000 000 000");
+        config.setTelefono("+51 990 750 147");
         config.setEmail("hola@deroncuts.com");
-        config.setDireccion("Av. Ejemplo 123 — actualizar desde administración");
-        config.setEnlaceMapa("https://maps.app.goo.gl/placeholder");
+        config.setDireccion("Valeriano 362 - Huaman");
+        config.setEnlaceMapa("https://maps.app.goo.gl/Fs3wnPjCqfNzZGhG7");
         config.setInstagram("https://instagram.com/deroncuts");
         config.setTiktok("https://tiktok.com/@deroncuts");
         config.setDescripcionBarbero(
-                "Yumpi es el barbero detrás de DERON CUTS. Se especializa en fades, degradados, " +
-                "barba y cortes urbanos, cuidando los detalles para adaptar cada corte al estilo " +
-                "de cada cliente. En DERON CUTS la experiencia también importa: atención cercana, " +
-                "buen ambiente y música para que cada visita se sienta cómoda, relajada y con personalidad.");
+                "Yumpi es el barbero detrás de DERON CUTS: fades, degradados y barba con un ojo " +
+                "en los detalles, adaptando cada corte a tu estilo. Atención de uno a uno, sin apuro, " +
+                "con buena música y mejor ambiente.");
         config.setHorarioJson(horarioDefault());
         return config;
     }

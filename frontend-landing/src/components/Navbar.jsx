@@ -42,11 +42,6 @@ export default function Navbar() {
             </a>
           </div>
           <div className="nav__item">
-            <a className="nav__link" href="#reservar" onClick={() => anchor('reservar')}>
-              Cómo reservar
-            </a>
-          </div>
-          <div className="nav__item">
             <a className="nav__link" href="#ubicacion" onClick={() => anchor('ubicacion')}>
               Ubicación
             </a>

@@ -10,9 +10,7 @@ export default function Schedule({ config }) {
         <h2 className="section-title">
           Cuándo está <span className="acc">Yumpi</span>
         </h2>
-        <p className="section-sub">
-          Horario semanal de atención. Responde también por WhatsApp dentro de estos horarios.
-        </p>
+  
 
         <div className="schedule__grid">
           {WEEK_ORDER.map((dia) => {
