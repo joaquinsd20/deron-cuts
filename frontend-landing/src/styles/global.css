@@ -290,32 +290,37 @@ ul {
   pointer-events: none;
 }
 
-.barber-film .barber-film__overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 26px;
-  pointer-events: none;
-}
+/* ---------- CTA bajo el video ---------- */
 
-.barber-film .barber-film__cta {
-  pointer-events: auto;
-}
-
-.barber-film__caption {
-  position: static;
-  margin: 0;
+.hero-cta {
   text-align: center;
-  font-family: var(--font-head);
+  padding-block: 84px;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1), transparent 55%),
+    var(--bg);
+}
+
+.hero-cta__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4.5vw, 3.2rem);
   text-transform: uppercase;
-  letter-spacing: 0.34em;
-  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.hero-cta__title span {
   color: var(--neon);
-  pointer-events: none;
+}
+
+.hero-cta__copy {
+  color: var(--muted);
+  margin: 16px auto 28px;
+  max-width: 46ch;
+}
+
+.hero-cta__btn {
+  font-size: 0.95rem;
+  padding: 15px 34px;
 }
 
 .stats {

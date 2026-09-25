@@ -28,7 +28,7 @@ export default function Home() {
       <>
         <Navbar />
         <div className="error-state container">
-          <h2>No pudimos conectar con el backend</h2>
+          <h2>No pudimos conectar con el servidor</h2>
           <p>
             Verifica que el servidor de DERON CUTS esté corriendo en <b>http://localhost:8082</b> y
             recarga la página.
@@ -57,12 +57,17 @@ export default function Home() {
             preload="metadata"
           />
           <div className="barber-film__scrim" aria-hidden="true" />
-          <div className="barber-film__overlay">
-            <Link to="/reservar" className="btn btn--primary barber-film__cta">
-              Reservar ahora
-            </Link>
-            <p className="barber-film__caption">El corte de hoy · Barber Studio</p>
-          </div>
+        </section>
+        <section className="hero-cta">
+          <h2 className="hero-cta__title">
+            Tu próximo corte te <span>espera</span>
+          </h2>
+          <p className="hero-cta__copy">
+            Elige el corte que quieras, elige la hora y deja el resto en manos de Yumpi.
+          </p>
+          <Link to="/reservar" className="btn btn--primary hero-cta__btn">
+            Reserva YA!
+          </Link>
         </section>
         <Services servicios={servicios} />
         <Gallery />
