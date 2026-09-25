@@ -46,11 +46,6 @@ export default function Navbar() {
             </div>
           </div>
           <div className="nav__item">
-            <a className="nav__link" href="#servicios" onClick={() => anchor('servicios')}>
-              Servicios
-            </a>
-          </div>
-          <div className="nav__item">
             <a className="nav__link" href="#yumpi" onClick={() => anchor('yumpi')}>
               Sobre Yumpi
             </a>
