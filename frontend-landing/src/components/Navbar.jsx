@@ -19,7 +19,10 @@ export default function Navbar() {
     <header className="navbar">
       <div className="container navbar__inner">
         <Link to="/" className="brand" onClick={() => setOpen(false)}>
-          <img className="brand__logo" src="/logo.jpg" alt="DERON CUTS" />
+          <span className="brand__name">
+            DERON<span>CUTS</span>
+          </span>
+          <span className="brand__tag">Barber Studio</span>
         </Link>
 
         <nav className={`nav__list${open ? ' nav__list--open' : ''}`}>

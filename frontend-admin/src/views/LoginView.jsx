@@ -29,7 +29,7 @@ export default function LoginView() {
     <div className="login">
       <form className="login__card" onSubmit={onSubmit}>
         <div className="login__brand">
-          <img src="/logo.jpg" alt="DERON CUTS" />
+          DERON <span>CUTS</span>
         </div>
       
 

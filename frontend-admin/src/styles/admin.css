@@ -66,11 +66,13 @@ a {
   border-bottom: 1px solid var(--line);
 }
 
-.sidebar__logo {
-  display: block;
-  height: 46px;
-  width: auto;
-  margin-bottom: 10px;
+.sidebar__name {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.sidebar__name span {
+  color: var(--neon);
 }
 
 .sidebar__tag {
@@ -732,14 +734,13 @@ a {
 }
 
 .login__brand {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
   text-align: center;
 }
 
-.login__brand img {
-  display: inline-block;
-  height: 96px;
-  width: auto;
-  margin-bottom: 4px;
+.login__brand span {
+  color: var(--neon);
 }
 
 .login__sub {
