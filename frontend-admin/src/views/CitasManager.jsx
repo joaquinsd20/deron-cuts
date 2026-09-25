@@ -221,7 +221,7 @@ export default function CitasManager() {
           </div>
         </div>
       </main>
-      <Toast message={toast?.message} tipo={toast?.tipo} />
+      <Toast message={toast?.message} tipo={toast?.tipo} onClose={() => setToast(null)} />
     </div>
   )
 }

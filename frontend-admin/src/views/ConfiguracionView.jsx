@@ -23,7 +23,10 @@ const VACIO = {
   instagram: '',
   tiktok: '',
   descripcionBarbero: '',
-  horario: {}
+  horario: {},
+  recordatoriosActivo: true,
+  recordatoriosAntesHoras: 2,
+  whatsappActivo: false
 }
 
 export default function ConfiguracionView() {
@@ -198,9 +201,58 @@ export default function ConfiguracionView() {
               })}
             </div>
           </div>
+
+          <div className="card" style={{ marginTop: 18 }}>
+            <div className="card__title">Recordatorios y notificaciones</div>
+            <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              <div className="field">
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={!!config.recordatoriosActivo}
+                    onChange={(e) => setCampo('recordatoriosActivo', e.target.checked)}
+                  />
+                  Activar avisos automáticos
+                </label>
+                <div className="hint">
+                  Aviso al instante (con sonido) en el panel cuando hay una cita nueva,
+                  reprogramada o cancelada.
+                </div>
+              </div>
+              <div className="field">
+                <label>Recordar al cliente con horas de anticipación</label>
+                <select
+                  value={config.recordatoriosAntesHoras ?? 2}
+                  onChange={(e) => setCampo('recordatoriosAntesHoras', Number(e.target.value))}
+                >
+                  <option value={1}>1 hora antes</option>
+                  <option value={2}>2 horas antes</option>
+                  <option value={3}>3 horas antes</option>
+                  <option value={6}>6 horas antes</option>
+                  <option value={12}>12 horas antes</option>
+                  <option value={24}>1 día antes</option>
+                  <option value={48}>2 días antes</option>
+                </select>
+              </div>
+              <div className="field" style={{ gridColumn: '1 / -1' }}>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={!!config.whatsappActivo}
+                    onChange={(e) => setCampo('whatsappActivo', e.target.checked)}
+                  />
+                  Enviar recordatorios por WhatsApp
+                </label>
+                <div className="hint">
+                  Requiere conectar la integración de Meta WhatsApp. Mientras tanto los
+                  recordatorios de WhatsApp quedan en cola en la sección Recordatorios.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
-      <Toast message={toast?.message} tipo={toast?.tipo} />
+      <Toast message={toast?.message} tipo={toast?.tipo} onClose={() => setToast(null)} />
     </div>
   )
 }

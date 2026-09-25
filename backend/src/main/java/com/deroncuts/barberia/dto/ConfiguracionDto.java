@@ -15,6 +15,9 @@ public class ConfiguracionDto {
     private String tiktok;
     private String descripcionBarbero;
     private Map<String, HorarioDia> horario;
+    private Boolean recordatoriosActivo;
+    private Integer recordatoriosAntesHoras;
+    private Boolean whatsappActivo;
 
     public static class HorarioDia {
         private String abre;
@@ -132,5 +135,29 @@ public class ConfiguracionDto {
 
     public void setHorario(Map<String, HorarioDia> horario) {
         this.horario = horario;
+    }
+
+    public Boolean getRecordatoriosActivo() {
+        return recordatoriosActivo;
+    }
+
+    public void setRecordatoriosActivo(Boolean recordatoriosActivo) {
+        this.recordatoriosActivo = recordatoriosActivo;
+    }
+
+    public Integer getRecordatoriosAntesHoras() {
+        return recordatoriosAntesHoras;
+    }
+
+    public void setRecordatoriosAntesHoras(Integer recordatoriosAntesHoras) {
+        this.recordatoriosAntesHoras = recordatoriosAntesHoras;
+    }
+
+    public Boolean getWhatsappActivo() {
+        return whatsappActivo;
+    }
+
+    public void setWhatsappActivo(Boolean whatsappActivo) {
+        this.whatsappActivo = whatsappActivo;
     }
 }

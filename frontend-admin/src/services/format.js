@@ -49,3 +49,14 @@ export function aInputLocal(fechaHora) {
   const p = (n) => String(n).padStart(2, '0')
   return `${dt.getFullYear()}-${p(dt.getMonth() + 1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`
 }
+
+export function formatFechaHoraLarga(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleString('es-MX', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}

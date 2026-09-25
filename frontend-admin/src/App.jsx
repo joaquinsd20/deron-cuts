@@ -7,6 +7,7 @@ import Calendario from './views/Calendario.jsx'
 import CitasManager from './views/CitasManager.jsx'
 import CatalogoManager from './views/CatalogoManager.jsx'
 import Pagos from './views/Pagos.jsx'
+import Recordatorios from './views/Recordatorios.jsx'
 import ConfiguracionView from './views/ConfiguracionView.jsx'
 
 export default function App() {
@@ -50,6 +51,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Pagos />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recordatorios"
+        element={
+          <ProtectedRoute>
+            <Recordatorios />
           </ProtectedRoute>
         }
       />

@@ -49,6 +49,15 @@ public class ConfiguracionNegocio {
     @Column(name = "horario_json", columnDefinition = "LONGTEXT")
     private String horarioJson;
 
+    @Column(name = "recordatorios_activo")
+    private Boolean recordatoriosActivo = true;
+
+    @Column(name = "recordatorios_antes_horas")
+    private Integer recordatoriosAntesHoras = 2;
+
+    @Column(name = "whatsapp_activo")
+    private Boolean whatsappActivo = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -153,6 +162,30 @@ public class ConfiguracionNegocio {
 
     public void setHorarioJson(String horarioJson) {
         this.horarioJson = horarioJson;
+    }
+
+    public Boolean getRecordatoriosActivo() {
+        return recordatoriosActivo;
+    }
+
+    public void setRecordatoriosActivo(Boolean recordatoriosActivo) {
+        this.recordatoriosActivo = recordatoriosActivo;
+    }
+
+    public Integer getRecordatoriosAntesHoras() {
+        return recordatoriosAntesHoras;
+    }
+
+    public void setRecordatoriosAntesHoras(Integer recordatoriosAntesHoras) {
+        this.recordatoriosAntesHoras = recordatoriosAntesHoras;
+    }
+
+    public Boolean getWhatsappActivo() {
+        return whatsappActivo;
+    }
+
+    public void setWhatsappActivo(Boolean whatsappActivo) {
+        this.whatsappActivo = whatsappActivo;
     }
 
     public LocalDateTime getCreatedAt() {

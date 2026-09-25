@@ -86,3 +86,23 @@ export function getConfiguracionAdmin() {
 export function actualizarConfiguracion(payload) {
   return api.put('/api/admin/configuracion', payload).then((r) => r.data)
 }
+
+export function getRecordatorios(params = {}) {
+  return api.get('/api/admin/recordatorios', { params }).then((r) => r.data)
+}
+
+export function crearRecordatorio(payload) {
+  return api.post('/api/admin/recordatorios', payload).then((r) => r.data)
+}
+
+export function enviarRecordatorio(id) {
+  return api.patch(`/api/admin/recordatorios/${id}/enviar`).then((r) => r.data)
+}
+
+export function cancelarRecordatorio(id) {
+  return api.patch(`/api/admin/recordatorios/${id}/cancelar`).then((r) => r.data)
+}
+
+export function eliminarRecordatorio(id) {
+  return api.delete(`/api/admin/recordatorios/${id}`).then((r) => r.data)
+}

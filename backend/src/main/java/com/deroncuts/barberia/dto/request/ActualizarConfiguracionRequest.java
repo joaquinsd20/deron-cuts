@@ -39,6 +39,12 @@ public class ActualizarConfiguracionRequest {
 
     private Map<String, ConfiguracionDto.HorarioDia> horario;
 
+    private Boolean recordatoriosActivo;
+
+    private Integer recordatoriosAntesHoras;
+
+    private Boolean whatsappActivo;
+
     public String getNombreNegocio() {
         return nombreNegocio;
     }
@@ -117,5 +123,29 @@ public class ActualizarConfiguracionRequest {
 
     public void setHorario(Map<String, ConfiguracionDto.HorarioDia> horario) {
         this.horario = horario;
+    }
+
+    public Boolean getRecordatoriosActivo() {
+        return recordatoriosActivo;
+    }
+
+    public void setRecordatoriosActivo(Boolean recordatoriosActivo) {
+        this.recordatoriosActivo = recordatoriosActivo;
+    }
+
+    public Integer getRecordatoriosAntesHoras() {
+        return recordatoriosAntesHoras;
+    }
+
+    public void setRecordatoriosAntesHoras(Integer recordatoriosAntesHoras) {
+        this.recordatoriosAntesHoras = recordatoriosAntesHoras;
+    }
+
+    public Boolean getWhatsappActivo() {
+        return whatsappActivo;
+    }
+
+    public void setWhatsappActivo(Boolean whatsappActivo) {
+        this.whatsappActivo = whatsappActivo;
     }
 }

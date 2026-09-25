@@ -6,6 +6,7 @@ const LINKS = [
   { to: '/calendario', label: 'Calendario' },
   { to: '/citas', label: 'Citas' },
   { to: '/pagos', label: 'Pagos' },
+  { to: '/recordatorios', label: 'Recordatorios' },
   { to: '/servicios', label: 'Servicios' },
   { to: '/configuracion', label: 'Configuración' }
 ]

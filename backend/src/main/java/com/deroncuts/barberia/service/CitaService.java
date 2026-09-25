@@ -39,15 +39,18 @@ public class CitaService {
     private final ServicioService servicioService;
     private final DisponibilidadService disponibilidadService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RecordatorioService recordatorioService;
 
     public CitaService(CitaRepository citaRepository,
                        ServicioService servicioService,
                        DisponibilidadService disponibilidadService,
-                       SimpMessagingTemplate messagingTemplate) {
+                       SimpMessagingTemplate messagingTemplate,
+                       RecordatorioService recordatorioService) {
         this.citaRepository = citaRepository;
         this.servicioService = servicioService;
         this.disponibilidadService = disponibilidadService;
         this.messagingTemplate = messagingTemplate;
+        this.recordatorioService = recordatorioService;
     }
 
     @Transactional
@@ -76,6 +79,7 @@ public class CitaService {
 
         Cita guardada = citaRepository.save(cita);
         publicarEvento("CREADA", guardada);
+        recordatorioService.notificarNuevaCita(guardada);
         return CitaDto.from(guardada);
     }
 
@@ -174,6 +178,9 @@ public class CitaService {
         }
         cita.setEstado(nuevoEstado);
         Cita guardada = citaRepository.save(cita);
+        if (nuevoEstado == EstadoCita.CANCELADA) {
+            recordatorioService.notificarCancelada(guardada);
+        }
         publicarEvento("ESTADO", guardada);
         return CitaDto.from(guardada);
     }
@@ -194,6 +201,7 @@ public class CitaService {
         cita.setFechaHoraInicio(inicio);
         cita.setFechaHoraFin(fin);
         Cita guardada = citaRepository.save(cita);
+        recordatorioService.notificarReprogramada(guardada);
         publicarEvento("REPROGRAMADA", guardada);
         return CitaDto.from(guardada);
     }

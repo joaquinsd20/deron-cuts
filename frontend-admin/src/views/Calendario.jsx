@@ -149,7 +149,7 @@ export default function Calendario() {
           )}
         </div>
       </main>
-      <Toast message={toast?.message} tipo={toast?.tipo} />
+      <Toast message={toast?.message} tipo={toast?.tipo} onClose={() => setToast(null)} />
     </div>
   )
 }

@@ -41,13 +41,30 @@ public class ConfiguracionService {
         config.setTiktok(request.getTiktok());
         config.setDescripcionBarbero(request.getDescripcionBarbero());
         config.setHorarioJson(serializarHorario(request.getHorario()));
+        config.setRecordatoriosActivo(request.getRecordatoriosActivo());
+        config.setRecordatoriosAntesHoras(request.getRecordatoriosAntesHoras());
+        config.setWhatsappActivo(request.getWhatsappActivo());
         return toDto(repository.save(config));
     }
 
     @Transactional
     public ConfiguracionNegocio obtenerOMeterDefault() {
-        return repository.findAll().stream().findFirst()
+        ConfiguracionNegocio config = repository.findAll().stream().findFirst()
                 .orElseGet(() -> repository.save(crearConfiguracionDefault()));
+        boolean cambios = false;
+        if (config.getRecordatoriosActivo() == null) {
+            config.setRecordatoriosActivo(true);
+            cambios = true;
+        }
+        if (config.getRecordatoriosAntesHoras() == null) {
+            config.setRecordatoriosAntesHoras(2);
+            cambios = true;
+        }
+        if (config.getWhatsappActivo() == null) {
+            config.setWhatsappActivo(false);
+            cambios = true;
+        }
+        return cambios ? repository.save(config) : config;
     }
 
     private ConfiguracionNegocio crearConfiguracionDefault() {
@@ -63,6 +80,9 @@ public class ConfiguracionService {
                 "en los detalles, adaptando cada corte a tu estilo. Atención de uno a uno, sin apuro, " +
                 "con buena música y mejor ambiente.");
         config.setHorarioJson(horarioDefault());
+        config.setRecordatoriosActivo(true);
+        config.setRecordatoriosAntesHoras(2);
+        config.setWhatsappActivo(false);
         return config;
     }
 
@@ -99,6 +119,15 @@ public class ConfiguracionService {
         dto.setTiktok(config.getTiktok());
         dto.setDescripcionBarbero(config.getDescripcionBarbero());
         dto.setHorario(parsearHorario(config.getHorarioJson()));
+        dto.setRecordatoriosActivo(config.getRecordatoriosActivo() == null
+                ? true
+                : config.getRecordatoriosActivo());
+        dto.setRecordatoriosAntesHoras(config.getRecordatoriosAntesHoras() == null
+                ? 2
+                : config.getRecordatoriosAntesHoras());
+        dto.setWhatsappActivo(config.getWhatsappActivo() == null
+                ? false
+                : config.getWhatsappActivo());
         return dto;
     }
 
