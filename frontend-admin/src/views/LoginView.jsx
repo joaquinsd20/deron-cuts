@@ -29,9 +29,9 @@ export default function LoginView() {
     <div className="login">
       <form className="login__card" onSubmit={onSubmit}>
         <div className="login__brand">
-          DERON <span>CUTS</span>
+          <img src="/logo.jpg" alt="DERON CUTS" />
         </div>
-        <div className="login__sub">Panel de administración</div>
+      
 
         <div className="form-grid">
           <div className="field">

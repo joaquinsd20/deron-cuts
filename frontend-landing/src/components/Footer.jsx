@@ -13,7 +13,7 @@ export default function Footer({ config }) {
     <footer className="footer">
       <div className="container footer__inner">
         <Link to="/" className="footer__brand">
-          DERON<span>CUTS</span>
+          <img src="/logo.jpg" alt="DERON CUTS" />
         </Link>
 
         <div className="footer__socials">

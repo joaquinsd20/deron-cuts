@@ -22,9 +22,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">
-        <div className="sidebar__name">
-          DERON <span>CUTS</span>
-        </div>
+        <img className="sidebar__logo" src="/logo.jpg" alt="DERON CUTS" />
         <div className="sidebar__tag">Panel admin</div>
       </div>
 
