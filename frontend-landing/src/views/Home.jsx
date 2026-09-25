@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Services from '../components/Services.jsx'
-import Gallery from '../components/Gallery.jsx'
 import AboutYumpi from '../components/AboutYumpi.jsx'
 import Schedule from '../components/Schedule.jsx'
 import LocationContact from '../components/LocationContact.jsx'
@@ -64,7 +63,6 @@ export default function Home() {
           </Link>
         </section>
         <Services servicios={servicios} />
-        <Gallery />
         <AboutYumpi config={config} />
         <Schedule config={config} />
         <LocationContact config={config} />

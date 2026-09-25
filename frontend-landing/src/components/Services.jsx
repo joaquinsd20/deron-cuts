@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom'
 import { formatCurrency } from '../config.js'
 
+const SHOTS = [
+  { img: '/cortes/IMG_3922.jpg', label: 'Low Fade' },
+  { img: '/cortes/IMG_4208.jpg', label: 'Drop Fade' },
+  { img: '/cortes/IMG_5413.jpg', label: 'Taper Fade' },
+  { img: '/cortes/corte-4.jpg', label: 'Mid Taper Fade' }
+]
+
 export default function Services({ servicios = [] }) {
   if (servicios.length === 0) return null
 
@@ -8,7 +15,16 @@ export default function Services({ servicios = [] }) {
     <section className="section services" id="servicios">
       <div className="container">
         <span className="section-tag">El menú</span>
-   
+
+        <div className="services__shots">
+          {SHOTS.map((s) => (
+            <figure className="shot" key={s.label}>
+              <img src={s.img} alt={s.label} loading="lazy" />
+              <figcaption className="shot__label">{s.label}</figcaption>
+            </figure>
+          ))}
+        </div>
+
         <div className="services__grid">
           {servicios.map((svc) => (
             <article className="svc-card" key={svc.id}>
