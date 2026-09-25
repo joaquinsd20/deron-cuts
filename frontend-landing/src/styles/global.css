@@ -62,7 +62,17 @@ ul {
 .section {
   padding-block: 88px;
   scroll-margin-top: 72px;
-  border-bottom: 1px solid var(--line);
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    rgba(44, 44, 50, 0.22) 18%,
+    var(--line) 50%,
+    rgba(44, 44, 50, 0.22) 82%,
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: 100% 1px;
 }
 
 .section-tag {
@@ -179,7 +189,7 @@ ul {
   z-index: 50;
   background: rgba(15, 15, 18, 0.92);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(44, 44, 50, 0.55);
 }
 
 .navbar__inner {
@@ -304,7 +314,6 @@ ul {
   height: clamp(340px, 60vh, 720px);
   overflow: hidden;
   background: #0d0d0f;
-  border-bottom: 1px solid var(--line);
 }
 
 .barber-film .barber-film__video {
@@ -1119,9 +1128,19 @@ ul {
 /* ---------- Footer ---------- */
 
 .footer {
-  border-top: 1px solid var(--line);
   padding-block: 40px;
   background: var(--bg);
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    rgba(44, 44, 50, 0.22) 18%,
+    var(--line) 50%,
+    rgba(44, 44, 50, 0.22) 82%,
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: 100% 1px;
 }
 
 .footer__inner {
