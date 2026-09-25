@@ -33,7 +33,13 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(13, 13, 15, 0.86), rgba(13, 13, 15, 0.9)),
+    url('/fondo-opt.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   line-height: 1.55;
