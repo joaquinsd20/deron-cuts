@@ -239,6 +239,43 @@ ul {
   padding: 10px 16px;
 }
 
+.nav__drop {
+  position: relative;
+}
+
+.nav__drop-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 210px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-hard);
+  padding: 6px;
+  display: none;
+}
+
+.nav__drop:hover .nav__drop-menu,
+.nav__drop:focus-within .nav__drop-menu {
+  display: block;
+}
+
+.nav__drop-link {
+  display: block;
+  padding: 9px 12px;
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--neon-dim);
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.nav__drop-link:hover {
+  color: var(--neon);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .nav__toggle {
   display: none;
   background: none;
@@ -1580,6 +1617,19 @@ ul {
 
   .nav__cta-wrap {
     margin-top: 10px;
+  }
+
+  .nav__drop-menu {
+    position: static;
+    display: block;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 6px 0 2px 14px;
+  }
+
+  .nav__drop-link {
+    padding: 6px 10px;
   }
 
   .services__grid,

@@ -26,9 +26,28 @@ export default function Navbar() {
         </Link>
 
         <nav className={`nav__list${open ? ' nav__list--open' : ''}`}>
+          <div className="nav__item nav__drop">
+            <a className="nav__link" href="#trabajos" onClick={() => anchor('trabajos')}>
+              Cortes
+            </a>
+            <div className="nav__drop-menu">
+              <a className="nav__drop-link" href="#trabajos" onClick={() => anchor('trabajos')}>
+                Low Fade
+              </a>
+              <a className="nav__drop-link" href="#trabajos" onClick={() => anchor('trabajos')}>
+                Drop Fade
+              </a>
+              <a className="nav__drop-link" href="#trabajos" onClick={() => anchor('trabajos')}>
+                Taper Fade
+              </a>
+              <a className="nav__drop-link" href="#trabajos" onClick={() => anchor('trabajos')}>
+                Mid Taper Fade
+              </a>
+            </div>
+          </div>
           <div className="nav__item">
             <a className="nav__link" href="#servicios" onClick={() => anchor('servicios')}>
-              Cortes
+              Servicios
             </a>
           </div>
           <div className="nav__item">

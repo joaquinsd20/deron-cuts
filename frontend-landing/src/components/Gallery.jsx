@@ -1,13 +1,10 @@
 const WORK = [
-  { label: 'Fade a la piel', tag: 'Fade', cls: 'gallery__item--fade' },
-  { label: 'Barba perfilada', tag: 'Barba', cls: 'gallery__item--barba' },
-  { label: 'Línea personalizada', tag: 'Diseño', cls: 'gallery__item--diseno' },
-  { label: 'Degradado alto', tag: 'Fade', cls: 'gallery__item--mix' },
-  { label: 'Corte urbano', tag: 'Urbano', cls: 'gallery__item--diseno' },
-  { label: 'Texturizado con navaja', tag: 'Barba', cls: 'gallery__item--mix' },
   { label: 'Low Fade', tag: 'Fade', cls: 'gallery__item--foto', img: '/cortes/IMG_3922.jpg' },
   { label: 'Drop Fade con diseño en la nuca', tag: 'Diseño', cls: 'gallery__item--foto', img: '/cortes/IMG_4208.jpg' },
-  { label: 'Taper Fade', tag: 'Fade', cls: 'gallery__item--foto', img: '/cortes/IMG_5413.jpg' }
+  { label: 'Taper Fade', tag: 'Fade', cls: 'gallery__item--foto', img: '/cortes/IMG_5413.jpg' },
+  { label: 'Mid Taper Fade', tag: 'Fade', cls: 'gallery__item--foto', img: '/cortes/corte-4.jpg' },
+  { label: 'Barba perfilada', tag: 'Barba', cls: 'gallery__item--barba' },
+  { label: 'Línea personalizada', tag: 'Diseño', cls: 'gallery__item--diseno' }
 ]
 
 export default function Gallery() {
