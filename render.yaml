@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: deron-cuts-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/public/configuracion
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: DERON_DB_URL
+        sync: false
+      - key: DERON_DB_USER
+        sync: false
+      - key: DERON_DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
