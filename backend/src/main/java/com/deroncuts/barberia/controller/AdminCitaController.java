@@ -2,7 +2,9 @@ package com.deroncuts.barberia.controller;
 
 import com.deroncuts.barberia.dto.CitaDto;
 import com.deroncuts.barberia.dto.DashboardResumen;
+import com.deroncuts.barberia.dto.request.AplicarTardanzaRequest;
 import com.deroncuts.barberia.dto.request.CambiarEstadoRequest;
+import com.deroncuts.barberia.dto.request.ConfirmarAdelantoRequest;
 import com.deroncuts.barberia.dto.request.RegistrarPagoRequest;
 import com.deroncuts.barberia.dto.request.ReprogramarRequest;
 import com.deroncuts.barberia.model.EstadoCita;
@@ -52,6 +54,18 @@ public class AdminCitaController {
     @PostMapping("/{id}/pago")
     public CitaDto registrarPago(@PathVariable Long id, @Valid @RequestBody RegistrarPagoRequest request) {
         return citaService.registrarPago(id, request);
+    }
+
+    @PostMapping("/{id}/adelanto")
+    public CitaDto confirmarAdelanto(@PathVariable Long id,
+                                     @Valid @RequestBody ConfirmarAdelantoRequest request) {
+        return citaService.confirmarAdelanto(id, request);
+    }
+
+    @PostMapping("/{id}/tardanza")
+    public CitaDto aplicarTardanza(@PathVariable Long id,
+                                   @Valid @RequestBody AplicarTardanzaRequest request) {
+        return citaService.aplicarTardanza(id, request);
     }
 
     @PatchMapping("/{id}/estado")

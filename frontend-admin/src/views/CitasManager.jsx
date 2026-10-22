@@ -2,7 +2,14 @@ import { useEffect, useState, useCallback } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
 import AppointmentCard from '../components/AppointmentCard.jsx'
-import { getCitas, cambiarEstadoCita, reprogramarCita, registrarPagoCita } from '../services/api.js'
+import {
+  getCitas,
+  cambiarEstadoCita,
+  reprogramarCita,
+  registrarPagoCita,
+  confirmarAdelantoCita,
+  aplicarTardanzaCita
+} from '../services/api.js'
 import { fechaLocal, aInputLocal, formatMoney, METODOS_PAGO } from '../services/format.js'
 
 const ESTADOS = [
@@ -24,6 +31,8 @@ export default function CitasManager() {
   const [cobrando, setCobrando] = useState(null)
   const [metodoPago, setMetodoPago] = useState('EFECTIVO')
   const [montoPago, setMontoPago] = useState('')
+  const [adelantando, setAdelantando] = useState(null)
+  const [metodoAdelanto, setMetodoAdelanto] = useState('YAPE')
   const [toast, setToast] = useState(null)
 
   const cargar = useCallback(async () => {
@@ -74,7 +83,7 @@ export default function CitasManager() {
   const abrirCobro = (cita) => {
     setCobrando(cita)
     setMetodoPago('EFECTIVO')
-    setMontoPago(String(cita.precioServicio ?? ''))
+    setMontoPago(String(cita.saldoPendiente ?? ''))
   }
 
   const confirmarCobro = async () => {
@@ -89,10 +98,46 @@ export default function CitasManager() {
     try {
       await registrarPagoCita(cobrando.id, payload)
       setCobrando(null)
-      setToast({ message: `Pago de ${formatMoney(payload.monto ?? cobrando.precioServicio)} registrado` })
+      setToast({
+        message: `Pago de ${formatMoney(payload.monto ?? cobrando.saldoPendiente)} registrado`
+      })
       await cargar()
     } catch {
       setToast({ message: 'No se pudo registrar el pago', tipo: 'error' })
+    }
+  }
+
+  const abrirAdelanto = (cita) => {
+    setAdelantando(cita)
+    setMetodoAdelanto(cita.metodoAdelanto || 'YAPE')
+  }
+
+  const guardarAdelanto = async (pagado) => {
+    if (!adelantando) return
+    try {
+      await confirmarAdelantoCita(adelantando.id, pagado, metodoAdelanto)
+      setAdelantando(null)
+      setToast({
+        message: pagado ? 'Adelanto registrado y cita confirmada' : 'Adelanto marcado como pendiente'
+      })
+      await cargar()
+    } catch {
+      setToast({ message: 'No se pudo actualizar el adelanto', tipo: 'error' })
+    }
+  }
+
+  const alternarTardanza = async (cita) => {
+    try {
+      const aplicar = !cita.tardanzaAplicada
+      await aplicarTardanzaCita(cita.id, aplicar)
+      setToast({
+        message: aplicar
+          ? 'Tardanza aplicada: se perdió el adelanto y se sumaron S/ 10'
+          : 'Tardanza retirada'
+      })
+      await cargar()
+    } catch {
+      setToast({ message: 'No se pudo actualizar la tardanza', tipo: 'error' })
     }
   }
 
@@ -158,11 +203,56 @@ export default function CitasManager() {
             </div>
           )}
 
+          {adelantando && (
+            <div className="card">
+              <div className="card__title">
+                Adelanto · {adelantando.nombreCliente} / {adelantando.nombreServicio} (
+                {formatMoney(adelantando.adelantoMonto)})
+              </div>
+              <div className="form-grid">
+                <div className="field">
+                  <label>Método del adelanto</label>
+                  <select
+                    value={metodoAdelanto}
+                    onChange={(e) => setMetodoAdelanto(e.target.value)}
+                  >
+                    {METODOS_PAGO.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="cita__actions">
+                  {!adelantando.adelantoPagado && (
+                    <button className="btn btn--pago btn--sm" onClick={() => guardarAdelanto(true)}>
+                      Confirmar adelanto
+                    </button>
+                  )}
+                  {adelantando.adelantoPagado && (
+                    <>
+                      <span className="badge badge--adelanto">ADELANTO RECIBIDO</span>
+                      <button
+                        className="btn btn--danger btn--sm"
+                        onClick={() => guardarAdelanto(false)}
+                      >
+                        Quitar adelanto
+                      </button>
+                    </>
+                  )}
+                  <button className="btn btn--outline btn--sm" onClick={() => setAdelantando(null)}>
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {cobrando && (
             <div className="card">
               <div className="card__title">
-                Cobrar · {cobrando.nombreCliente} / {cobrando.nombreServicio}{' '}
-                ({formatMoney(cobrando.precioServicio)})
+                Cobrar · {cobrando.nombreCliente} / {cobrando.nombreServicio} (Total{' '}
+                {formatMoney(cobrando.totalAPagar)} · Saldo {formatMoney(cobrando.saldoPendiente)})
               </div>
               <div className="form-grid">
                 <div className="field">
@@ -178,7 +268,7 @@ export default function CitasManager() {
                   </select>
                 </div>
                 <div className="field">
-                  <label>Monto (deja vacío para el precio del servicio)</label>
+                  <label>Monto (deja vacío para cobrar el saldo pendiente)</label>
                   <input
                     type="number"
                     min="0"
@@ -215,6 +305,8 @@ export default function CitasManager() {
                     onEstado={cambiarEstado}
                     onReprogramar={abrirReprogramar}
                     onRegistrarPago={abrirCobro}
+                    onAdelanto={abrirAdelanto}
+                    onTardanza={alternarTardanza}
                   />
                 ))
             )}

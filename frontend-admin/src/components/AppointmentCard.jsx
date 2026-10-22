@@ -8,9 +8,21 @@ const METODO_LABEL = {
   TRANSFERENCIA: 'Transferencia'
 }
 
-export default function AppointmentCard({ cita, onEstado, onReprogramar, onRegistrarPago }) {
+export default function AppointmentCard({
+  cita,
+  onEstado,
+  onReprogramar,
+  onRegistrarPago,
+  onAdelanto,
+  onTardanza
+}) {
   const telNumerico = (cita.telefonoWhatsapp || '').replace(/\D/g, '')
   const estado = (cita.estado || '').toUpperCase()
+  const precio = Number(cita.precioFinal ?? cita.precioServicio ?? 0)
+  const adelanto = Number(cita.adelantoMonto ?? 0)
+  const requiereAdelanto = adelanto > 0
+  const saldo = Number(cita.saldoPendiente ?? 0)
+  const abierta = estado === 'PENDIENTE' || estado === 'CONFIRMADA'
 
   return (
     <article className={`cita cita--${estado.toLowerCase()}`}>
@@ -21,7 +33,13 @@ export default function AppointmentCard({ cita, onEstado, onReprogramar, onRegis
         <div className="cita__meta">
           <span className={`badge badge--${estado}`}>{estado}</span>
           {' \u00b7 '}
-          {cita.nombreServicio} · {formatMoney(cita.precioServicio)} · {cita.duracionMinutos} min
+          {cita.nombreServicio} · {cita.duracionMinutos} min
+          {cita.descuentoCumpleanos && (
+            <>
+              {' · '}
+              <span className="badge badge--cumple">CUMPLEAÑOS GRATIS</span>
+            </>
+          )}
           {cita.pagada && (
             <>
               {' · '}
@@ -50,11 +68,40 @@ export default function AppointmentCard({ cita, onEstado, onReprogramar, onRegis
             </>
           )}
         </div>
+        <div className="cita__meta">
+          Precio {formatMoney(precio)} · Total {formatMoney(cita.totalAPagar)} · Saldo{' '}
+          <b>{formatMoney(saldo)}</b>
+          {requiereAdelanto && (
+            <>
+              {' · '}
+              {cita.adelantoPagado ? (
+                <span className="badge badge--adelanto">
+                  ADELANTO {formatMoney(adelanto)}
+                  {cita.metodoAdelanto
+                    ? ` · ${METODO_LABEL[cita.metodoAdelanto] || cita.metodoAdelanto}`
+                    : ''}
+                </span>
+              ) : (
+                <span className="badge badge--adelanto-pend">
+                  ADELANTO PENDIENTE {formatMoney(adelanto)}
+                </span>
+              )}
+            </>
+          )}
+          {cita.tardanzaAplicada && (
+            <>
+              {' · '}
+              <span className="badge badge--tardanza">
+                TARDANZA +{formatMoney(cita.penalidadTardanza)}
+              </span>
+            </>
+          )}
+        </div>
         {cita.notas && <div className="cita__notas">{cita.notas}</div>}
       </div>
 
       <div className="cita__actions">
-        {estado === 'PENDIENTE' && (
+        {estado === 'PENDIENTE' && (!requiereAdelanto || cita.adelantoPagado) && (
           <button className="btn btn--sm" onClick={() => onEstado('CONFIRMADA')}>
             Confirmar
           </button>
@@ -72,11 +119,28 @@ export default function AppointmentCard({ cita, onEstado, onReprogramar, onRegis
             </button>
           </>
         )}
+        {requiereAdelanto && onAdelanto && abierta && (
+          <button
+            className={`btn btn--sm ${cita.adelantoPagado ? 'btn--outline' : 'btn--pago'}`}
+            onClick={() => onAdelanto(cita)}
+          >
+            {cita.adelantoPagado ? 'Adelanto recibido' : 'Adelanto'}
+          </button>
+        )}
+        {onTardanza && abierta && (
+          <button
+            className={`btn btn--sm ${cita.tardanzaAplicada ? 'btn--outline' : 'btn--danger'}`}
+            onClick={() => onTardanza(cita)}
+          >
+            {cita.tardanzaAplicada ? 'Quitar tardanza' : 'Aplicar tardanza'}
+          </button>
+        )}
         {!cita.pagada &&
+          saldo > 0 &&
           (estado === 'CONFIRMADA' || estado === 'COMPLETADA') &&
           onRegistrarPago && (
             <button className="btn btn--sm btn--pago" onClick={() => onRegistrarPago(cita)}>
-              Cobrar
+              Cobrar saldo
             </button>
           )}
         {estado === 'CANCELADA' && cita.pagada && (
@@ -87,12 +151,11 @@ export default function AppointmentCard({ cita, onEstado, onReprogramar, onRegis
             Cancelar
           </button>
         )}
-        {onReprogramar &&
-          (estado === 'PENDIENTE' || estado === 'CONFIRMADA') && (
-            <button className="btn btn--sm btn--outline" onClick={() => onReprogramar(cita)}>
-              Reprogramar
-            </button>
-          )}
+        {onReprogramar && abierta && (
+          <button className="btn btn--sm btn--outline" onClick={() => onReprogramar(cita)}>
+            Reprogramar
+          </button>
+        )}
       </div>
     </article>
   )

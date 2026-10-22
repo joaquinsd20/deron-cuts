@@ -22,6 +22,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     List<Cita> findByFechaHoraInicioAfterOrderByFechaHoraInicioAsc(LocalDateTime desde);
 
+    List<Cita> findByClienteIdOrderByFechaHoraInicioDesc(Long clienteId);
+
     boolean existsByFechaHoraInicioLessThanAndFechaHoraFinGreaterThanAndEstadoIn(
             LocalDateTime fin, LocalDateTime inicio, List<EstadoCita> estados);
 

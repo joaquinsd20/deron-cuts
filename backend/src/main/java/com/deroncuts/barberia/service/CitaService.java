@@ -5,7 +5,10 @@ import com.deroncuts.barberia.dto.DashboardResumen;
 import com.deroncuts.barberia.dto.EventoCita;
 import com.deroncuts.barberia.dto.MetodoPagoResumen;
 import com.deroncuts.barberia.dto.PagosResumen;
+import com.deroncuts.barberia.dto.request.AplicarTardanzaRequest;
 import com.deroncuts.barberia.dto.request.CambiarEstadoRequest;
+import com.deroncuts.barberia.dto.request.ConfirmarAdelantoRequest;
+import com.deroncuts.barberia.dto.request.CrearCitaClienteRequest;
 import com.deroncuts.barberia.dto.request.CrearCitaRequest;
 import com.deroncuts.barberia.dto.request.RegistrarPagoRequest;
 import com.deroncuts.barberia.dto.request.ReprogramarRequest;
@@ -13,17 +16,23 @@ import com.deroncuts.barberia.exception.BusinessException;
 import com.deroncuts.barberia.exception.ConflictException;
 import com.deroncuts.barberia.exception.NotFoundException;
 import com.deroncuts.barberia.model.Cita;
+import com.deroncuts.barberia.model.Cliente;
 import com.deroncuts.barberia.model.EstadoCita;
 import com.deroncuts.barberia.model.MetodoPago;
 import com.deroncuts.barberia.model.Servicio;
 import com.deroncuts.barberia.repository.CitaRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,17 +49,23 @@ public class CitaService {
     private final DisponibilidadService disponibilidadService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RecordatorioService recordatorioService;
+    private final int adelantoPorcentaje;
+    private final BigDecimal penalidadTardanza;
 
     public CitaService(CitaRepository citaRepository,
                        ServicioService servicioService,
                        DisponibilidadService disponibilidadService,
                        SimpMessagingTemplate messagingTemplate,
-                       RecordatorioService recordatorioService) {
+                       RecordatorioService recordatorioService,
+                       @Value("${app.reservas.adelanto-porcentaje:50}") int adelantoPorcentaje,
+                       @Value("${app.reservas.penalidad-tardanza:10}") BigDecimal penalidadTardanza) {
         this.citaRepository = citaRepository;
         this.servicioService = servicioService;
         this.disponibilidadService = disponibilidadService;
         this.messagingTemplate = messagingTemplate;
         this.recordatorioService = recordatorioService;
+        this.adelantoPorcentaje = adelantoPorcentaje;
+        this.penalidadTardanza = penalidadTardanza;
     }
 
     @Transactional
@@ -76,6 +91,49 @@ public class CitaService {
         cita.setFechaHoraInicio(inicio);
         cita.setFechaHoraFin(fin);
         cita.setEstado(EstadoCita.PENDIENTE);
+        cita.setPrecioFinal(servicio.getPrecio());
+        cita.setAdelantoMonto(calcularAdelanto(servicio.getPrecio()));
+        cita.setPenalidadTardanza(BigDecimal.ZERO);
+
+        Cita guardada = citaRepository.save(cita);
+        publicarEvento("CREADA", guardada);
+        recordatorioService.notificarNuevaCita(guardada);
+        return CitaDto.from(guardada);
+    }
+
+    @Transactional
+    public CitaDto crearParaCliente(Cliente cliente, CrearCitaClienteRequest request) {
+        Servicio servicio = servicioService.obtenerEntity(request.getServicioId());
+        if (!servicio.isActivo()) {
+            throw new BusinessException("El servicio seleccionado no está disponible");
+        }
+
+        LocalDateTime inicio = request.getFechaHoraInicio();
+        if (inicio == null || inicio.isBefore(LocalDateTime.now())) {
+            throw new BusinessException("La fecha y hora deben estar en el futuro");
+        }
+        LocalDateTime fin = inicio.plusMinutes(servicio.getDuracionMinutos());
+        validarBloqueDisponible(inicio, fin, null);
+
+        boolean cumpleanos = esSemanaDeCumpleanos(cliente.getFechaNacimiento(), inicio.toLocalDate());
+        BigDecimal precioFinal = cumpleanos ? BigDecimal.ZERO : servicio.getPrecio();
+
+        Cita cita = new Cita();
+        cita.setServicio(servicio);
+        cita.setCliente(cliente);
+        cita.setNombreCliente(cliente.getNombre());
+        cita.setTelefonoWhatsapp(cliente.getTelefono());
+        cita.setEmail(cliente.getEmail());
+        cita.setNotas(request.getNotas());
+        cita.setFechaHoraInicio(inicio);
+        cita.setFechaHoraFin(fin);
+        cita.setEstado(EstadoCita.PENDIENTE);
+        cita.setPrecioFinal(precioFinal);
+        cita.setDescuentoCumpleanos(cumpleanos);
+        cita.setAdelantoMonto(cumpleanos ? BigDecimal.ZERO : calcularAdelanto(precioFinal));
+        cita.setAdelantoPagado(false);
+        cita.setAdelantoAplicado(false);
+        cita.setPenalidadTardanza(BigDecimal.ZERO);
 
         Cita guardada = citaRepository.save(cita);
         publicarEvento("CREADA", guardada);
@@ -110,6 +168,14 @@ public class CitaService {
         return citas.stream().map(CitaDto::from).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<CitaDto> listarPorCliente(Long clienteId) {
+        return citaRepository.findByClienteIdOrderByFechaHoraInicioDesc(clienteId)
+                .stream()
+                .map(CitaDto::from)
+                .toList();
+    }
+
     @Transactional
     public CitaDto registrarPago(Long id, RegistrarPagoRequest request) {
         Cita cita = obtenerEntity(id);
@@ -119,7 +185,7 @@ public class CitaService {
         MetodoPago metodo = parseMetodoPago(request.getMetodoPago());
         BigDecimal monto = request.getMonto();
         if (monto == null) {
-            monto = cita.getServicio().getPrecio();
+            monto = saldoPendiente(cita);
         }
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("El monto debe ser mayor a cero");
@@ -130,6 +196,51 @@ public class CitaService {
         cita.setPagada(true);
         Cita guardada = citaRepository.save(cita);
         publicarEvento("PAGO", guardada);
+        return CitaDto.from(guardada);
+    }
+
+    @Transactional
+    public CitaDto confirmarAdelanto(Long id, ConfirmarAdelantoRequest request) {
+        Cita cita = obtenerEntity(id);
+        BigDecimal adelanto = cita.getAdelantoMonto() == null ? BigDecimal.ZERO : cita.getAdelantoMonto();
+        if (adelanto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Esta cita no requiere adelanto");
+        }
+
+        if (Boolean.TRUE.equals(request.getPagado())) {
+            MetodoPago metodo = request.getMetodoPago() == null || request.getMetodoPago().isBlank()
+                    ? MetodoPago.YAPE
+                    : parseMetodoPago(request.getMetodoPago());
+            cita.setAdelantoPagado(true);
+            cita.setAdelantoAplicado(!cita.isTardanzaAplicada());
+            cita.setMetodoAdelanto(metodo);
+            cita.setFechaAdelanto(LocalDateTime.now());
+            if (cita.getEstado() == EstadoCita.PENDIENTE) {
+                cita.setEstado(EstadoCita.CONFIRMADA);
+            }
+        } else {
+            cita.setAdelantoPagado(false);
+            cita.setAdelantoAplicado(false);
+            cita.setMetodoAdelanto(null);
+            cita.setFechaAdelanto(null);
+        }
+
+        Cita guardada = citaRepository.save(cita);
+        publicarEvento("ADELANTO", guardada);
+        return CitaDto.from(guardada);
+    }
+
+    @Transactional
+    public CitaDto aplicarTardanza(Long id, AplicarTardanzaRequest request) {
+        Cita cita = obtenerEntity(id);
+        boolean aplicar = Boolean.TRUE.equals(request.getAplicar());
+        cita.setTardanzaAplicada(aplicar);
+        cita.setPenalidadTardanza(aplicar ? penalidadTardanza : BigDecimal.ZERO);
+        if (cita.isAdelantoPagado()) {
+            cita.setAdelantoAplicado(!aplicar);
+        }
+        Cita guardada = citaRepository.save(cita);
+        publicarEvento("TARDANZA", guardada);
         return CitaDto.from(guardada);
     }
 
@@ -279,6 +390,54 @@ public class CitaService {
             desglose.add(item);
         }
         return desglose;
+    }
+
+    private BigDecimal calcularAdelanto(BigDecimal precio) {
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return precio.multiply(BigDecimal.valueOf(adelantoPorcentaje))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal precioFinal(Cita cita) {
+        return cita.getPrecioFinal() != null ? cita.getPrecioFinal() : cita.getServicio().getPrecio();
+    }
+
+    private BigDecimal saldoPendiente(Cita cita) {
+        BigDecimal penalidad = cita.getPenalidadTardanza() == null
+                ? BigDecimal.ZERO
+                : cita.getPenalidadTardanza();
+        BigDecimal adelanto = cita.getAdelantoMonto() == null
+                ? BigDecimal.ZERO
+                : cita.getAdelantoMonto();
+        BigDecimal credito = cita.isAdelantoPagado() && cita.isAdelantoAplicado()
+                ? adelanto
+                : BigDecimal.ZERO;
+        BigDecimal pagado = cita.getMontoPagado() == null
+                ? BigDecimal.ZERO
+                : cita.getMontoPagado();
+        return precioFinal(cita).add(penalidad).subtract(credito).subtract(pagado).max(BigDecimal.ZERO);
+    }
+
+    private boolean esSemanaDeCumpleanos(LocalDate nacimiento, LocalDate fechaCita) {
+        if (nacimiento == null || fechaCita == null) {
+            return false;
+        }
+        for (int anio = fechaCita.getYear() - 1; anio <= fechaCita.getYear(); anio++) {
+            LocalDate cumpleanos;
+            if (nacimiento.getMonth() == Month.FEBRUARY && nacimiento.getDayOfMonth() == 29) {
+                cumpleanos = LocalDate.of(anio, 2, 28);
+            } else {
+                cumpleanos = nacimiento.withYear(anio);
+            }
+            LocalDate lunes = cumpleanos.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            LocalDate domingo = cumpleanos.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+            if (!fechaCita.isBefore(lunes) && !fechaCita.isAfter(domingo)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void validarBloqueDisponible(LocalDateTime inicio, LocalDateTime fin, Long excluirCitaId) {

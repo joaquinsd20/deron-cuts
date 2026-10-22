@@ -29,6 +29,10 @@ public class Cita {
     @JoinColumn(name = "servicio_id", nullable = false)
     private Servicio servicio;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
+
     @Column(name = "nombre_cliente", nullable = false, length = 120)
     private String nombreCliente;
 
@@ -64,6 +68,34 @@ public class Cita {
     @Column(nullable = false)
     private boolean pagada = false;
 
+    @Column(name = "precio_final", precision = 10, scale = 2)
+    private BigDecimal precioFinal;
+
+    @Column(name = "descuento_cumpleanos", nullable = false)
+    private boolean descuentoCumpleanos = false;
+
+    @Column(name = "adelanto_monto", precision = 10, scale = 2)
+    private BigDecimal adelantoMonto;
+
+    @Column(name = "adelanto_pagado", nullable = false)
+    private boolean adelantoPagado = false;
+
+    @Column(name = "adelanto_aplicado", nullable = false)
+    private boolean adelantoAplicado = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "metodo_adelanto", length = 20)
+    private MetodoPago metodoAdelanto;
+
+    @Column(name = "fecha_adelanto")
+    private LocalDateTime fechaAdelanto;
+
+    @Column(name = "tardanza_aplicada", nullable = false)
+    private boolean tardanzaAplicada = false;
+
+    @Column(name = "penalidad_tardanza", precision = 10, scale = 2)
+    private BigDecimal penalidadTardanza;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -96,6 +128,14 @@ public class Cita {
 
     public void setServicio(Servicio servicio) {
         this.servicio = servicio;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
     }
 
     public String getNombreCliente() {
@@ -184,6 +224,78 @@ public class Cita {
 
     public void setPagada(boolean pagada) {
         this.pagada = pagada;
+    }
+
+    public BigDecimal getPrecioFinal() {
+        return precioFinal;
+    }
+
+    public void setPrecioFinal(BigDecimal precioFinal) {
+        this.precioFinal = precioFinal;
+    }
+
+    public boolean isDescuentoCumpleanos() {
+        return descuentoCumpleanos;
+    }
+
+    public void setDescuentoCumpleanos(boolean descuentoCumpleanos) {
+        this.descuentoCumpleanos = descuentoCumpleanos;
+    }
+
+    public BigDecimal getAdelantoMonto() {
+        return adelantoMonto;
+    }
+
+    public void setAdelantoMonto(BigDecimal adelantoMonto) {
+        this.adelantoMonto = adelantoMonto;
+    }
+
+    public boolean isAdelantoPagado() {
+        return adelantoPagado;
+    }
+
+    public void setAdelantoPagado(boolean adelantoPagado) {
+        this.adelantoPagado = adelantoPagado;
+    }
+
+    public boolean isAdelantoAplicado() {
+        return adelantoAplicado;
+    }
+
+    public void setAdelantoAplicado(boolean adelantoAplicado) {
+        this.adelantoAplicado = adelantoAplicado;
+    }
+
+    public MetodoPago getMetodoAdelanto() {
+        return metodoAdelanto;
+    }
+
+    public void setMetodoAdelanto(MetodoPago metodoAdelanto) {
+        this.metodoAdelanto = metodoAdelanto;
+    }
+
+    public LocalDateTime getFechaAdelanto() {
+        return fechaAdelanto;
+    }
+
+    public void setFechaAdelanto(LocalDateTime fechaAdelanto) {
+        this.fechaAdelanto = fechaAdelanto;
+    }
+
+    public boolean isTardanzaAplicada() {
+        return tardanzaAplicada;
+    }
+
+    public void setTardanzaAplicada(boolean tardanzaAplicada) {
+        this.tardanzaAplicada = tardanzaAplicada;
+    }
+
+    public BigDecimal getPenalidadTardanza() {
+        return penalidadTardanza;
+    }
+
+    public void setPenalidadTardanza(BigDecimal penalidadTardanza) {
+        this.penalidadTardanza = penalidadTardanza;
     }
 
     public LocalDateTime getCreatedAt() {

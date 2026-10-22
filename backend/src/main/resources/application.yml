@@ -30,6 +30,12 @@ app:
   admin:
     # Credencial por defecto para el usuario seed "yumpi" (SOLO demo, cambiar en producción).
     default-password: ${APP_ADMIN_PASSWORD:Yumpi2026!}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+  reservas:
+    adelanto-porcentaje: ${RESERVA_ADELANTO_PORCENTAJE:50}
+    tolerancia-minutos: ${RESERVA_TOLERANCIA_MINUTOS:15}
+    penalidad-tardanza: ${RESERVA_PENALIDAD_TARDANZA:10}
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5174}
   recordatorios:

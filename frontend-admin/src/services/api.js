@@ -51,6 +51,18 @@ export function registrarPagoCita(citaId, payload) {
   return api.post(`/api/admin/citas/${citaId}/pago`, payload).then((r) => r.data)
 }
 
+export function confirmarAdelantoCita(citaId, pagado, metodoPago) {
+  return api
+    .post(`/api/admin/citas/${citaId}/adelanto`, { pagado, metodoPago })
+    .then((r) => r.data)
+}
+
+export function aplicarTardanzaCita(citaId, aplicar) {
+  return api
+    .post(`/api/admin/citas/${citaId}/tardanza`, { aplicar })
+    .then((r) => r.data)
+}
+
 export function getResumenPagos() {
   return api.get('/api/admin/pagos/resumen').then((r) => r.data)
 }

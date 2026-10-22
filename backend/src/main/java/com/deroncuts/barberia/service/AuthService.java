@@ -29,7 +29,7 @@ public class AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
             String username = authentication.getName();
-            String token = jwtService.generarToken(username);
+            String token = jwtService.generarToken(username, "ADMIN");
             String nombreBarbero = configuracionService.obtener().getNombreBarbero();
             String nombreNegocio = configuracionService.obtener().getNombreNegocio();
             return new LoginResponse(token, username, nombreBarbero, nombreNegocio);

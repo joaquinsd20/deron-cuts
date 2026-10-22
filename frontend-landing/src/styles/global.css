@@ -1647,3 +1647,232 @@ ul {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* ---------- Client auth / account ---------- */
+
+.nav__logout {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+.auth {
+  padding-block: 60px 90px;
+  display: flex;
+  justify-content: center;
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 38px;
+}
+
+.auth__title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  margin-top: 6px;
+}
+
+.auth__sub {
+  color: var(--muted);
+  font-size: 0.94rem;
+  margin-top: 10px;
+}
+
+.auth__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-block: 24px;
+}
+
+.auth__tab {
+  background: var(--bg);
+  border: 2px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.auth__tab--active {
+  border-color: var(--neon);
+  color: var(--ink);
+}
+
+.auth__form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth__form .btn {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.auth__form .field textarea {
+  width: 100%;
+}
+
+.auth__divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-block: 22px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.auth__divider::before,
+.auth__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.auth__google {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.auth__google-btn {
+  width: 320px;
+  max-width: 100%;
+}
+
+.auth__foot {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 26px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.auth__foot a {
+  color: var(--neon);
+}
+
+.account {
+  padding-block: 60px 90px;
+}
+
+.account__grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 28px;
+  align-items: start;
+  margin-top: 34px;
+}
+
+.account__card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 28px;
+}
+
+.account__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.account__actions .btn {
+  width: 100%;
+}
+
+.account__citas {
+  display: grid;
+  gap: 14px;
+}
+
+.account__cita {
+  background: var(--bg);
+  border-left: 4px solid var(--neon);
+  padding: 16px 18px;
+}
+
+.account__cita-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.account__cita-meta {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-top: 8px;
+}
+
+.account__badge {
+  font-family: var(--font-head);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.account__badge--confirmada,
+.account__badge--completada {
+  border-color: var(--neon);
+  color: var(--neon);
+}
+
+.account__badge--cancelada {
+  border-color: var(--pink);
+  color: var(--pink);
+}
+
+.policy {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--pink);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.policy b {
+  color: var(--ink);
+}
+
+.policy--ok {
+  border-left-color: var(--neon);
+}
+
+@media (max-width: 1024px) {
+  .account__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .auth__card {
+    padding: 24px;
+  }
+
+  .account__card {
+    padding: 22px;
+  }
+}

@@ -1091,3 +1091,32 @@ a {
     overflow-x: auto;
   }
 }
+.cita--pendiente {
+  border-left-color: #a2a2ab;
+}
+
+.cita--confirmada {
+  border-left-color: var(--neon);
+}
+
+.cita--completada {
+  border-left-color: var(--muted);
+  opacity: 0.75;
+}
+
+.cita--cancelada {
+  border-left-color: var(--danger);
+  opacity: 0.6;
+}
+
+.badge--cumple,
+.badge--adelanto {
+  color: var(--neon);
+  border-color: var(--neon);
+}
+
+.badge--adelanto-pend,
+.badge--tardanza {
+  color: var(--danger);
+  border-color: var(--danger);
+}

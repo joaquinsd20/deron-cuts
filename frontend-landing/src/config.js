@@ -57,8 +57,42 @@ export function formatCurrency(value) {
 }
 
 export function formatFechaLarga(fecha) {
-  const d = new Date(fecha)
+  const valor =
+    typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)
+      ? `${fecha}T00:00:00`
+      : fecha
+  const d = new Date(valor)
   return `${ES_DAYS[d.getDay()]} ${d.getDate()} ${ES_MONTHS[d.getMonth()]} ${d.getFullYear()}`
+}
+
+export function esSemanaDeCumpleanos(fechaNacimiento, fechaCita) {
+  if (!fechaNacimiento || !fechaCita) return false
+  const [anioNac, mesNac, diaNac] = String(fechaNacimiento)
+    .slice(0, 10)
+    .split('-')
+    .map(Number)
+  const [anioCita, mesCita, diaCita] = String(fechaCita)
+    .slice(0, 10)
+    .split('-')
+    .map(Number)
+  if (!anioNac || !mesNac || !diaNac || !anioCita || !mesCita || !diaCita) return false
+
+  const cita = new Date(anioCita, mesCita - 1, diaCita)
+  const lunesDe = (fecha) => {
+    const copia = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate())
+    copia.setDate(copia.getDate() - ((copia.getDay() + 6) % 7))
+    return copia
+  }
+
+  return [anioCita - 1, anioCita].some((anio) => {
+    let cumple = new Date(anio, mesNac - 1, diaNac)
+    if (cumple.getMonth() !== mesNac - 1) {
+      cumple = new Date(anio, 1, 28)
+    }
+    const lunes = lunesDe(cumple)
+    const domingo = addDays(lunes, 6)
+    return cita >= lunes && cita <= domingo
+  })
 }
 
 export function toInputDate(date) {

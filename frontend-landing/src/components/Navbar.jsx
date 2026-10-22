@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { cliente, cerrarSesion } = useAuth()
   const onHome = location.pathname === '/'
 
   const anchor = (id) => {
@@ -13,6 +16,12 @@ export default function Navbar() {
     } else {
       window.location.href = `/#${id}`
     }
+  }
+
+  const salir = () => {
+    setOpen(false)
+    cerrarSesion()
+    navigate('/')
   }
 
   return (
@@ -55,6 +64,26 @@ export default function Navbar() {
               Ubicación
             </a>
           </div>
+          {cliente ? (
+            <>
+              <div className="nav__item">
+                <Link to="/cuenta" className="nav__link" onClick={() => setOpen(false)}>
+                  Mi cuenta
+                </Link>
+              </div>
+              <div className="nav__item">
+                <button type="button" className="nav__link nav__logout" onClick={salir}>
+                  Salir
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="nav__item">
+              <Link to="/login" className="nav__link" onClick={() => setOpen(false)}>
+                Ingresar
+              </Link>
+            </div>
+          )}
           <div className="nav__item nav__cta-wrap">
             <Link to="/reservar" className="btn btn--primary nav__cta" onClick={() => setOpen(false)}>
               Reservar ahora

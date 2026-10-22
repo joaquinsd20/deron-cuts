@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 import {
   getConfiguracion,
   getServicios,
@@ -10,6 +11,8 @@ import {
 } from '../services/api.js'
 import {
   formatCurrency,
+  formatFechaLarga,
+  esSemanaDeCumpleanos,
   ES_DAYS,
   ES_MONTHS,
   dayKey,
@@ -17,11 +20,10 @@ import {
   buildWhatsappLink
 } from '../config.js'
 
-const PHONE_RE = /^\+?[0-9\s()\-]{6,30}$/
-
 export default function Booking() {
   const [searchParams] = useSearchParams()
   const preServicio = searchParams.get('servicio')
+  const { cliente: cuenta } = useAuth()
 
   const [config, setConfig] = useState(null)
   const [servicios, setServicios] = useState([])
@@ -34,7 +36,7 @@ export default function Booking() {
   const [horarios, setHorarios] = useState([])
   const [cargandoHorarios, setCargandoHorarios] = useState(false)
   const [hora, setHora] = useState(null)
-  const [cliente, setCliente] = useState({ nombre: '', whatsapp: '', email: '', notas: '' })
+  const [notas, setNotas] = useState('')
   const [errores, setErrores] = useState({})
   const [enviando, setEnviando] = useState(false)
   const [errorSubmit, setErrorSubmit] = useState(null)
@@ -81,13 +83,12 @@ export default function Booking() {
 
   const servicio = servicios.find((s) => s.id === servicioId)
   const fechaObj = fecha ? new Date(`${fecha}T00:00:00`) : null
-
-  const decidirDatoHora = (h, campo, valor) => {
-    setCliente((c) => ({ ...c, [campo]: valor }))
-    const nuevosErrores = { ...errores }
-    delete nuevosErrores[campo]
-    setErrores(nuevosErrores)
-  }
+  const cumpleBeneficio = fecha
+    ? esSemanaDeCumpleanos(cuenta?.fechaNacimiento, fecha)
+    : false
+  const precioFinal = cumpleBeneficio ? 0 : Number(servicio?.precio || 0)
+  const adelanto = cumpleBeneficio ? 0 : Number((precioFinal * 0.5).toFixed(2))
+  const saldo = Math.max(0, Number((precioFinal - adelanto).toFixed(2)))
 
   const validarPaso = () => {
     const nuevosErrores = {}
@@ -101,18 +102,8 @@ export default function Booking() {
       if (!hora) nuevosErrores.hora = 'Elige un horario disponible.'
     }
 
-    if (step === 3) {
-      if (!cliente.nombre.trim() || cliente.nombre.trim().length < 3) {
-        nuevosErrores.nombre = 'Escribe tu nombre completo.'
-      }
-      if (!cliente.whatsapp.trim()) {
-        nuevosErrores.whatsapp = 'Escribe tu WhatsApp o teléfono.'
-      } else if (!PHONE_RE.test(cliente.whatsapp.trim())) {
-        nuevosErrores.whatsapp = 'El número no parece válido.'
-      }
-      if (cliente.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cliente.email)) {
-        nuevosErrores.email = 'Ese correo no es válido.'
-      }
+    if (step === 3 && notas.length > 2000) {
+      nuevosErrores.notas = 'Las notas no pueden superar 2000 caracteres.'
     }
 
     setErrores(nuevosErrores)
@@ -123,6 +114,8 @@ export default function Booking() {
     if (!validarPaso()) return
     if (step < 3) {
       setStep(step + 1)
+    } else if (step === 3) {
+      setStep(4)
     } else {
       enviar()
     }
@@ -137,10 +130,7 @@ export default function Booking() {
     setErrorSubmit(null)
     crearCita({
       servicioId,
-      nombreCliente: cliente.nombre.trim(),
-      telefonoWhatsapp: cliente.whatsapp.trim(),
-      email: cliente.email.trim() || null,
-      notas: cliente.notas.trim() || null,
+      notas: notas.trim() || null,
       fechaHoraInicio: `${fecha}T${hora}:00`
     })
       .then((cita) => setCreada(cita))
@@ -180,6 +170,11 @@ export default function Booking() {
   }
 
   if (creada) {
+    const mensaje = buildWhatsappLink(
+      config.telefono,
+      `Hola ${config.nombreBarbero}, acabo de reservar "${creada.nombreServicio}" el ${formatFechaLarga(creada.fechaHoraInicio)} a las ${horaHora(creada.fechaHoraInicio)}. Mi adelanto es ${formatCurrency(creada.adelantoMonto)}.`
+    )
+
     return (
       <>
         <Navbar />
@@ -190,8 +185,7 @@ export default function Booking() {
                 <div className="success__badge">OK</div>
                 <h1 className="success__title">Cita agendada</h1>
                 <p className="success__copy">
-                  Gracias, <b>{creada.nombreCliente}</b>. Te esperamos en DERON CUTS. Si necesitas
-                  cambiar algo, escríbenos por WhatsApp.
+                  Gracias, <b>{creada.nombreCliente}</b>. Te esperamos en DERON CUTS.
                 </p>
               </div>
 
@@ -204,18 +198,39 @@ export default function Booking() {
                     </div>
                     <div className="summary__row">
                       <span className="k">Precio</span>
-                      <span className="v">{formatCurrency(creada.precioServicio)}</span>
+                      <span className="v">
+                        {creada.descuentoCumpleanos
+                          ? 'Gratis por cumpleaños'
+                          : formatCurrency(creada.precioFinal)}
+                      </span>
                     </div>
                     <div className="summary__row">
                       <span className="k">Fecha y hora</span>
                       <span className="v">
-                        {formatFecha(creada.fechaHoraInicio)} · {horaHora(creada.fechaHoraInicio)}
+                        {formatFechaLarga(creada.fechaHoraInicio)} · {horaHora(creada.fechaHoraInicio)}
                       </span>
                     </div>
                     <div className="summary__row">
                       <span className="k">Duración</span>
                       <span className="v">{creada.duracionMinutos} minutos</span>
                     </div>
+                    {creada.adelantoMonto > 0 && (
+                      <div className="summary__row summary__row--accent">
+                        <span className="k">Adelanto 50%</span>
+                        <span className="v">
+                          {formatCurrency(creada.adelantoMonto)} ·{' '}
+                          {creada.adelantoPagado ? 'Recibido' : 'Pendiente'}
+                        </span>
+                      </div>
+                    )}
+                    {Number(creada.precioFinal) - Number(creada.adelantoMonto) > 0 && (
+                      <div className="summary__row summary__row--accent">
+                        <span className="k">Resto al llegar</span>
+                        <span className="v">
+                          {formatCurrency(Number(creada.precioFinal) - Number(creada.adelantoMonto))}
+                        </span>
+                      </div>
+                    )}
                     <div className="summary__row summary__row--accent">
                       <span className="k">Barbero</span>
                       <span className="v">{config.nombreBarbero}</span>
@@ -226,23 +241,38 @@ export default function Booking() {
                     </div>
                   </div>
 
+                  {creada.descuentoCumpleanos ? (
+                    <div className="policy policy--ok">
+                      Tu cita cae en la semana de tu cumpleaños: el corte es gratis y no pagas
+                      adelanto. ¡Felicidades!
+                    </div>
+                  ) : (
+                    <div className="policy">
+                      <b>Para confirmar tu reserva</b>, envía el 50% del adelanto por Yape o Plin
+                      al WhatsApp de {config.nombreBarbero}. El adelanto quedará como pendiente
+                      hasta que se reciba.
+                    </div>
+                  )}
+
+                  <div className="policy">
+                    <b>Política de llegada:</b> tolerancia de 15 minutos. Si llegas después,
+                    se pierde el adelanto y se suman S/ 10 al saldo.
+                  </div>
+
                   <div className="hero__actions" style={{ marginTop: 24 }}>
-                    {buildWhatsappLink(
-                      config.telefono,
-                      `Hola ${config.nombreBarbero}, acabo de reservar "${creada.nombreServicio}" el ${formatFecha(creada.fechaHoraInicio)} a las ${horaHora(creada.fechaHoraInicio)}`
-                    ) && (
+                    {creada.adelantoMonto > 0 && mensaje && (
                       <a
                         className="btn btn--primary"
-                        href={buildWhatsappLink(
-                          config.telefono,
-                          `Hola ${config.nombreBarbero}, acabo de reservar "${creada.nombreServicio}" el ${formatFecha(creada.fechaHoraInicio)} a las ${horaHora(creada.fechaHoraInicio)}`
-                        )}
+                        href={mensaje}
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Confirmar por WhatsApp
+                        Coordinar adelanto por WhatsApp
                       </a>
                     )}
+                    <Link to="/cuenta" className="btn btn--outline">
+                      Ver mis citas
+                    </Link>
                     <Link to="/" className="btn btn--outline">
                       Volver al inicio
                     </Link>
@@ -266,8 +296,7 @@ export default function Booking() {
             <div className="booking__head">
               <h1 className="booking__title">Reserva tu corte</h1>
               <p className="booking__sub">
-                Cuatro pasos, un minuto. Tu cita queda agendada con {config.nombreBarbero} en{' '}
-                {config.nombreNegocio}.
+                Hola, {cuenta?.nombre}. Elige tu servicio y horario; el adelanto es el 50%.
               </p>
             </div>
 
@@ -367,58 +396,46 @@ export default function Booking() {
                   <>
                     <span className="wizard__label">Paso 3 de 4</span>
                     <h2 className="wizard__title">Tus datos</h2>
-                    <div className="wizard__form" style={{ display: 'grid', gap: 18, marginTop: 24 }}>
-                      <div className={`field${errores.nombre ? ' field--error' : ''}`}>
-                        <label htmlFor="nombre">
-                          Nombre completo <span className="req">*</span>
-                        </label>
-                        <input
-                          id="nombre"
-                          type="text"
-                          placeholder="Ej: Carlos Pérez"
-                          value={cliente.nombre}
-                          onChange={(e) => decidirDatoHora(e, 'nombre', e.target.value)}
-                        />
-                        {errores.nombre && <span className="field__error">{errores.nombre}</span>}
+                    <p className="wizard__sub">
+                      Usaremos los datos de tu cuenta para la reserva.
+                    </p>
+                    <div className="summary">
+                      <div className="summary__row">
+                        <span className="k">Nombre</span>
+                        <span className="v">{cuenta?.nombre}</span>
                       </div>
-
-                      <div className={`field${errores.whatsapp ? ' field--error' : ''}`}>
-                        <label htmlFor="whatsapp">
-                          WhatsApp / Teléfono <span className="req">*</span>
-                        </label>
-                        <input
-                          id="whatsapp"
-                          type="tel"
-                          placeholder="Ej: +51 999 888 777"
-                          value={cliente.whatsapp}
-                          onChange={(e) => decidirDatoHora(e, 'whatsapp', e.target.value)}
-                        />
-                        {errores.whatsapp && <span className="field__error">{errores.whatsapp}</span>}
+                      <div className="summary__row">
+                        <span className="k">Correo</span>
+                        <span className="v">{cuenta?.email}</span>
                       </div>
-
-                      <div className={`field${errores.email ? ' field--error' : ''}`}>
-                        <label htmlFor="email">Correo (opcional)</label>
-                        <input
-                          id="email"
-                          type="email"
-                          placeholder="tucorreo@ejemplo.com"
-                          value={cliente.email}
-                          onChange={(e) => decidirDatoHora(e, 'email', e.target.value)}
-                        />
-                        {errores.email && <span className="field__error">{errores.email}</span>}
+                      <div className="summary__row">
+                        <span className="k">WhatsApp</span>
+                        <span className="v">{cuenta?.telefono}</span>
                       </div>
-
-                      <div className="field">
-                        <label htmlFor="notas">Notas (opcional)</label>
-                        <textarea
-                          id="notas"
-                          rows="3"
-                          placeholder="Cuéntale a Yumpi qué estilo quieres…"
-                          value={cliente.notas}
-                          onChange={(e) => decidirDatoHora(e, 'notas', e.target.value)}
-                        />
+                      <div className="summary__row summary__row--accent">
+                        <span className="k">Cumpleaños</span>
+                        <span className="v">
+                          {cuenta?.fechaNacimiento
+                            ? formatFechaLarga(cuenta.fechaNacimiento)
+                            : '—'}
+                        </span>
                       </div>
                     </div>
+                    <div className={`field${errores.notas ? ' field--error' : ''}`}>
+                      <label htmlFor="notas">Notas (opcional)</label>
+                      <textarea
+                        id="notas"
+                        rows="3"
+                        placeholder="Cuéntale a Yumpi qué estilo quieres…"
+                        value={notas}
+                        onChange={(e) => setNotas(e.target.value)}
+                      />
+                      {errores.notas && <span className="field__error">{errores.notas}</span>}
+                    </div>
+                    <p className="hint">
+                      ¿Tus datos están mal? Puedes revisarlos en{' '}
+                      <Link to="/cuenta">Mi cuenta</Link>.
+                    </p>
                   </>
                 )}
 
@@ -433,7 +450,9 @@ export default function Booking() {
                       </div>
                       <div className="summary__row">
                         <span className="k">Precio</span>
-                        <span className="v">{formatCurrency(servicio?.precio)}</span>
+                        <span className="v">
+                          {cumpleBeneficio ? 'Gratis por cumpleaños' : formatCurrency(precioFinal)}
+                        </span>
                       </div>
                       <div className="summary__row">
                         <span className="k">Fecha</span>
@@ -448,12 +467,24 @@ export default function Booking() {
                         <span className="v">{servicio?.duracionMinutos} minutos</span>
                       </div>
                       <div className="summary__row summary__row--accent">
+                        <span className="k">Adelanto 50%</span>
+                        <span className="v">
+                          {cumpleBeneficio ? 'No requiere' : formatCurrency(adelanto)}
+                        </span>
+                      </div>
+                      <div className="summary__row summary__row--accent">
+                        <span className="k">Resto al llegar</span>
+                        <span className="v">
+                          {cumpleBeneficio ? 'S/ 0.00' : formatCurrency(saldo)}
+                        </span>
+                      </div>
+                      <div className="summary__row summary__row--accent">
                         <span className="k">Cliente</span>
-                        <span className="v">{cliente.nombre}</span>
+                        <span className="v">{cuenta?.nombre}</span>
                       </div>
                       <div className="summary__row summary__row--accent">
                         <span className="k">Contacto</span>
-                        <span className="v">{cliente.whatsapp}</span>
+                        <span className="v">{cuenta?.telefono}</span>
                       </div>
                       <div className="summary__row summary__row--accent">
                         <span className="k">Barbero</span>
@@ -463,6 +494,10 @@ export default function Booking() {
                         <span className="k">Ubicación</span>
                         <span className="v">{config.direccion}</span>
                       </div>
+                    </div>
+                    <div className="policy">
+                      <b>Reserva con adelanto:</b> el 50% se coordina por Yape o Plin. Tolerancia
+                      de 15 minutos; si llegas tarde pierdes el adelanto y se suman S/ 10.
                     </div>
                     {errorSubmit && <div className="alert">{errorSubmit}</div>}
                   </>
@@ -493,7 +528,29 @@ export default function Booking() {
                 </div>
                 <div className="aside__row">
                   <span>Precio</span>
-                  <span className="val">{servicio ? formatCurrency(servicio.precio) : '—'}</span>
+                  <span className="val">
+                    {cumpleBeneficio
+                      ? 'Gratis'
+                      : servicio
+                        ? formatCurrency(precioFinal)
+                        : '—'}
+                  </span>
+                </div>
+                <div className="aside__row">
+                  <span>Cumpleaños</span>
+                  <span className="val">{cumpleBeneficio ? 'Sí, gratis' : 'No'}</span>
+                </div>
+                <div className="aside__row">
+                  <span>Adelanto 50%</span>
+                  <span className="val">
+                    {cumpleBeneficio ? 'S/ 0.00' : servicio ? formatCurrency(adelanto) : '—'}
+                  </span>
+                </div>
+                <div className="aside__row">
+                  <span>Resto al llegar</span>
+                  <span className="val">
+                    {cumpleBeneficio ? 'S/ 0.00' : servicio ? formatCurrency(saldo) : '—'}
+                  </span>
                 </div>
                 <div className="aside__row">
                   <span>Duración</span>
