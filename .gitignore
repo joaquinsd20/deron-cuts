@@ -12,6 +12,9 @@ target/
 .idea/
 *.iml
 
+# Vercel
+.vercel
+
 # SO
 Thumbs.db
 .DS_Store
@@ -19,4 +22,5 @@ Thumbs.db
 # Env / secretos locales
 .env
 .env.*
+!.env.example
 *.local

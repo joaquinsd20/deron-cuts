@@ -1,6 +1,8 @@
 import { Client } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+
 let client = null
 const topicListeners = new Map()
 
@@ -26,7 +28,7 @@ function ensureConnected() {
   if (client) return
 
   client = new Client({
-    webSocketFactory: () => new SockJS('/ws'),
+    webSocketFactory: () => new SockJS(`${API_URL}/ws`),
     reconnectDelay: 5000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
