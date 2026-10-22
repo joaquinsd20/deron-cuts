@@ -54,11 +54,6 @@ export default function Home() {
             preload="metadata"
           />
           <div className="barber-film__scrim" aria-hidden="true" />
-          <div className="barber-film__cta">
-            <Link to="/reservar" className="btn btn--primary">
-              Reserva YA!
-            </Link>
-          </div>
         </section>
         <Services />
         <AboutYumpi config={config} />

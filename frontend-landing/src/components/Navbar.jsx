@@ -52,6 +52,12 @@ export default function Navbar() {
               <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
                 Mid Taper Fade
               </a>
+              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
+                Burst Fade
+              </a>
+              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
+                Modern Mullet
+              </a>
             </div>
           </div>
           <div className="nav__item">

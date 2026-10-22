@@ -1,38 +1,220 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const SHOTS = [
-  { img: '/cortes/IMG_3922.jpg', label: 'Low Fade', precio: 'S/ 35' },
-  { img: '/cortes/IMG_4208.jpg', label: 'Drop Fade', precio: 'S/ 50' },
-  { img: '/cortes/IMG_5413.jpg', label: 'Taper Fade', precio: 'S/ 25' },
-  { img: '/cortes/corte-4.jpg', label: 'Mid Taper Fade', precio: 'S/ 30' }
+  {
+    img: '/cortes/IMG_3922.jpg',
+    label: 'Low Fade',
+    precio: 'S/ 35',
+    desc: 'Degradado bajo, limpio y con transición suave. Un clásico que siempre queda bien.'
+  },
+  {
+    img: '/cortes/IMG_4208.jpg',
+    label: 'Drop Fade',
+    precio: 'S/ 50',
+    desc: 'El fade que baja por detrás para un acabado moderno, con más contraste y movimiento.'
+  },
+  {
+    img: '/cortes/IMG_5413.jpg',
+    label: 'Taper Fade',
+    precio: 'S/ 25',
+    desc: 'Laterales ajustados y nuca degradada. Práctico, limpio y fácil de mantener.'
+  },
+  {
+    img: '/cortes/corte-4.jpg',
+    label: 'Mid Taper Fade',
+    precio: 'S/ 30',
+    desc: 'Taper medio, equilibrado para cualquier rostro. Ni tan bajo, ni tan marcado.'
+  },
+  {
+    img: '/cortes/burst%20fade.jpg',
+    label: 'Burst Fade',
+    precio: 'S/ 40',
+    desc: 'Degradado en ráfaga alrededor de la oreja, con curvas marcadas y un look moderno.'
+  },
+  {
+    img: '/cortes/modern%20mullet.jpg',
+    label: 'Modern Mullet',
+    precio: 'S/ 45',
+    desc: 'Laterales cortos, movimiento atrás y actitud. Una versión actual del mullet clásico.'
+  }
 ]
 
+const PERSONALIZADO = {
+  label: 'Personalizado',
+  precio: 'S/ 30',
+  desc: 'Líneas, diseños y detalles a tu medida. Cuéntanos tu idea y la trabajamos contigo.',
+  custom: true
+}
+
 export default function Services() {
+  const trackRef = useRef(null)
+  const drag = useRef({ activo: false, inicioX: 0, ultimoX: 0, scrollInicial: 0, movido: false })
+  const [detalle, setDetalle] = useState(null)
+  const [puedeAtras, setPuedeAtras] = useState(false)
+  const [puedeAdelante, setPuedeAdelante] = useState(true)
+
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+
+    const actualizar = () => {
+      setPuedeAtras(track.scrollLeft > 4)
+      setPuedeAdelante(track.scrollLeft + track.clientWidth < track.scrollWidth - 4)
+    }
+
+    actualizar()
+    track.addEventListener('scroll', actualizar, { passive: true })
+    window.addEventListener('resize', actualizar)
+
+    return () => {
+      track.removeEventListener('scroll', actualizar)
+      window.removeEventListener('resize', actualizar)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!detalle) return
+
+    const cerrarConEscape = (e) => {
+      if (e.key === 'Escape') setDetalle(null)
+    }
+
+    const overflowAnterior = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', cerrarConEscape)
+
+    return () => {
+      document.body.style.overflow = overflowAnterior
+      document.removeEventListener('keydown', cerrarConEscape)
+    }
+  }, [detalle])
+
+  const mover = (direccion) => {
+    const track = trackRef.current
+    if (!track) return
+    const card = track.querySelector('.shot')
+    const paso = card ? card.getBoundingClientRect().width + 16 : 300
+    track.scrollBy({ left: direccion * paso, behavior: 'smooth' })
+  }
+
+  const iniciarArrastre = (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    drag.current = {
+      activo: true,
+      inicioX: e.clientX,
+      ultimoX: e.clientX,
+      scrollInicial: trackRef.current.scrollLeft,
+      movido: false
+    }
+  }
+
+  const moverArrastre = (e) => {
+    const estado = drag.current
+    if (!estado.activo) return
+
+    estado.ultimoX = e.clientX
+    const delta = e.clientX - estado.inicioX
+    if (Math.abs(delta) > 8) estado.movido = true
+    trackRef.current.scrollLeft = estado.scrollInicial - delta
+  }
+
+  const terminarArrastre = () => {
+    const estado = drag.current
+    if (!estado.activo) return
+    estado.activo = false
+    if (!estado.movido) return
+
+    const delta = estado.ultimoX - estado.inicioX
+    if (Math.abs(delta) < 40) return
+
+    const track = trackRef.current
+    const cards = track.querySelectorAll('.shot')
+    const card = cards[0]
+    if (!card) return
+
+    const paso = card.getBoundingClientRect().width + 16
+    const indiceActual = Math.round(estado.scrollInicial / paso)
+    const siguiente = Math.min(cards.length - 1, Math.max(0, indiceActual + (delta < 0 ? 1 : -1)))
+    track.scrollTo({ left: siguiente * paso, behavior: 'smooth' })
+  }
+
+  const abrirDetalle = (corte) => {
+    if (drag.current.movido) {
+      drag.current.movido = false
+      return
+    }
+    setDetalle(corte)
+  }
+
   return (
     <section className="section services" id="servicios">
       <div className="container">
         <span className="section-tag">El menú</span>
 
-        <div className="services__shots">
-          {SHOTS.map((s) => (
-            <figure className="shot" key={s.label}>
-              <img src={s.img} alt={s.label} loading="lazy" />
-              <figcaption className="shot__meta">
-                <span className="shot__label">{s.label}</span>
-                <span className="shot__price">{s.precio}</span>
-              </figcaption>
-            </figure>
-          ))}
+        <div className="services__carousel">
+          <div
+            className="services__track"
+            ref={trackRef}
+            onPointerDown={iniciarArrastre}
+            onPointerMove={moverArrastre}
+            onPointerUp={terminarArrastre}
+            onPointerLeave={terminarArrastre}
+            onPointerCancel={terminarArrastre}
+            onDragStart={(e) => e.preventDefault()}
+          >
+            {SHOTS.map((s) => (
+              <button
+                type="button"
+                className="shot"
+                key={s.label}
+                onClick={() => abrirDetalle(s)}
+                aria-label={`Ver detalle de ${s.label}`}
+              >
+                <img src={s.img} alt={s.label} loading="lazy" draggable={false} />
+                <span className="shot__meta">
+                  <span className="shot__label">{s.label}</span>
+                  <span className="shot__price">{s.precio}</span>
+                </span>
+              </button>
+            ))}
 
-          <figure className="shot shot--custom">
-            <div className="shot__custom-art" aria-hidden="true">
-              <span>+</span>
-            </div>
-            <figcaption className="shot__meta">
-              <span className="shot__label">Personalizado</span>
-              <span className="shot__price">S/ 30</span>
-            </figcaption>
-          </figure>
+            <button
+              type="button"
+              className="shot shot--custom"
+              onClick={() => abrirDetalle(PERSONALIZADO)}
+              aria-label="Ver detalle de corte personalizado"
+            >
+              <span className="shot__custom-art" aria-hidden="true">
+                <span>+</span>
+              </span>
+              <span className="shot__meta">
+                <span className="shot__label">{PERSONALIZADO.label}</span>
+                <span className="shot__price">{PERSONALIZADO.precio}</span>
+              </span>
+            </button>
+          </div>
+
+          <div className="services__nav">
+            <button
+              type="button"
+              className="services__arrow"
+              onClick={() => mover(-1)}
+              disabled={!puedeAtras}
+              aria-label="Ver cortes anteriores"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="services__arrow"
+              onClick={() => mover(1)}
+              disabled={!puedeAdelante}
+              aria-label="Ver más cortes"
+            >
+              ›
+            </button>
+          </div>
         </div>
 
         <div className="services__no-grid">
@@ -44,6 +226,46 @@ export default function Services() {
           </p>
         </div>
       </div>
+
+      {detalle && (
+        <div
+          className="shot-modal"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setDetalle(null)
+          }}
+        >
+          <div className="shot-modal__panel" role="dialog" aria-modal="true" aria-labelledby="shot-modal-title">
+            <button
+              type="button"
+              className="shot-modal__close"
+              onClick={() => setDetalle(null)}
+              aria-label="Cerrar detalle"
+            >
+              ×
+            </button>
+
+            {detalle.custom ? (
+              <div className="shot-modal__art" aria-hidden="true">
+                <span>+</span>
+              </div>
+            ) : (
+              <img src={detalle.img} alt={detalle.label} />
+            )}
+
+            <div className="shot-modal__body">
+              <span className="shot-modal__price">{detalle.precio}</span>
+              <h3 className="shot-modal__title" id="shot-modal-title">
+                {detalle.label}
+              </h3>
+              <p className="shot-modal__desc">{detalle.desc}</p>
+              <Link to="/reservar" className="btn btn--primary" onClick={() => setDetalle(null)}>
+                Reservar este corte
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
