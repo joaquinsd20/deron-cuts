@@ -45,17 +45,46 @@ export default function Home() {
       <main>
         <section className="barber-film" aria-label="Video de barbería">
           <div className="barber-film__ambient" aria-hidden="true" />
-          <div className="barber-film__stage">
-            <video
-              className="barber-film__video"
-              src="/videos/corte.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-            />
-            <div className="barber-film__scrim" aria-hidden="true" />
+          <div className="container barber-film__inner">
+            <div className="barber-film__copy">
+              <span className="barber-film__tag">Barber Studio · Reserva online</span>
+              <h1 className="barber-film__title">
+                Tu estilo,
+                <br />
+                <span>al siguiente nivel</span>
+              </h1>
+              <p className="barber-film__text">
+                Cortes a medida, atención personalizada y una reserva en línea en menos de un
+                minuto.
+              </p>
+              <div className="barber-film__actions">
+                <Link to="/reservar" className="btn btn--primary">
+                  Reservar mi corte
+                </Link>
+                <a href="#servicios" className="btn btn--outline">
+                  Ver cortes
+                </a>
+              </div>
+              <ul className="barber-film__points">
+                <li>Reserva en línea</li>
+                <li>Atención personalizada</li>
+                <li>Yape y Plin</li>
+              </ul>
+            </div>
+
+            <div className="barber-film__stage">
+              <video
+                className="barber-film__video"
+                src="/videos/corte.mp4"
+                poster="/videos/corte-poster.jpg"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+              />
+              <div className="barber-film__scrim" aria-hidden="true" />
+            </div>
           </div>
         </section>
         <Services />
