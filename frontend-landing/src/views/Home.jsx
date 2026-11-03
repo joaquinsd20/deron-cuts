@@ -7,7 +7,6 @@ import Schedule from '../components/Schedule.jsx'
 import LocationContact from '../components/LocationContact.jsx'
 import Footer from '../components/Footer.jsx'
 import ScrollReveal from '../components/ScrollReveal.jsx'
-import BeforeAfter from '../components/BeforeAfter.jsx'
 import { getConfiguracion } from '../services/api.js'
 
 export default function Home() {
@@ -124,26 +123,6 @@ export default function Home() {
         </section>
         <Services />
         <AboutYumpi config={config} />
-        <section className="section proceso" id="proceso">
-          <div className="container proceso__grid">
-            <div className="proceso__copy">
-              <span className="section-tag">El cambio</span>
-              <h2 className="section-title">
-                El detalle se nota <span className="acc">en cada corte</span>
-              </h2>
-              <p className="section-sub">
-                Desliza el control para ver el avance: del primer pase al acabado final.
-              </p>
-              <Link to="/reservar" className="btn btn--primary proceso__cta">
-                Quiero mi cambio
-              </Link>
-            </div>
-            <BeforeAfter
-              before="/cortes/proceso-antes.jpg"
-              after="/cortes/proceso-despues.jpg"
-            />
-          </div>
-        </section>
         <Schedule config={config} />
         <LocationContact config={config} />
         <section className="cta-final">
