@@ -44,16 +44,19 @@ export default function Home() {
       <Navbar />
       <main>
         <section className="barber-film" aria-label="Video de barbería">
-          <video
-            className="barber-film__video"
-            src="/videos/corte.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-          />
-          <div className="barber-film__scrim" aria-hidden="true" />
+          <div className="barber-film__ambient" aria-hidden="true" />
+          <div className="barber-film__stage">
+            <video
+              className="barber-film__video"
+              src="/videos/corte.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            />
+            <div className="barber-film__scrim" aria-hidden="true" />
+          </div>
         </section>
         <Services />
         <AboutYumpi config={config} />
