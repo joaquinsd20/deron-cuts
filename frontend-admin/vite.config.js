@@ -11,8 +11,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       port: 5174,
       proxy: {
-        '/api': { target: backend, changeOrigin: true },
-        '/ws': { target: backend, ws: true }
+        '/api': { target: backend, changeOrigin: true, headers: { origin: 'http://localhost:5174' } },
+        '/ws': { target: backend, ws: true, changeOrigin: true, headers: { origin: 'http://localhost:5174' } }
       }
     }
   }
