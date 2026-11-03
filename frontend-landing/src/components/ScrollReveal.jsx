@@ -5,33 +5,34 @@ const SELECTOR = '.section, .cta-final'
 export default function ScrollReveal() {
   useEffect(() => {
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-    if (reduced || !('IntersectionObserver' in window)) return
+    if (reduced) return
 
-    const targets = Array.from(document.querySelectorAll(SELECTOR)).filter(
-      (el) => !el.classList.contains('reveal')
-    )
+    const targets = Array.from(document.querySelectorAll(SELECTOR))
     if (!targets.length) return
 
-    const pending = targets.filter((el) => {
-      const top = el.getBoundingClientRect().top
-      if (top < window.innerHeight * 0.9) return false
-      el.classList.add('reveal')
-      return true
+    const check = () => {
+      const limit = window.innerHeight * 0.9
+      targets.forEach((el) => {
+        if (el.classList.contains('reveal--in')) return
+        if (el.getBoundingClientRect().top < limit) el.classList.add('reveal--in')
+      })
+    }
+
+    targets.forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
+        el.classList.add('reveal--in')
+      } else {
+        el.classList.add('reveal')
+      }
     })
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return
-          entry.target.classList.add('reveal--in')
-          observer.unobserve(entry.target)
-        })
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }
-    )
+    window.addEventListener('scroll', check, { passive: true })
+    window.addEventListener('resize', check)
 
-    pending.forEach((el) => observer.observe(el))
-    return () => observer.disconnect()
+    return () => {
+      window.removeEventListener('scroll', check)
+      window.removeEventListener('resize', check)
+    }
   }, [])
 
   return null
