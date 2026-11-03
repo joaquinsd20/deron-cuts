@@ -37,7 +37,7 @@ app:
     tolerancia-minutos: ${RESERVA_TOLERANCIA_MINUTOS:15}
     penalidad-tardanza: ${RESERVA_PENALIDAD_TARDANZA:10}
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5174}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5174,https://deron-cuts.vercel.app}
   recordatorios:
     # Cada cuántos ms se revisan los recordatorios programados (por defecto 30s).
     poll-ms: ${RECORDATORIOS_POLL_MS:30000}

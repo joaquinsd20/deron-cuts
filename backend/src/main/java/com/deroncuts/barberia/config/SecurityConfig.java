@@ -69,9 +69,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+        List<String> origins = new java.util.ArrayList<>(Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
-                .toList();
+                .filter(s -> !s.isBlank())
+                .toList());
+        // Orígenes adicionales garantizados (no dependen de variables de entorno)
+        for (String o : List.of(
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "https://deron-cuts.vercel.app"
+        )) {
+            if (!origins.contains(o)) origins.add(o);
+        }
         config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
