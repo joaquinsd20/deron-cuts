@@ -401,6 +401,8 @@ ul {
 
 @media (max-width: 720px) {
   .barber-film {
+    /* Fallback para navegadores sin svh (iOS antiguo) */
+    min-height: calc(100vh - 70px);
     min-height: calc(100svh - 70px);
     padding: 0;
   }
@@ -411,6 +413,7 @@ ul {
 
   .barber-film__stage {
     width: 100%;
+    height: calc(100vh - 70px);
     height: calc(100svh - 70px);
     max-width: none;
     aspect-ratio: auto;
