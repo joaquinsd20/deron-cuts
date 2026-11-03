@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Services from '../components/Services.jsx'
@@ -6,11 +6,15 @@ import AboutYumpi from '../components/AboutYumpi.jsx'
 import Schedule from '../components/Schedule.jsx'
 import LocationContact from '../components/LocationContact.jsx'
 import Footer from '../components/Footer.jsx'
+import ScrollReveal from '../components/ScrollReveal.jsx'
+import BeforeAfter from '../components/BeforeAfter.jsx'
 import { getConfiguracion } from '../services/api.js'
 
 export default function Home() {
   const [config, setConfig] = useState(null)
   const [error, setError] = useState(false)
+  const [videoPaused, setVideoPaused] = useState(false)
+  const videoRef = useRef(null)
 
   useEffect(() => {
     getConfiguracion()
@@ -19,6 +23,16 @@ export default function Home() {
       })
       .catch(() => setError(true))
   }, [])
+
+  const toggleVideo = () => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.paused) {
+      video.play().catch(() => {})
+    } else {
+      video.pause()
+    }
+  }
 
   if (error) {
     return (
@@ -42,6 +56,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
+      <ScrollReveal />
       <main>
         <section className="barber-film" aria-label="Video de barbería">
           <div className="barber-film__ambient" aria-hidden="true" />
@@ -74,6 +89,7 @@ export default function Home() {
 
             <div className="barber-film__stage">
               <video
+                ref={videoRef}
                 className="barber-film__video"
                 src="/videos/corte.mp4"
                 poster="/videos/corte-poster.jpg"
@@ -82,13 +98,52 @@ export default function Home() {
                 loop
                 playsInline
                 preload="metadata"
+                onClick={toggleVideo}
+                onPlay={() => setVideoPaused(false)}
+                onPause={() => setVideoPaused(true)}
               />
               <div className="barber-film__scrim" aria-hidden="true" />
+              <button
+                type="button"
+                className="barber-film__play"
+                onClick={toggleVideo}
+                aria-label={videoPaused ? 'Reproducir video' : 'Pausar video'}
+              >
+                {videoPaused ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M7 5h4v14H7zM13 5h4v14h-4z" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </section>
         <Services />
         <AboutYumpi config={config} />
+        <section className="section proceso" id="proceso">
+          <div className="container proceso__grid">
+            <div className="proceso__copy">
+              <span className="section-tag">El cambio</span>
+              <h2 className="section-title">
+                El detalle se nota <span className="acc">en cada corte</span>
+              </h2>
+              <p className="section-sub">
+                Desliza el control para ver el avance: del primer pase al acabado final.
+              </p>
+              <Link to="/reservar" className="btn btn--primary proceso__cta">
+                Quiero mi cambio
+              </Link>
+            </div>
+            <BeforeAfter
+              before="/cortes/proceso-antes.jpg"
+              after="/cortes/proceso-despues.jpg"
+            />
+          </div>
+        </section>
         <Schedule config={config} />
         <LocationContact config={config} />
         <section className="cta-final">

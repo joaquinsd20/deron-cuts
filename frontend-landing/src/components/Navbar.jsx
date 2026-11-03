@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
@@ -8,6 +8,26 @@ export default function Navbar() {
   const navigate = useNavigate()
   const { cliente, cerrarSesion } = useAuth()
   const onHome = location.pathname === '/'
+
+  useEffect(() => {
+    if (!open) return
+
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (event) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+
+    return () => {
+      document.body.style.overflow = overflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  useEffect(() => {
+    setOpen(false)
+  }, [location.pathname])
 
   const anchor = (id) => {
     setOpen(false)
@@ -34,7 +54,8 @@ export default function Navbar() {
           <span className="brand__tag">Barber Studio</span>
         </Link>
 
-        <nav className={`nav__list${open ? ' nav__list--open' : ''}`}>
+        <nav id="menu-principal" className={`nav__list${open ? ' nav__list--open' : ''}`} aria-label="Menú principal">
+          <span className="nav__eyebrow" aria-hidden="true">Menú</span>
           <div className="nav__item nav__drop">
             <a className="nav__link" href="#servicios" onClick={() => anchor('servicios')}>
               Cortes
@@ -98,8 +119,10 @@ export default function Navbar() {
         </nav>
 
         <button
-          className="nav__toggle"
-          aria-label="Abrir menú"
+          className={`nav__toggle${open ? ' nav__toggle--open' : ''}`}
+          aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={open}
+          aria-controls="menu-principal"
           onClick={() => setOpen((v) => !v)}
         >
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
