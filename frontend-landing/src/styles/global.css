@@ -2696,6 +2696,67 @@ ul {
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
+/* ---------- Página legal ---------- */
+
+.legal {
+  padding-block: 80px 60px;
+  max-width: 760px;
+}
+
+.legal__title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-block: 8px 6px;
+}
+
+.legal__updated {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 32px;
+}
+
+.legal__block {
+  margin-bottom: 26px;
+}
+
+.legal__block h2 {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--neon);
+  margin-bottom: 10px;
+}
+
+.legal__block p,
+.legal__block li {
+  color: var(--ink);
+  line-height: 1.65;
+  font-size: 0.95rem;
+}
+
+.legal__block ul {
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+
+.legal__back {
+  margin-top: 36px;
+}
+
+.footer__legal {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer__legal:hover {
+  color: var(--ink);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loading-cookie__emoji {
     animation: none;

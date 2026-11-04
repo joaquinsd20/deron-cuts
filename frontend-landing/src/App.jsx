@@ -4,6 +4,7 @@ import Home from './views/Home.jsx'
 import Booking from './views/Booking.jsx'
 import Login from './views/Login.jsx'
 import Cuenta from './views/Cuenta.jsx'
+import Privacidad from './views/Privacidad.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import FloatingActions from './components/FloatingActions.jsx'
 import LoadingCookie from './components/LoadingCookie.jsx'
@@ -38,6 +39,7 @@ export default function App() {
           }
         />
         <Route path="/login" element={<Login />} />
+        <Route path="/privacidad" element={<Privacidad />} />
         <Route
           path="/cuenta"
           element={

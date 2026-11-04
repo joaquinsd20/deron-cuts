@@ -45,7 +45,10 @@ export default function Footer({ config }) {
         </div>
 
         <p className="footer__copy">
-          © {year} DERON CUTS 
+          © {year} DERON CUTS ·{' '}
+          <Link to="/privacidad" className="footer__legal">
+            Política de privacidad
+          </Link>
         </p>
       </div>
     </footer>
