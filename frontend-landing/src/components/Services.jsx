@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { beginLoading, endLoading } from '../lib/loading.js'
 
 const SHOTS = [
   {
@@ -144,6 +145,10 @@ export default function Services() {
       drag.current.movido = false
       return
     }
+    beginLoading()
+    if (corte.custom) {
+      window.setTimeout(() => endLoading(), 400)
+    }
     setDetalle(corte)
   }
 
@@ -250,7 +255,7 @@ export default function Services() {
                 <span>+</span>
               </div>
             ) : (
-              <img src={detalle.img} alt={detalle.label} />
+              <img src={detalle.img} alt={detalle.label} onLoad={() => endLoading()} onError={() => endLoading()} />
             )}
 
             <div className="shot-modal__body">

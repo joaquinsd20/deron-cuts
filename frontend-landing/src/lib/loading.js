@@ -13,6 +13,7 @@ export function beginLoading() {
 }
 
 export function endLoading() {
+  if (pending === 0) return
   pending = Math.max(0, pending - 1)
   if (pending === 0) {
     const elapsed = Date.now() - shownAt
