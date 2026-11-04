@@ -10,8 +10,10 @@ export default function FloatingActions() {
   const [config, setConfig] = useState(null)
   const [visible, setVisible] = useState(!isHome)
   const [playing, setPlaying] = useState(false)
+  const [mutedAuto, setMutedAuto] = useState(false)
   const audioRef = useRef(null)
   const fadeRef = useRef(0)
+  const unmuteCleanupRef = useRef(null)
 
   useEffect(() => {
     getConfiguracion()
@@ -24,12 +26,87 @@ export default function FloatingActions() {
       setVisible(true)
       return
     }
-
-    const onScroll = () => setVisible(window.scrollY > window.innerHeight * 0.7)
+    const onScroll = () => setVisible((prev) => prev || window.scrollY > window.innerHeight * 0.7)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [isHome])
+
+  // Música automática: intentar autoplay con sonido; si el navegador lo bloquea,
+  // arrancar en silencio y activar el sonido en la primera interacción.
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    let cancelled = false
+
+    const unmute = () => {
+      const a = audioRef.current
+      if (!a) return
+      a.muted = false
+      a.volume = 0
+      fadeTo(0.3, 1200)
+      setPlaying(true)
+      setMutedAuto(false)
+      cleanupListeners()
+    }
+
+    const cleanupListeners = () => {
+      window.removeEventListener('click', unmute, true)
+      window.removeEventListener('scroll', unmute, true)
+      window.removeEventListener('touchstart', unmute, true)
+      window.removeEventListener('keydown', unmute, true)
+      unmuteCleanupRef.current = null
+    }
+
+    const registerUnmute = () => {
+      unmuteCleanupRef.current = cleanupListeners
+      window.addEventListener('click', unmute, true)
+      window.addEventListener('scroll', unmute, true)
+      window.addEventListener('touchstart', unmute, true)
+      window.addEventListener('keydown', unmute, true)
+    }
+
+    const startMuted = async () => {
+      if (cancelled) return
+      audio.muted = true
+      audio.volume = 0
+      try {
+        await audio.play()
+        if (cancelled) return
+        setMutedAuto(true)
+        setVisible(true)
+        registerUnmute()
+      } catch {
+        setMutedAuto(false)
+      }
+    }
+
+    audio.muted = false
+    audio.volume = 0.3
+    const attempt = audio.play()
+    if (attempt && typeof attempt.then === 'function') {
+      attempt
+        .then(() => {
+          if (cancelled) return
+          setPlaying(true)
+          setVisible(true)
+        })
+        .catch(() => startMuted())
+    } else {
+      setPlaying(true)
+      setVisible(true)
+    }
+
+    return () => {
+      cancelled = true
+      cleanupListeners()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (playing || mutedAuto) setVisible(true)
+  }, [playing, mutedAuto])
 
   useEffect(() => () => cancelAnimationFrame(fadeRef.current), [])
 
@@ -51,17 +128,25 @@ export default function FloatingActions() {
     const audio = audioRef.current
     if (!audio) return
 
+    if (unmuteCleanupRef.current) {
+      unmuteCleanupRef.current()
+    }
+
     if (!audio.paused) {
       fadeTo(0, 350)
       window.setTimeout(() => audio.pause(), 380)
+      audio.muted = true
       setPlaying(false)
+      setMutedAuto(false)
       return
     }
 
+    audio.muted = false
     audio.volume = 0
     try {
       await audio.play()
       setPlaying(true)
+      setMutedAuto(false)
       fadeTo(0.3, 1200)
     } catch {
       setPlaying(false)
@@ -70,22 +155,26 @@ export default function FloatingActions() {
 
   const wa = buildWhatsappLink(
     config?.telefono,
-    `Hola ${config?.nombreBarbero || 'Yumpi'}, quiero agendar un corte en ${
-      config?.nombreNegocio || 'DERON CUTS'
-    }`
+    `Hola ${config?.nombreBarbero || 'Yumpi'}, quiero agendar un corte en ${config?.nombreNegocio || 'DERON CUTS'}`
   )
+
+  const buttonLabel = playing
+    ? 'Silenciar música'
+    : mutedAuto
+    ? 'Activar sonido'
+    : 'Activar música'
 
   return (
     <div className={`floaties${visible ? ' floaties--show' : ''}`}>
-      <audio ref={audioRef} src="/audio/ambiente.mp3" loop preload="none" />
+      <audio ref={audioRef} src="/audio/ambiente.mp3" loop preload="auto" />
 
       <button
         type="button"
         className={`fab fab--music${playing ? ' is-playing' : ''}`}
         onClick={toggleMusic}
-        aria-label={playing ? 'Silenciar música' : 'Activar música'}
+        aria-label={buttonLabel}
         aria-pressed={playing}
-        title={playing ? 'Silenciar música' : 'Activar música'}
+        title={buttonLabel}
       >
         <span className="eq" aria-hidden="true">
           <span />
