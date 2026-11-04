@@ -1,26 +1,26 @@
 const listeners = new Set()
 let pending = 0
-let showTimer = null
+let shownAt = 0
 let hideTimer = null
+const MIN_DISPLAY = 700
 
 export function beginLoading() {
   pending += 1
   if (pending === 1) {
-    clearTimeout(hideTimer)
-    // Pequeño retraso para no parpadear en peticiones rápidas
-    showTimer = setTimeout(() => {
-      if (pending > 0) listeners.forEach((cb) => cb(true))
-    }, 280)
+    shownAt = Date.now()
+    listeners.forEach((cb) => cb(true))
   }
 }
 
 export function endLoading() {
   pending = Math.max(0, pending - 1)
   if (pending === 0) {
-    clearTimeout(showTimer)
+    const elapsed = Date.now() - shownAt
+    const wait = Math.max(0, MIN_DISPLAY - elapsed)
+    clearTimeout(hideTimer)
     hideTimer = setTimeout(() => {
       if (pending === 0) listeners.forEach((cb) => cb(false))
-    }, 220)
+    }, wait)
   }
 }
 
