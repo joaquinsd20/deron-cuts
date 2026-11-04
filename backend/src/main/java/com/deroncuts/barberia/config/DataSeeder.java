@@ -71,27 +71,38 @@ public class DataSeeder implements CommandLineRunner {
         if (servicioRepository.count() > 0) {
             return;
         }
-        crear("Fade clásico",
-                "Degradado limpio con máquina, acabado a tijera y detalle final. El clásico de DERON CUTS.",
-                "35.00", 45);
-        crear("Corte + Barba",
-                "Corte con fades a tu estilo más perfilado y barba definida con toalla caliente.",
-                "50.00", 60);
-        crear("Buzz cut",
-                "Corte ultra corto, rápido y preciso. Para quienes van al grano.",
-                "25.00", 30);
-        crear("Diseño personalizado",
-                "Líneas y detalles a tu firma para ponerle personalidad al corte.",
-                "30.00", 30);
-        log.info("Servicios demo sembrados (precios placeholders). Administra desde el panel.");
+        crear("Low Fade",
+                "Degradado bajo, limpio y con transición suave. Un clásico que siempre queda bien.",
+                "35.00", 45, "/cortes/IMG_3922.jpg");
+        crear("Drop Fade",
+                "El fade que baja por detrás para un acabado moderno, con más contraste y movimiento.",
+                "50.00", 60, "/cortes/IMG_4208.jpg");
+        crear("Taper Fade",
+                "Laterales ajustados y nuca degradada. Práctico, limpio y fácil de mantener.",
+                "25.00", 30, "/cortes/IMG_5413.jpg");
+        crear("Mid Taper Fade",
+                "Taper medio, equilibrado para cualquier rostro. Ni tan bajo, ni tan marcado.",
+                "30.00", 45, "/cortes/corte-4.jpg");
+        crear("Burst Fade",
+                "Degradado en ráfaga alrededor de la oreja, con curvas marcadas y un look moderno.",
+                "40.00", 45, "/cortes/burst%20fade.jpg");
+        crear("Modern Mullet",
+                "Laterales cortos, movimiento atrás y actitud. Una versión actual del mullet clásico.",
+                "45.00", 50, "/cortes/modern%20mullet.jpg");
+        log.info("Servicios sembrados desde la landing. Administra desde el panel.");
     }
 
     private void crear(String nombre, String descripcion, String precio, int duracion) {
+        crear(nombre, descripcion, precio, duracion, null);
+    }
+
+    private void crear(String nombre, String descripcion, String precio, int duracion, String imagenUrl) {
         Servicio servicio = new Servicio();
         servicio.setNombre(nombre);
         servicio.setDescripcion(descripcion);
         servicio.setPrecio(new BigDecimal(precio));
         servicio.setDuracionMinutos(duracion);
+        servicio.setImagenUrl(imagenUrl);
         servicio.setActivo(true);
         servicioRepository.save(servicio);
     }

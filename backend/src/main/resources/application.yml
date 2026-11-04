@@ -9,7 +9,7 @@ spring:
     username: ${DERON_DB_USER:deroncuts}
     password: ${DERON_DB_PASSWORD:DeronApp2026}
     hikari:
-      connection-timeout: 30000
+      connection-timeout: 10000
       maximum-pool-size: 5
   jpa:
     hibernate:
@@ -17,7 +17,6 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: false
   jackson:
     serialization:
