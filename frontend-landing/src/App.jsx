@@ -5,10 +5,12 @@ import Login from './views/Login.jsx'
 import Cuenta from './views/Cuenta.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import FloatingActions from './components/FloatingActions.jsx'
+import LoadingCookie from './components/LoadingCookie.jsx'
 
 export default function App() {
   return (
     <>
+      <LoadingCookie />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route

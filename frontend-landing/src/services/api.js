@@ -1,11 +1,13 @@
 import axios from 'axios'
 import { clienteAuth } from './clienteAuth.js'
+import { beginLoading, endLoading } from '../lib/loading.js'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || ''
 })
 
 api.interceptors.request.use((config) => {
+  beginLoading()
   const token = clienteAuth.getToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -14,8 +16,12 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    endLoading()
+    return res
+  },
   (err) => {
+    endLoading()
     if (err?.response?.status === 401 && String(err?.config?.url || '').startsWith('/api/cliente')) {
       clienteAuth.clear()
     }
