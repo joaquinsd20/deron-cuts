@@ -241,11 +241,18 @@ export default function Login() {
               <span>o</span>
             </div>
 
-            <GoogleButton onCredential={conectarGoogle} disabled={enviando} />
+            <GoogleButton
+              onCredential={conectarGoogle}
+              disabled={
+                enviando ||
+                (modo === 'registro' && (!registro.telefono || !registro.fechaNacimiento))
+              }
+            />
 
             {modo === 'registro' && (
               <p className="hint">
-                Si usarás Google, completa primero tu teléfono y fecha de nacimiento.
+                Para crear tu cuenta con Google, completa primero tu teléfono y fecha de
+                nacimiento. El botón se activará cuando los tengas.
               </p>
             )}
 
