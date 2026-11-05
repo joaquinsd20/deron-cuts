@@ -1,22 +1,46 @@
-# Deron Cuts - Plataforma Web para Barbería
+💈 Deron Cuts
 
-Plataforma web interactiva desarrollada para la gestión integral de reservas, exhibición de servicios y administración comercial de un negocio local de barbería. 
+Plataforma web moderna diseñada para un estudio de barbería, enfocada en ofrecer una experiencia de usuario fluida para la reserva de citas y la gestión del negocio.
 
-## Enlace del Proyecto
-[Repositorio en GitHub](https://github.com/joaquinsd20/deron-cuts.git)
+🚀 Enlaces de Producción
 
-## Tecnologías y Stack
-* Frontend: JavaScript, HTML5, CSS3
-* Base de Datos y Backend as a Service: Firebase
+Frontend: https://deron-cuts.vercel.app/
 
-## Características Principales
-* Landing Page Interactiva: Interfaz visual optimizada para la exhibición de servicios de barbería y atracción de clientes locales.
-* Sistema de Reservas en Línea: Módulo interactivo para la gestión y agendamiento de citas de los usuarios.
-* Panel Administrativo: Interfaz de control interno para el seguimiento de ingresos, registro de clientes, historial de cortes y gestión de promociones comerciales.
+💻 Características Principales
 
-## Instalación y Uso Local
-Para clonar y ejecutar el proyecto en un entorno local, siga los siguientes pasos:
+Landing Page Interactiva: Diseño moderno y atractivo adaptado a la identidad visual de la barbería.
 
-1. Clonar el repositorio:
-   ```bash
-   git clone [https://github.com/joaquinsd20/deron-cuts.git](https://github.com/joaquinsd20/deron-cuts.git)
+Sistema de Citas Online: Permite a los clientes gestionar y reservar sus turnos de manera rápida.
+
+Gestión del Negocio: Panel enfocado en la administración de las reservas y servicios del estudio.
+
+🛠️ Stack Tecnológico
+
+Backend: Java (Spring Boot / API robusta).
+
+Base de Datos: TiDB.
+
+Despliegue y Hosting: Vercel (Frontend) y Render (Backend / Servicios).
+
+Asistencia de Desarrollo: Desarrollado con el apoyo de Claude Open Code.
+
+⚙️ Instalación y Configuración Local
+
+Si deseas clonar y probar el proyecto en tu entorno local:
+
+Clona el repositorio:
+
+git clone https://github.com/joaquinsd20/deron-cuts.git
+
+
+Configura el Backend (Java) y la Base de Datos (TiDB):
+
+Configura las credenciales de tu base de datos TiDB en el archivo de propiedades de tu proyecto Java (por ejemplo, application.properties o application.yml).
+
+Ejecuta la aplicación:
+
+Compila y levanta el servidor backend con Java, y vincula el frontend según corresponda.
+
+👨‍💻 Autor
+
+Desarrollado por Daniel Joaquín Sánchez Delgado (joaquinsd20).
