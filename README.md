@@ -18,7 +18,7 @@ Gestión del Negocio: Panel enfocado en la administración de las reservas y ser
 
 Backend: Java (Spring Boot / API robusta).
 
-Base de Datos: TiDB.
+Base de Datos: TiDB y MySql.
 
 Despliegue y Hosting: Vercel (Frontend) y Render (Backend / Servicios).
 
