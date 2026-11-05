@@ -51,11 +51,22 @@ public class DataSeeder implements CommandLineRunner {
         configuracionService.obtenerOMeterDefault();
         sembrarAdmin();
         sembrarServicios();
-        sembrarCitasDemo();
+        // Citas ficticias ("Luis Torres", etc.) solo para desarrollo, nunca en producción.
+        if (Boolean.parseBoolean(System.getenv().getOrDefault("APP_DEMO_DATA", "false"))) {
+            sembrarCitasDemo();
+        }
     }
 
     private void sembrarAdmin() {
-        if (usuarioAdminRepository.existsByUsername("yumpi")) {
+        java.util.Optional<UsuarioAdmin> existente = usuarioAdminRepository.findByUsername("yumpi");
+        if (existente.isPresent()) {
+            // APP_ADMIN_PASSWORD (Render) es la fuente de verdad: si cambia, se actualiza aquí.
+            UsuarioAdmin admin = existente.get();
+            if (!passwordEncoder.matches(adminDefaultPassword, admin.getPasswordHash())) {
+                admin.setPasswordHash(passwordEncoder.encode(adminDefaultPassword));
+                usuarioAdminRepository.save(admin);
+                log.info("Contraseña del admin 'yumpi' sincronizada con APP_ADMIN_PASSWORD.");
+            }
             return;
         }
         UsuarioAdmin admin = new UsuarioAdmin();
@@ -67,10 +78,38 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Usuario admin 'yumpi' creado. Cambia la contraseña por defecto en producción.");
     }
 
+    private static final List<String> CORTES_LANDING = List.of(
+            "Low Fade", "Drop Fade", "Taper Fade", "Mid Taper Fade", "Burst Fade", "Modern Mullet");
+    private static final List<String> SERVICIOS_DEMO_ANTIGUOS = List.of(
+            "Fade clásico", "Corte + Barba", "Buzz cut", "Diseño personalizado");
+
     private void sembrarServicios() {
         if (servicioRepository.count() > 0) {
+            // Migración única: bases creadas con el catálogo demo antiguo (sin fotos).
+            // Si no existe ninguno de los cortes de la landing, se crean y se desactivan
+            // los demo antiguos. Una vez creados, esto no vuelve a ejecutarse, así que lo
+            // que el barbero cambie desde el admin se respeta.
+            List<Servicio> actuales = servicioRepository.findAll();
+            boolean tieneCortesLanding = actuales.stream()
+                    .anyMatch(s -> CORTES_LANDING.stream().anyMatch(n -> n.equalsIgnoreCase(s.getNombre())));
+            if (tieneCortesLanding) {
+                return;
+            }
+            for (Servicio s : actuales) {
+                if (SERVICIOS_DEMO_ANTIGUOS.contains(s.getNombre()) && s.getImagenUrl() == null) {
+                    s.setActivo(false);
+                    servicioRepository.save(s);
+                }
+            }
+            crearCortesLanding();
+            log.info("Catálogo migrado a los cortes de la landing; los servicios demo antiguos quedaron inactivos.");
             return;
         }
+        crearCortesLanding();
+        log.info("Servicios sembrados desde la landing. Administra desde el panel.");
+    }
+
+    private void crearCortesLanding() {
         crear("Low Fade",
                 "Degradado bajo, limpio y con transición suave. Un clásico que siempre queda bien.",
                 "35.00", 45, "/cortes/IMG_3922.jpg");
@@ -89,7 +128,6 @@ public class DataSeeder implements CommandLineRunner {
         crear("Modern Mullet",
                 "Laterales cortos, movimiento atrás y actitud. Una versión actual del mullet clásico.",
                 "45.00", 50, "/cortes/modern%20mullet.jpg");
-        log.info("Servicios sembrados desde la landing. Administra desde el panel.");
     }
 
     private void crear(String nombre, String descripcion, String precio, int duracion) {
