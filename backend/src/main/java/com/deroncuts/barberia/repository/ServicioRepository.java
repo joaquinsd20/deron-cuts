@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ServicioRepository extends JpaRepository<Servicio, Long> {
 
-    List<Servicio> findByActivoTrueOrderByIdAsc();
+    List<Servicio> findByActivoTrueAndEliminadoFalseOrderByIdAsc();
 
-    List<Servicio> findAllByOrderByIdAsc();
+    List<Servicio> findByEliminadoFalseOrderByIdAsc();
 }

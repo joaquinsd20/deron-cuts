@@ -92,7 +92,11 @@ public class DataSeeder implements CommandLineRunner {
             List<Servicio> actuales = servicioRepository.findAll();
             boolean tieneCortesLanding = actuales.stream()
                     .anyMatch(s -> CORTES_LANDING.stream().anyMatch(n -> n.equalsIgnoreCase(s.getNombre())));
-            if (tieneCortesLanding) {
+            // Solo aplica a bases que aún muestran el catálogo demo antiguo. Si el barbero
+            // borra los cortes desde el admin, no se vuelven a crear.
+            boolean demoAntiguoVisible = actuales.stream()
+                    .anyMatch(s -> s.isActivo() && SERVICIOS_DEMO_ANTIGUOS.contains(s.getNombre()));
+            if (tieneCortesLanding || !demoAntiguoVisible) {
                 return;
             }
             for (Servicio s : actuales) {

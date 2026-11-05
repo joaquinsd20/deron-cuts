@@ -19,16 +19,19 @@ public class ServicioService {
 
     private final ServicioRepository servicioRepository;
     private final ServicioImagenRepository servicioImagenRepository;
+    private final com.deroncuts.barberia.repository.CitaRepository citaRepository;
 
     public ServicioService(ServicioRepository servicioRepository,
-                           ServicioImagenRepository servicioImagenRepository) {
+                           ServicioImagenRepository servicioImagenRepository,
+                           com.deroncuts.barberia.repository.CitaRepository citaRepository) {
         this.servicioRepository = servicioRepository;
         this.servicioImagenRepository = servicioImagenRepository;
+        this.citaRepository = citaRepository;
     }
 
     @Transactional(readOnly = true)
     public List<ServicioDto> listarActivos() {
-        return servicioRepository.findByActivoTrueOrderByIdAsc()
+        return servicioRepository.findByActivoTrueAndEliminadoFalseOrderByIdAsc()
                 .stream()
                 .map(this::toDto)
                 .toList();
@@ -36,7 +39,7 @@ public class ServicioService {
 
     @Transactional(readOnly = true)
     public List<ServicioDto> listarTodos() {
-        return servicioRepository.findAllByOrderByIdAsc()
+        return servicioRepository.findByEliminadoFalseOrderByIdAsc()
                 .stream()
                 .map(this::toDto)
                 .toList();
@@ -94,6 +97,25 @@ public class ServicioService {
         // ?v= cambia en cada subida para que navegadores y CDN no muestren la foto anterior
         servicio.setImagenUrl("/api/public/servicios/" + id + "/imagen?v=" + System.currentTimeMillis());
         return toDto(servicioRepository.save(servicio));
+    }
+
+    /**
+     * Sin citas: se borra de la base junto con su foto.
+     * Con citas en el historial: se oculta para siempre (admin y landing), así las
+     * citas y pagos pasados conservan el nombre del servicio.
+     */
+    @Transactional
+    public void eliminar(Long id) {
+        Servicio servicio = obtenerEntity(id);
+        servicioImagenRepository.findById(id).ifPresent(servicioImagenRepository::delete);
+        if (citaRepository.existsByServicioId(id)) {
+            servicio.setEliminado(true);
+            servicio.setActivo(false);
+            servicio.setImagenUrl(null);
+            servicioRepository.save(servicio);
+        } else {
+            servicioRepository.delete(servicio);
+        }
     }
 
     @Transactional(readOnly = true)

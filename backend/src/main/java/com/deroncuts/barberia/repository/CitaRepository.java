@@ -34,6 +34,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     long countByEstado(EstadoCita estado);
 
+    boolean existsByServicioId(Long servicioId);
+
     List<Cita> findByFechaHoraInicioBetweenAndEstadoOrderByFechaHoraInicioAsc(
             LocalDateTime inicio, LocalDateTime fin, EstadoCita estado);
 

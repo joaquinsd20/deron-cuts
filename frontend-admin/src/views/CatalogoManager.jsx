@@ -128,13 +128,21 @@ export default function CatalogoManager() {
   }
 
   const eliminar = async (s) => {
-    if (!window.confirm(`¿Desactivar «${s.nombre}»?`)) return
+    const ok = window.confirm(
+      `¿Eliminar «${s.nombre}»?\n\nDesaparece del panel y de la página web. No se puede deshacer.\n` +
+        'Si solo quieres ocultarlo por un tiempo, desmarca "Visible" en su lugar.'
+    )
+    if (!ok) return
     try {
       await eliminarServicio(s.id)
-      setToast({ message: 'Servicio desactivado' })
+      setToast({ message: 'Servicio eliminado' })
+      if (form.id === s.id) {
+        setEditando(false)
+        setForm(VACIO)
+      }
       await cargar()
-    } catch {
-      setToast({ message: 'No se pudo desactivar el servicio', tipo: 'error' })
+    } catch (err) {
+      setToast({ message: err?.response?.data?.message || 'No se pudo eliminar el servicio', tipo: 'error' })
     }
   }
 
@@ -264,14 +272,14 @@ export default function CatalogoManager() {
                     <th>Servicio</th>
                     <th>Precio</th>
                     <th>Duración</th>
-                    <th>Activo</th>
+                    <th>Visible en la web</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visibles.map((s) => (
-                    <tr key={s.id}>
-                      <td>
+                    <tr key={s.id} className={s.activo ? '' : 'fila--inactiva'}>
+                      <td className="td--principal">
                         <div className="servicio-celda">
                           {s.imagenUrl ? (
                             <img className="servicio-celda__img" src={resolverImagen(s.imagenUrl)} alt="" />
@@ -284,9 +292,9 @@ export default function CatalogoManager() {
                           </div>
                         </div>
                       </td>
-                      <td>{formatMoney(s.precio)}</td>
-                      <td>{s.duracionMinutos} min</td>
-                      <td>
+                      <td data-label="Precio">{formatMoney(s.precio)}</td>
+                      <td data-label="Duración">{s.duracionMinutos} min</td>
+                      <td data-label="Visible en la web">
                         <label className="switch">
                           <input
                             type="checkbox"
@@ -296,16 +304,14 @@ export default function CatalogoManager() {
                           {s.activo ? 'Sí' : 'No'}
                         </label>
                       </td>
-                      <td>
+                      <td className="td--acciones">
                         <div className="row-actions">
                           <button className="btn btn--sm btn--outline" onClick={() => abrirEditar(s)}>
                             Editar
                           </button>
-                          {s.activo && (
-                            <button className="btn btn--sm btn--danger" onClick={() => eliminar(s)}>
-                              Desactivar
-                            </button>
-                          )}
+                          <button className="btn btn--sm btn--danger" onClick={() => eliminar(s)}>
+                            Eliminar
+                          </button>
                         </div>
                       </td>
                     </tr>

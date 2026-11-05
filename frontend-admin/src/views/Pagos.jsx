@@ -136,15 +136,15 @@ export default function Pagos() {
                 <tbody>
                   {pagos.map((p) => (
                     <tr key={p.id}>
-                      <td>{formatFechaHora(p.fechaPago)}</td>
-                      <td>{p.nombreCliente}</td>
-                      <td>{p.nombreServicio}</td>
-                      <td>
+                      <td data-label="Fecha">{formatFechaHora(p.fechaPago)}</td>
+                      <td data-label="Cliente">{p.nombreCliente}</td>
+                      <td data-label="Servicio">{p.nombreServicio}</td>
+                      <td data-label="Método">
                         <span className={`tag tag--metodo ${'tag--' + (p.metodoPago || '').toLowerCase()}`}>
                           {METODO_LABEL[p.metodoPago] || p.metodoPago}
                         </span>
                       </td>
-                      <td className="tabla__num">{formatMoneyLargo(p.montoPagado)}</td>
+                      <td className="tabla__num" data-label="Monto">{formatMoneyLargo(p.montoPagado)}</td>
                     </tr>
                   ))}
                 </tbody>

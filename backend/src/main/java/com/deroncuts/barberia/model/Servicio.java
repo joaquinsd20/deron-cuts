@@ -38,6 +38,18 @@ public class Servicio {
     @Column(nullable = false)
     private boolean activo = true;
 
+    /** Eliminado desde el admin pero con citas en el historial: se oculta en vez de borrarse. */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean eliminado = false;
+
+    public boolean isEliminado() {
+        return eliminado;
+    }
+
+    public void setEliminado(boolean eliminado) {
+        this.eliminado = eliminado;
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

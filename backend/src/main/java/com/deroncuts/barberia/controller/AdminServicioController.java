@@ -58,7 +58,7 @@ public class AdminServicioController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        servicioService.cambiarActivo(id, false);
+        servicioService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }
