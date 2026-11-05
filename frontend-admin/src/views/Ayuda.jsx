@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
+import ActivarAvisos from '../components/ActivarAvisos.jsx'
 import { cambiarMiPassword } from '../services/api.js'
 
 const GUIA = [
@@ -89,6 +90,7 @@ export default function Ayuda() {
               <p className="page-head__sub">Cómo funcionan las reservas y tu contraseña del panel.</p>
             </div>
           </header>
+          <ActivarAvisos modo="completo" avisar={setToast} />
 
           <div className="card" style={{ marginBottom: 18 }}>
             <div className="card__title">Guía rápida: reservas y adelanto</div>

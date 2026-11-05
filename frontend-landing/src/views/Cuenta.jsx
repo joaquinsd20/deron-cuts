@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import AvisosCita from '../components/AvisosCita.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getMisCitas, cancelarCita, cambiarPassword } from '../services/api.js'
 import { formatCurrency, formatFechaLarga } from '../config.js'
@@ -170,6 +171,7 @@ export default function Cuenta() {
 
             <div className="account__card">
               <div className="aside__title">Mis citas</div>
+              <AvisosCita />
               {errorCancelar && <div className="alert">{errorCancelar}</div>}
               {cargando ? (
                 <div className="spinner" />

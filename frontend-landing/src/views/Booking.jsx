@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
+import AvisosCita from '../components/AvisosCita.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
   getConfiguracion,
@@ -186,6 +187,8 @@ export default function Booking() {
                   Gracias, <b>{creada.nombreCliente}</b>. Te esperamos en DERON CUTS.
                 </p>
               </div>
+
+              <AvisosCita />
 
               <div className="wizard">
                 <div className="wizard__main">

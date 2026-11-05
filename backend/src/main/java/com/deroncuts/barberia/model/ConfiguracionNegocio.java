@@ -207,4 +207,27 @@ public class ConfiguracionNegocio {
     public void setMetodosPago(String metodosPago) {
         this.metodosPago = metodosPago;
     }
+
+    /** Claves VAPID para notificaciones push (se generan solas la primera vez). */
+    @Column(name = "vapid_publica", length = 200)
+    private String vapidPublica;
+
+    @Column(name = "vapid_privada", length = 200)
+    private String vapidPrivada;
+
+    public String getVapidPublica() {
+        return vapidPublica;
+    }
+
+    public void setVapidPublica(String vapidPublica) {
+        this.vapidPublica = vapidPublica;
+    }
+
+    public String getVapidPrivada() {
+        return vapidPrivada;
+    }
+
+    public void setVapidPrivada(String vapidPrivada) {
+        this.vapidPrivada = vapidPrivada;
+    }
 }

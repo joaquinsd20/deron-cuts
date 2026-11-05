@@ -61,6 +61,20 @@ export function MetodoIcono({ metodo, tamano = 32 }) {
       </span>
     )
   }
+  if (k === 'YAPE' || k === 'PLIN') {
+    return (
+      <img
+        className={`metodo-ico metodo-ico--img metodo-ico--${info.clase}-img`}
+        src={`/metodos/${info.clase}.png`}
+        alt=""
+        width={tamano}
+        height={tamano}
+        style={{ width: tamano, height: tamano }}
+        aria-hidden="true"
+        draggable={false}
+      />
+    )
+  }
   if (info) {
     return (
       <span className={`metodo-ico metodo-ico--${info.clase}`} style={style} aria-hidden="true">

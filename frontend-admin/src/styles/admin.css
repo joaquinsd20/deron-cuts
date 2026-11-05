@@ -1922,3 +1922,56 @@ a {
     font-size: clamp(1.25rem, 6.4vw, 1.8rem);
   }
 }
+
+/* Logos oficiales (imágenes) de Yape y Plin */
+.metodo-ico--img {
+  object-fit: contain;
+  background: none;
+  box-shadow: none;
+}
+
+.metodo-ico--yape-img {
+  border-radius: 24%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.metodo-ico--plin-img {
+  border-radius: 0;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
+
+/* Tarjeta "Activar avisos" */
+.avisos {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  border: 1px solid var(--neon-dim);
+}
+
+.avisos--activo {
+  border-color: rgba(74, 222, 128, 0.45);
+}
+
+.avisos--bloqueado,
+.avisos--ios-instalar {
+  border-color: #e9b949;
+}
+
+.avisos__icono {
+  font-size: 1.6rem;
+}
+
+.avisos__texto {
+  flex: 1;
+  min-width: 200px;
+  display: grid;
+  gap: 4px;
+}
+
+.avisos__texto span {
+  color: var(--neon-dim);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}

@@ -3131,3 +3131,46 @@ ul {
   line-height: 1.5;
   color: var(--neon-dim);
 }
+
+/* Avisos de la cita (notificaciones push) */
+.avisos-cita {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+}
+
+.avisos-cita--activo {
+  border-color: rgba(74, 222, 128, 0.45);
+}
+
+.avisos-cita--bloqueado,
+.avisos-cita--ios {
+  border-color: rgba(233, 185, 73, 0.6);
+}
+
+.avisos-cita__icono {
+  font-size: 1.5rem;
+}
+
+.avisos-cita__texto {
+  flex: 1;
+  min-width: 200px;
+  color: var(--neon-dim);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.avisos-cita__texto b {
+  color: var(--ink);
+}
+
+.avisos-cita__error {
+  display: block;
+  color: #ff8a8a;
+  margin-top: 4px;
+}

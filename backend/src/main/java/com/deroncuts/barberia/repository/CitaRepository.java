@@ -44,6 +44,9 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     List<Cita> findByPagadaTrue();
 
+    List<Cita> findByEstadoInAndAvisoPrevioEnviadoFalseAndFechaHoraInicioBetween(
+            List<EstadoCita> estados, LocalDateTime desde, LocalDateTime hasta);
+
     List<Cita> findByAdelantoPagadoTrueAndFechaAdelantoBetween(LocalDateTime inicio, LocalDateTime fin);
 
     long countByPagadaTrue();

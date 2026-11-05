@@ -305,4 +305,16 @@ public class Cita {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    /** Ya se avisó (push) al cliente y al barbero de que la cita es en pocas horas. */
+    @Column(name = "aviso_previo_enviado", nullable = false, columnDefinition = "boolean default false")
+    private boolean avisoPrevioEnviado = false;
+
+    public boolean isAvisoPrevioEnviado() {
+        return avisoPrevioEnviado;
+    }
+
+    public void setAvisoPrevioEnviado(boolean avisoPrevioEnviado) {
+        this.avisoPrevioEnviado = avisoPrevioEnviado;
+    }
 }

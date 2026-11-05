@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
 import Reloj from '../components/Reloj.jsx'
+import ActivarAvisos from '../components/ActivarAvisos.jsx'
 import AppointmentCard from '../components/AppointmentCard.jsx'
 import { getResumen, getCitas } from '../services/api.js'
 import { useAccionesCita } from '../components/AccionesCita.jsx'
@@ -142,6 +143,7 @@ export default function Dashboard() {
               <Reloj />
             </div>
           </header>
+          <ActivarAvisos modo="banner" avisar={setToast} />
 
           <section className="stats">
             {stats.map((s) => (

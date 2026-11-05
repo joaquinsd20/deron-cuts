@@ -2,7 +2,7 @@ import axios from 'axios'
 import { clienteAuth } from './clienteAuth.js'
 import { beginLoading, endLoading } from '../lib/loading.js'
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || ''
 })
 

@@ -50,6 +50,7 @@ public class CitaService {
     private final com.deroncuts.barberia.repository.RecordatorioRepository recordatorioRepository;
     private final ServicioService servicioService;
     private final ConfiguracionService configuracionService;
+    private final NotificacionService notificaciones;
     private final DisponibilidadService disponibilidadService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RecordatorioService recordatorioService;
@@ -61,6 +62,7 @@ public class CitaService {
                        com.deroncuts.barberia.repository.RecordatorioRepository recordatorioRepository,
                        ServicioService servicioService,
                        ConfiguracionService configuracionService,
+                       NotificacionService notificaciones,
                        DisponibilidadService disponibilidadService,
                        SimpMessagingTemplate messagingTemplate,
                        RecordatorioService recordatorioService,
@@ -71,6 +73,7 @@ public class CitaService {
         this.recordatorioRepository = recordatorioRepository;
         this.servicioService = servicioService;
         this.configuracionService = configuracionService;
+        this.notificaciones = notificaciones;
         this.disponibilidadService = disponibilidadService;
         this.messagingTemplate = messagingTemplate;
         this.recordatorioService = recordatorioService;
@@ -148,6 +151,11 @@ public class CitaService {
         Cita guardada = citaRepository.save(cita);
         publicarEvento("CREADA", guardada);
         recordatorioService.notificarNuevaCita(guardada);
+        notificaciones.avisarAdmins("📅 Nueva reserva",
+                guardada.getNombreCliente() + " · " + servicio.getNombre() + " · "
+                        + fechaTexto(guardada.getFechaHoraInicio())
+                        + (cumpleanos ? " · 🎂 semana de cumpleaños" : ""),
+                "/citas");
         return CitaDto.from(guardada);
     }
 
@@ -237,6 +245,10 @@ public class CitaService {
 
         Cita guardada = citaRepository.save(cita);
         publicarEvento("ADELANTO", guardada);
+        if (Boolean.TRUE.equals(request.getPagado())) {
+            avisarClienteDe(guardada, "✅ Tu cita está confirmada",
+                    "Recibimos tu adelanto. Te esperamos el " + fechaTexto(guardada.getFechaHoraInicio()) + ".");
+        }
         return CitaDto.from(guardada);
     }
 
@@ -326,12 +338,23 @@ public class CitaService {
         if (cita.getEstado() == EstadoCita.COMPLETADA) {
             throw new BusinessException("Una cita completada no puede cambiar de estado");
         }
+        EstadoCita anterior = cita.getEstado();
         cita.setEstado(nuevoEstado);
         Cita guardada = citaRepository.save(cita);
         if (nuevoEstado == EstadoCita.CANCELADA) {
             recordatorioService.notificarCancelada(guardada);
         }
         publicarEvento("ESTADO", guardada);
+        if (anterior != nuevoEstado) {
+            if (nuevoEstado == EstadoCita.CANCELADA) {
+                avisarClienteDe(guardada, "Tu cita fue cancelada",
+                        "La cita del " + fechaTexto(guardada.getFechaHoraInicio())
+                                + " fue cancelada. Escríbenos por WhatsApp para reprogramarla.");
+            } else if (nuevoEstado == EstadoCita.CONFIRMADA) {
+                avisarClienteDe(guardada, "✅ Tu cita está confirmada",
+                        "Te esperamos el " + fechaTexto(guardada.getFechaHoraInicio()) + ".");
+            }
+        }
         return CitaDto.from(guardada);
     }
 
@@ -370,7 +393,26 @@ public class CitaService {
         Cita guardada = citaRepository.save(cita);
         recordatorioService.notificarCancelada(guardada);
         publicarEvento("ESTADO", guardada);
+        notificaciones.avisarAdmins("❌ Cita cancelada",
+                guardada.getNombreCliente() + " canceló su cita del " + fechaTexto(guardada.getFechaHoraInicio())
+                        + (guardada.isAdelantoPagado() ? " (tenía adelanto pagado)" : ""),
+                "/citas");
         return CitaDto.from(guardada);
+    }
+
+    // ---------- Avisos push ----------
+
+    private static final java.time.format.DateTimeFormatter FMT_AVISO =
+            java.time.format.DateTimeFormatter.ofPattern("EEEE d 'de' MMMM, HH:mm", new java.util.Locale("es", "PE"));
+
+    static String fechaTexto(LocalDateTime fecha) {
+        return fecha.format(FMT_AVISO);
+    }
+
+    private void avisarClienteDe(Cita cita, String titulo, String cuerpo) {
+        if (cita.getCliente() != null) {
+            notificaciones.avisarCliente(cita.getCliente().getId(), titulo, cuerpo, "/cuenta");
+        }
     }
 
     @Transactional
@@ -388,9 +430,12 @@ public class CitaService {
 
         cita.setFechaHoraInicio(inicio);
         cita.setFechaHoraFin(fin);
+        cita.setAvisoPrevioEnviado(false);
         Cita guardada = citaRepository.save(cita);
         recordatorioService.notificarReprogramada(guardada);
         publicarEvento("REPROGRAMADA", guardada);
+        avisarClienteDe(guardada, "📅 Tu cita cambió de horario",
+                "Nueva fecha: " + fechaTexto(guardada.getFechaHoraInicio()) + ". Te esperamos.");
         return CitaDto.from(guardada);
     }
 
