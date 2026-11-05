@@ -8,8 +8,18 @@ export default function LoadingCookie() {
 
   useEffect(() => onLoadingChange(setVisible), [])
 
+  // Si el servidor está "dormido" (plan gratis de Render) la primera carga puede tardar
+  // hasta ~2 min: tras 6 s se explica qué pasa para que no parezca que la página se colgó.
+  const [lento, setLento] = useState(false)
+
   useEffect(() => {
-    if (!visible) setCracked(false)
+    if (!visible) {
+      setCracked(false)
+      setLento(false)
+      return undefined
+    }
+    const id = window.setTimeout(() => setLento(true), 6000)
+    return () => window.clearTimeout(id)
   }, [visible])
 
   if (!visible) return null
@@ -40,6 +50,12 @@ export default function LoadingCookie() {
       <span className="loading-cookie__text">
         {cracked ? '¡Se rompió! Horneando otra...' : 'Horneando tu página...'}
       </span>
+      {lento && (
+        <span className="loading-cookie__lento">
+          Estamos despertando el sistema de reservas. La primera visita puede tardar hasta 2
+          minutos; no cierres la página.
+        </span>
+      )}
     </div>
   )
 }

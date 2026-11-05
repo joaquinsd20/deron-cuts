@@ -3121,3 +3121,13 @@ ul {
 .account__card .auth__form {
   margin-top: 10px;
 }
+
+.loading-cookie__lento {
+  max-width: 300px;
+  margin-top: 10px;
+  padding: 0 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--neon-dim);
+}
