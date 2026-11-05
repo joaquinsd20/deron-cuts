@@ -195,4 +195,16 @@ public class ConfiguracionNegocio {
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
+
+    /** Métodos de pago aceptados, separados por coma (EFECTIVO,YAPE,PLIN…). */
+    @Column(name = "metodos_pago", length = 400)
+    private String metodosPago;
+
+    public String getMetodosPago() {
+        return metodosPago;
+    }
+
+    public void setMetodosPago(String metodosPago) {
+        this.metodosPago = metodosPago;
+    }
 }

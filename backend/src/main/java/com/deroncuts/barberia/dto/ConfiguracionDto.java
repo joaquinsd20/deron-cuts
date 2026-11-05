@@ -160,4 +160,14 @@ public class ConfiguracionDto {
     public void setWhatsappActivo(Boolean whatsappActivo) {
         this.whatsappActivo = whatsappActivo;
     }
+
+    private java.util.List<String> metodosPago;
+
+    public java.util.List<String> getMetodosPago() {
+        return metodosPago;
+    }
+
+    public void setMetodosPago(java.util.List<String> metodosPago) {
+        this.metodosPago = metodosPago;
+    }
 }

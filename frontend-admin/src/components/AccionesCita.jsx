@@ -8,7 +8,8 @@ import {
   eliminarCita,
   mensajeError
 } from '../services/api.js'
-import { aInputLocal, formatMoney, METODOS_PAGO } from '../services/format.js'
+import { aInputLocal, formatMoney } from '../services/format.js'
+import { MetodoSelector, MetodoIcono, nombreMetodo, useMetodosPago } from './MetodoPago.jsx'
 
 /**
  * Todas las acciones sobre una cita (estado, reprogramar, adelanto, cobro, tardanza,
@@ -26,6 +27,8 @@ export function useAccionesCita({ alCambiar, avisar }) {
   const [metodo, setMetodo] = useState('EFECTIVO')
   const [monto, setMonto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const metodos = useMetodosPago()
+  const preferido = (m) => (metodos.includes(m) ? m : metodos[0])
 
   const cerrar = () => {
     if (!enviando) setModal(null)
@@ -67,12 +70,12 @@ export function useAccionesCita({ alCambiar, avisar }) {
       setModal({ tipo: 'reprogramar', cita })
     },
     onRegistrarPago: (cita) => {
-      setMetodo('EFECTIVO')
+      setMetodo(preferido('EFECTIVO'))
       setMonto(String(cita.saldoPendiente ?? ''))
       setModal({ tipo: 'cobrar', cita })
     },
     onAdelanto: (cita) => {
-      setMetodo(cita.metodoAdelanto || 'YAPE')
+      setMetodo(cita.metodoAdelanto || preferido('YAPE'))
       setModal({ tipo: 'adelanto', cita })
     },
     onTardanza: (cita) => {
@@ -136,19 +139,14 @@ export function useAccionesCita({ alCambiar, avisar }) {
           {c.nombreCliente} · {c.nombreServicio}
         </p>
         {c.adelantoPagado ? (
-          <p className="modal__sub">
-            <span className="badge badge--adelanto">ADELANTO RECIBIDO</span>
+          <p className="modal__sub metodo-recibido">
+            <MetodoIcono metodo={c.metodoAdelanto} tamano={28} />
+            Adelanto recibido por {nombreMetodo(c.metodoAdelanto)}
           </p>
         ) : (
           <div className="field">
-            <label htmlFor="metodo-adelanto">¿Cómo te pagó?</label>
-            <select id="metodo-adelanto" value={metodo} onChange={(e) => setMetodo(e.target.value)}>
-              {METODOS_PAGO.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+            <label>¿Cómo te pagó?</label>
+            <MetodoSelector valor={metodo} onChange={setMetodo} metodos={metodos} />
           </div>
         )}
         <div className="modal__acciones">
@@ -211,14 +209,8 @@ export function useAccionesCita({ alCambiar, avisar }) {
           {c.nombreCliente} · Total {formatMoney(c.totalAPagar)} · Saldo {formatMoney(c.saldoPendiente)}
         </p>
         <div className="field">
-          <label htmlFor="metodo-pago">Método de pago</label>
-          <select id="metodo-pago" value={metodo} onChange={(e) => setMetodo(e.target.value)}>
-            {METODOS_PAGO.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+          <label>¿Cómo te pagó?</label>
+          <MetodoSelector valor={metodo} onChange={setMetodo} metodos={metodos} />
         </div>
         <div className="field">
           <label htmlFor="monto-pago">Monto (vacío = saldo pendiente)</label>

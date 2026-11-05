@@ -44,6 +44,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     List<Cita> findByPagadaTrue();
 
+    List<Cita> findByAdelantoPagadoTrueAndFechaAdelantoBetween(LocalDateTime inicio, LocalDateTime fin);
+
     long countByPagadaTrue();
 
     boolean existsByNombreCliente(String nombreCliente);

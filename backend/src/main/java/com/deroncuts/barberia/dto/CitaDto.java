@@ -72,7 +72,7 @@ public class CitaDto {
         dto.setEstado(cita.getEstado().name());
         dto.setCreatedAt(cita.getCreatedAt());
         dto.setPagada(cita.isPagada());
-        dto.setMetodoPago(cita.getMetodoPago() != null ? cita.getMetodoPago().name() : null);
+        dto.setMetodoPago(cita.getMetodoPago());
         dto.setMontoPagado(cita.getMontoPagado());
         dto.setFechaPago(cita.getFechaPago());
         dto.setDescuentoCumpleanos(cita.isDescuentoCumpleanos());
@@ -80,7 +80,7 @@ public class CitaDto {
         dto.setAdelantoMonto(adelanto);
         dto.setAdelantoPagado(cita.isAdelantoPagado());
         dto.setAdelantoAplicado(cita.isAdelantoAplicado());
-        dto.setMetodoAdelanto(cita.getMetodoAdelanto() != null ? cita.getMetodoAdelanto().name() : null);
+        dto.setMetodoAdelanto(cita.getMetodoAdelanto());
         dto.setFechaAdelanto(cita.getFechaAdelanto());
         dto.setTardanzaAplicada(cita.isTardanzaAplicada());
         dto.setPenalidadTardanza(penalidad);

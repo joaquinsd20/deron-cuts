@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -44,7 +46,46 @@ public class ConfiguracionService {
         config.setRecordatoriosActivo(request.getRecordatoriosActivo());
         config.setRecordatoriosAntesHoras(request.getRecordatoriosAntesHoras());
         config.setWhatsappActivo(request.getWhatsappActivo());
+        if (request.getMetodosPago() != null) {
+            List<String> metodos = normalizarMetodos(request.getMetodosPago());
+            if (metodos.isEmpty()) {
+                throw new BusinessException("Deja al menos un método de pago");
+            }
+            config.setMetodosPago(String.join(",", metodos));
+        }
         return toDto(repository.save(config));
+    }
+
+    public static final String METODOS_DEFAULT = "EFECTIVO,YAPE,PLIN";
+
+    /** Métodos de pago que acepta el negocio (los configura el barbero en el panel). */
+    @Transactional(readOnly = true)
+    public List<String> metodosPago() {
+        return metodosDe(obtenerOMeterDefault());
+    }
+
+    private List<String> metodosDe(ConfiguracionNegocio config) {
+        String valor = config.getMetodosPago();
+        return normalizarMetodos(java.util.Arrays.asList(
+                (valor == null || valor.isBlank() ? METODOS_DEFAULT : valor).split(",")));
+    }
+
+    /** "  yape " → "YAPE"; quita vacíos y repetidos; máx. 10 métodos de 30 caracteres. */
+    public static List<String> normalizarMetodos(List<String> entrada) {
+        java.util.LinkedHashSet<String> salida = new java.util.LinkedHashSet<>();
+        for (String m : entrada) {
+            if (m == null) continue;
+            String limpio = m.trim().replaceAll("\\s+", " ").replace(",", "").toUpperCase(java.util.Locale.ROOT);
+            if (limpio.isEmpty()) continue;
+            if (limpio.length() > 30) {
+                throw new BusinessException("El nombre del método de pago no puede superar 30 caracteres");
+            }
+            salida.add(limpio);
+        }
+        if (salida.size() > 10) {
+            throw new BusinessException("Puedes tener hasta 10 métodos de pago");
+        }
+        return new ArrayList<>(salida);
     }
 
     @Transactional
@@ -119,6 +160,7 @@ public class ConfiguracionService {
         dto.setTiktok(config.getTiktok());
         dto.setDescripcionBarbero(config.getDescripcionBarbero());
         dto.setHorario(parsearHorario(config.getHorarioJson()));
+        dto.setMetodosPago(metodosDe(config));
         dto.setRecordatoriosActivo(config.getRecordatoriosActivo() == null
                 ? true
                 : config.getRecordatoriosActivo());

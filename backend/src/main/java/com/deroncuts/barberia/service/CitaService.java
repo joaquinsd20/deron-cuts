@@ -18,7 +18,7 @@ import com.deroncuts.barberia.exception.NotFoundException;
 import com.deroncuts.barberia.model.Cita;
 import com.deroncuts.barberia.model.Cliente;
 import com.deroncuts.barberia.model.EstadoCita;
-import com.deroncuts.barberia.model.MetodoPago;
+import com.deroncuts.barberia.dto.PagoDto;
 import com.deroncuts.barberia.model.Servicio;
 import com.deroncuts.barberia.repository.CitaRepository;
 import com.deroncuts.barberia.repository.ConfiguracionNegocioRepository;
@@ -49,6 +49,7 @@ public class CitaService {
     private final ConfiguracionNegocioRepository configuracionRepository;
     private final com.deroncuts.barberia.repository.RecordatorioRepository recordatorioRepository;
     private final ServicioService servicioService;
+    private final ConfiguracionService configuracionService;
     private final DisponibilidadService disponibilidadService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RecordatorioService recordatorioService;
@@ -59,6 +60,7 @@ public class CitaService {
                        ConfiguracionNegocioRepository configuracionRepository,
                        com.deroncuts.barberia.repository.RecordatorioRepository recordatorioRepository,
                        ServicioService servicioService,
+                       ConfiguracionService configuracionService,
                        DisponibilidadService disponibilidadService,
                        SimpMessagingTemplate messagingTemplate,
                        RecordatorioService recordatorioService,
@@ -68,6 +70,7 @@ public class CitaService {
         this.configuracionRepository = configuracionRepository;
         this.recordatorioRepository = recordatorioRepository;
         this.servicioService = servicioService;
+        this.configuracionService = configuracionService;
         this.disponibilidadService = disponibilidadService;
         this.messagingTemplate = messagingTemplate;
         this.recordatorioService = recordatorioService;
@@ -189,7 +192,7 @@ public class CitaService {
         if (cita.getEstado() == EstadoCita.CANCELADA) {
             throw new BusinessException("No se puede cobrar una cita cancelada");
         }
-        MetodoPago metodo = parseMetodoPago(request.getMetodoPago());
+        String metodo = parseMetodoPago(request.getMetodoPago());
         BigDecimal monto = request.getMonto();
         if (monto == null) {
             monto = saldoPendiente(cita);
@@ -215,8 +218,8 @@ public class CitaService {
         }
 
         if (Boolean.TRUE.equals(request.getPagado())) {
-            MetodoPago metodo = request.getMetodoPago() == null || request.getMetodoPago().isBlank()
-                    ? MetodoPago.YAPE
+            String metodo = request.getMetodoPago() == null || request.getMetodoPago().isBlank()
+                    ? configuracionService.metodosPago().get(0)
                     : parseMetodoPago(request.getMetodoPago());
             cita.setAdelantoPagado(true);
             cita.setAdelantoAplicado(!cita.isTardanzaAplicada());
@@ -260,26 +263,55 @@ public class CitaService {
         LocalDateTime inicioMes = hoy.withDayOfMonth(1).atStartOfDay();
         LocalDateTime inicioTotal = LocalDateTime.of(2000, 1, 1, 0, 0);
 
+        List<PagoDto> todos = movimientos(inicioTotal, ahora.plusMinutes(1));
         PagosResumen resumen = new PagosResumen();
-        resumen.setTotal(sumPagos(inicioTotal, ahora));
-        resumen.setTotalHoy(sumPagos(inicioHoy, ahora));
-        resumen.setTotalSemana(sumPagos(inicioSemana, ahora));
-        resumen.setTotalMes(sumPagos(inicioMes, ahora));
-        resumen.setCantidad(citaRepository.countByPagadaTrue());
-        resumen.setDesglose(desglosePorMetodo());
+        resumen.setTotal(sumar(todos, inicioTotal));
+        resumen.setTotalHoy(sumar(todos, inicioHoy));
+        resumen.setTotalSemana(sumar(todos, inicioSemana));
+        resumen.setTotalMes(sumar(todos, inicioMes));
+        resumen.setCantidad(todos.size());
+        resumen.setDesglose(desglosePorMetodo(todos));
         return resumen;
     }
 
     @Transactional(readOnly = true)
-    public List<CitaDto> listarPagos(LocalDate desde, LocalDate hasta, String metodo) {
+    public List<PagoDto> listarPagos(LocalDate desde, LocalDate hasta, String metodo) {
         LocalDateTime inicio = desde != null ? desde.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0);
         LocalDateTime fin = hasta != null ? hasta.plusDays(1).atStartOfDay() : LocalDateTime.now().plusDays(1);
-        List<Cita> pagadas = citaRepository.findByPagadaTrueAndFechaPagoBetweenOrderByFechaPagoDesc(inicio, fin);
-        MetodoPago filtro = (metodo == null || metodo.isBlank()) ? null : parseMetodoPago(metodo);
-        return pagadas.stream()
-                .filter(c -> filtro == null || c.getMetodoPago() == filtro)
-                .map(CitaDto::from)
+        String filtro = (metodo == null || metodo.isBlank()) ? null : metodo.trim().toUpperCase(java.util.Locale.ROOT);
+        return movimientos(inicio, fin).stream()
+                .filter(p -> filtro == null || filtro.equals(p.getMetodoPago()))
                 .toList();
+    }
+
+    /**
+     * Todo el dinero recibido entre dos fechas: cada adelanto (en la fecha en que se
+     * confirmó) y cada cobro de saldo (en la fecha del cobro). Antes solo se contaba el
+     * saldo, así que los adelantos no aparecían en las ganancias.
+     */
+    private List<PagoDto> movimientos(LocalDateTime inicio, LocalDateTime fin) {
+        List<PagoDto> lista = new ArrayList<>();
+        for (Cita c : citaRepository.findByAdelantoPagadoTrueAndFechaAdelantoBetween(inicio, fin)) {
+            if (c.getAdelantoMonto() != null && c.getAdelantoMonto().compareTo(BigDecimal.ZERO) > 0) {
+                lista.add(PagoDto.de("ADELANTO", c.getId(), c.getFechaAdelanto(), c.getMetodoAdelanto(),
+                        c.getAdelantoMonto(), c.getNombreCliente(), c.getServicio().getNombre()));
+            }
+        }
+        for (Cita c : citaRepository.findByPagadaTrueAndFechaPagoBetweenOrderByFechaPagoDesc(inicio, fin)) {
+            if (c.getMontoPagado() != null && c.getMontoPagado().compareTo(BigDecimal.ZERO) > 0) {
+                lista.add(PagoDto.de("SALDO", c.getId(), c.getFechaPago(), c.getMetodoPago(),
+                        c.getMontoPagado(), c.getNombreCliente(), c.getServicio().getNombre()));
+            }
+        }
+        lista.sort((a, b) -> b.getFechaPago().compareTo(a.getFechaPago()));
+        return lista;
+    }
+
+    private static BigDecimal sumar(List<PagoDto> pagos, LocalDateTime desde) {
+        return pagos.stream()
+                .filter(p -> !p.getFechaPago().isBefore(desde))
+                .map(PagoDto::getMontoPagado)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Transactional(readOnly = true)
@@ -396,44 +428,38 @@ public class CitaService {
         }
     }
 
-    public MetodoPago parseMetodoPago(String metodo) {
-        try {
-            return MetodoPago.valueOf(metodo.trim().toUpperCase());
-        } catch (Exception e) {
-            throw new BusinessException(
-                    "Método de pago no válido: use EFECTIVO, YAPE, PLIN, TARJETA o TRANSFERENCIA");
+    /** Acepta solo los métodos que el barbero configuró (EFECTIVO, YAPE, PLIN, …). */
+    public String parseMetodoPago(String metodo) {
+        List<String> permitidos = configuracionService.metodosPago();
+        String valor = metodo == null ? "" : metodo.trim().replaceAll("\s+", " ").toUpperCase(java.util.Locale.ROOT);
+        if (!permitidos.contains(valor)) {
+            throw new BusinessException("Método de pago no válido. Usa: " + String.join(", ", permitidos));
         }
+        return valor;
     }
 
     private BigDecimal sumPagos(LocalDateTime inicio, LocalDateTime fin) {
-        return citaRepository.sumMontoPagadoEntre(inicio, fin);
+        return sumar(movimientos(inicio, fin), inicio);
     }
 
-    private List<MetodoPagoResumen> desglosePorMetodo() {
-        Map<MetodoPago, BigDecimal> totalPorMetodo = new HashMap<>();
-        Map<MetodoPago, Long> cantidadPorMetodo = new HashMap<>();
-
-        for (Cita cita : citaRepository.findByPagadaTrue()) {
-            MetodoPago metodo = cita.getMetodoPago();
-            if (metodo == null) {
-                continue;
-            }
-            totalPorMetodo.merge(metodo, cita.getMontoPagado(), BigDecimal::add);
+    private List<MetodoPagoResumen> desglosePorMetodo(List<PagoDto> pagos) {
+        Map<String, BigDecimal> totalPorMetodo = new java.util.LinkedHashMap<>();
+        Map<String, Long> cantidadPorMetodo = new HashMap<>();
+        for (PagoDto p : pagos) {
+            String metodo = p.getMetodoPago() == null ? "SIN MÉTODO" : p.getMetodoPago();
+            totalPorMetodo.merge(metodo, p.getMontoPagado(), BigDecimal::add);
             cantidadPorMetodo.merge(metodo, 1L, Long::sum);
         }
-
         List<MetodoPagoResumen> desglose = new ArrayList<>();
-        for (MetodoPago metodo : MetodoPago.values()) {
-            Long cantidad = cantidadPorMetodo.get(metodo);
-            if (cantidad == null) {
-                continue;
-            }
-            MetodoPagoResumen item = new MetodoPagoResumen();
-            item.setMetodoPago(metodo.name());
-            item.setCantidad(cantidad);
-            item.setTotal(totalPorMetodo.get(metodo));
-            desglose.add(item);
-        }
+        totalPorMetodo.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .forEach(e -> {
+                    MetodoPagoResumen item = new MetodoPagoResumen();
+                    item.setMetodoPago(e.getKey());
+                    item.setCantidad(cantidadPorMetodo.get(e.getKey()));
+                    item.setTotal(e.getValue());
+                    desglose.add(item);
+                });
         return desglose;
     }
 

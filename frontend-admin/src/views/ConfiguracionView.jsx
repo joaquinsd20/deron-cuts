@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
-import { getConfiguracionAdmin, actualizarConfiguracion } from '../services/api.js'
+import { getConfiguracionAdmin, actualizarConfiguracion, mensajeError } from '../services/api.js'
+import { MetodoIcono, nombreMetodo, refrescarMetodosPago } from '../components/MetodoPago.jsx'
 
 const DIAS = [
   ['LUNES', 'Lunes'],
@@ -59,13 +60,40 @@ export default function ConfiguracionView() {
       }
     }))
 
+  const [nuevoMetodo, setNuevoMetodo] = useState('')
+  const metodos = config.metodosPago || ['EFECTIVO', 'YAPE', 'PLIN']
+
+  const agregarMetodo = () => {
+    const m = nuevoMetodo.trim().replace(/\s+/g, ' ').toUpperCase()
+    if (!m) return
+    if (metodos.includes(m)) {
+      setToast({ message: 'Ese método ya está en la lista', tipo: 'error' })
+      return
+    }
+    setCampo('metodosPago', [...metodos, m])
+    setNuevoMetodo('')
+  }
+
+  const quitarMetodo = (m) => {
+    if (metodos.length <= 1) {
+      setToast({ message: 'Deja al menos un método de pago', tipo: 'error' })
+      return
+    }
+    setCampo(
+      'metodosPago',
+      metodos.filter((x) => x !== m)
+    )
+  }
+
   const guardar = async () => {
     setGuardando(true)
     try {
-      await actualizarConfiguracion(config)
+      const guardada = await actualizarConfiguracion({ ...config, metodosPago: metodos })
+      setConfig(guardada)
+      refrescarMetodosPago(guardada.metodosPago)
       setToast({ message: 'Configuración guardada' })
-    } catch {
-      setToast({ message: 'No se pudo guardar la configuración', tipo: 'error' })
+    } catch (err) {
+      setToast({ message: mensajeError(err, 'No se pudo guardar la configuración'), tipo: 'error' })
     } finally {
       setGuardando(false)
     }
@@ -97,6 +125,51 @@ export default function ConfiguracionView() {
               {guardando ? 'Guardando…' : 'Guardar'}
             </button>
           </header>
+
+          <div className="card">
+            <div className="card__title">Métodos de pago</div>
+            <p className="page-head__sub" style={{ marginBottom: 14 }}>
+              Estos aparecen al registrar un adelanto o un cobro. Agrega los que uses (por ejemplo
+              BIM o Tarjeta) y quita los que no. Pulsa Guardar arriba para aplicar.
+            </p>
+            <div className="metodos-config">
+              {metodos.map((m) => (
+                <div className="metodo-chip" key={m}>
+                  <MetodoIcono metodo={m} tamano={34} />
+                  <span>{nombreMetodo(m)}</span>
+                  <button
+                    type="button"
+                    className="metodo-chip__quitar"
+                    aria-label={`Quitar ${nombreMetodo(m)}`}
+                    onClick={() => quitarMetodo(m)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="metodo-agregar">
+              <div className="field" style={{ flex: 1 }}>
+                <label htmlFor="nuevo-metodo">Nuevo método</label>
+                <input
+                  id="nuevo-metodo"
+                  placeholder="Ej.: BIM, Tarjeta, Transferencia"
+                  maxLength={30}
+                  value={nuevoMetodo}
+                  onChange={(e) => setNuevoMetodo(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      agregarMetodo()
+                    }
+                  }}
+                />
+              </div>
+              <button type="button" className="btn btn--outline" onClick={agregarMetodo}>
+                + Agregar
+              </button>
+            </div>
+          </div>
 
           <div className="card">
             <div className="card__title">Datos del negocio</div>

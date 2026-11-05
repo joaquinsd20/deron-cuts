@@ -1636,3 +1636,289 @@ a {
 .cita__eliminar {
   color: var(--muted);
 }
+
+/* ---------- Logos de métodos de pago ---------- */
+.metodo-ico {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 28%;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 4px 12px rgba(0, 0, 0, 0.25);
+  user-select: none;
+}
+
+.metodo-ico--yape {
+  background: linear-gradient(145deg, #8b2fa3, #5b1470);
+}
+
+.metodo-ico--plin {
+  background: linear-gradient(135deg, #12d1c0 0%, #1aa3d9 55%, #2a5fd8 100%);
+}
+
+.metodo-ico--efectivo {
+  background: linear-gradient(145deg, #2fb36a, #17804a);
+}
+
+.metodo-ico--otro {
+  background: linear-gradient(145deg, #4a4a55, #2c2c33);
+  text-transform: uppercase;
+}
+
+.metodo-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 10px;
+}
+
+.metodo-opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 6px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.metodo-opcion:hover {
+  transform: translateY(-2px);
+}
+
+.metodo-opcion--activa {
+  border-color: var(--neon);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.metodo-recibido {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+}
+
+.metodo {
+  border-radius: 12px;
+  justify-content: flex-start;
+}
+
+.metodo__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.metodos-config {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.metodo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-family: var(--font-head);
+  font-size: 0.85rem;
+}
+
+.metodo-chip__quitar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.metodo-chip__quitar:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.metodo-agregar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Historial de ingresos ---------- */
+.ingresos {
+  display: grid;
+  gap: 8px;
+}
+
+.ingreso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.ingreso__info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.ingreso__info span {
+  color: var(--neon-dim);
+  font-size: 0.85rem;
+}
+
+.ingreso__info .ingreso__fecha {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.ingreso__monto {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  white-space: nowrap;
+}
+
+/* ---------- Fichas de clientes ---------- */
+.fichas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 14px;
+}
+
+.ficha {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.ficha--cumple {
+  border-color: #e9b949;
+  box-shadow: 0 0 0 1px rgba(233, 185, 73, 0.35);
+}
+
+.ficha__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ficha__avatar {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #3a3a44, #22222a);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.ficha__titulo {
+  display: grid;
+  min-width: 0;
+}
+
+.ficha__titulo span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ficha__datos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.dato {
+  display: grid;
+  gap: 2px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.dato__k {
+  font-family: var(--font-head);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dato__v {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.dato__s {
+  font-size: 0.76rem;
+  color: var(--neon-dim);
+}
+
+.ficha--cumple .dato:first-child {
+  background: rgba(233, 185, 73, 0.12);
+}
+
+.ficha__acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ficha__desde {
+  width: 100%;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.cumple-aviso {
+  margin-bottom: 18px;
+  border: 1px solid #e9b949;
+}
+
+@media (max-width: 640px) {
+  .fichas {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat__num {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .stats--pagos .stat__num {
+    font-size: clamp(1.25rem, 6.4vw, 1.8rem);
+  }
+}

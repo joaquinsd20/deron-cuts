@@ -1,6 +1,6 @@
 package com.deroncuts.barberia.controller;
 
-import com.deroncuts.barberia.dto.ClienteDto;
+
 import com.deroncuts.barberia.dto.request.CambiarPasswordRequest;
 import com.deroncuts.barberia.service.CuentaService;
 import jakarta.validation.Valid;
@@ -29,7 +29,7 @@ public class AdminClienteController {
     }
 
     @GetMapping("/clientes")
-    public List<ClienteDto> listar(@RequestParam(required = false) String q) {
+    public List<com.deroncuts.barberia.dto.ClienteAdminDto> listar(@RequestParam(required = false) String q) {
         return cuentaService.listarClientes(q);
     }
 

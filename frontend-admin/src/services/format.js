@@ -9,7 +9,7 @@ export function formatMoneyLargo(valor) {
   return `S/ ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-export const METODOS_PAGO = ['EFECTIVO', 'YAPE', 'PLIN', 'TARJETA', 'TRANSFERENCIA']
+export const METODOS_PAGO = ['EFECTIVO', 'YAPE', 'PLIN']
 
 export function formatHora(iso) {
   if (!iso) return ''

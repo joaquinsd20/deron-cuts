@@ -1,7 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
 import { getClientes, restablecerPasswordCliente } from '../services/api.js'
+import { formatMoney } from '../services/format.js'
+
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
+  'septiembre', 'octubre', 'noviembre', 'diciembre']
+
+function fechaCorta(iso) {
+  if (!iso) return '—'
+  const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number)
+  return `${d} de ${MESES[m - 1]}${y ? ` ${y}` : ''}`
+}
+
+function diaMes(iso) {
+  const [, m, d] = String(iso).slice(0, 10).split('-').map(Number)
+  return `${d} de ${MESES[m - 1]}`
+}
+
+function textoCumple(c) {
+  if (!c.fechaNacimiento) return null
+  if (c.diasParaCumple === 0) return `¡Hoy cumple ${c.edadQueCumple}! 🎉`
+  if (c.diasParaCumple === 1) return `Mañana cumple ${c.edadQueCumple}`
+  if (c.diasParaCumple <= 7) return `Cumple ${c.edadQueCumple} en ${c.diasParaCumple} días`
+  return `Faltan ${c.diasParaCumple} días`
+}
+
+function textoFrecuencia(c) {
+  if (c.frecuenciaDias) {
+    if (c.frecuenciaDias <= 9) return `Viene cada ~${c.frecuenciaDias} días`
+    const semanas = Math.round(c.frecuenciaDias / 7)
+    return `Viene cada ~${semanas} semana${semanas === 1 ? '' : 's'}`
+  }
+  if (c.visitas === 1) return 'Ha venido 1 vez'
+  return 'Aún sin visitas completadas'
+}
 
 function linkWhatsapp(telefono, texto) {
   let numero = String(telefono || '').replace(/\D/g, '')
@@ -10,8 +43,19 @@ function linkWhatsapp(telefono, texto) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`
 }
 
+const ORDENES = {
+  recientes: { label: 'Recientes', fn: (a, b) => b.id - a.id },
+  cumple: {
+    label: 'Cumpleaños próximos',
+    fn: (a, b) => (a.diasParaCumple ?? 999) - (b.diasParaCumple ?? 999)
+  },
+  visitas: { label: 'Más visitas', fn: (a, b) => b.visitas - a.visitas },
+  gasto: { label: 'Más gasto', fn: (a, b) => Number(b.totalGastado) - Number(a.totalGastado) }
+}
+
 export default function Clientes() {
   const [q, setQ] = useState('')
+  const [orden, setOrden] = useState('recientes')
   const [lista, setLista] = useState([])
   const [cargando, setCargando] = useState(true)
   const [toast, setToast] = useState(null)
@@ -28,6 +72,9 @@ export default function Clientes() {
     return () => window.clearTimeout(id)
   }, [q])
 
+  const ordenados = useMemo(() => lista.slice().sort(ORDENES[orden].fn), [lista, orden])
+  const cumplenPronto = lista.filter((c) => c.diasParaCumple != null && c.diasParaCumple <= 7)
+
   const restablecer = async (cliente) => {
     const ok = window.confirm(
       `¿Generar una clave temporal para ${cliente.nombre}?\n\nSu contraseña actual dejará de funcionar.`
@@ -36,12 +83,13 @@ export default function Clientes() {
     try {
       const { passwordTemporal } = await restablecerPasswordCliente(cliente.id)
       setTemporal({ cliente, clave: passwordTemporal })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
       setToast({ message: 'No se pudo generar la clave temporal', tipo: 'error' })
     }
   }
 
-  const mensaje = temporal
+  const mensajeClave = temporal
     ? `Hola ${temporal.cliente.nombre}, tu clave temporal de DERON CUTS es: ${temporal.clave}\n` +
       `Entra con tu correo (${temporal.cliente.email}) y cámbiala en "Mi cuenta".`
     : ''
@@ -57,12 +105,22 @@ export default function Clientes() {
                 Mis <span>clientes</span>
               </h1>
               <p className="page-head__sub">
-                Si un cliente olvidó su contraseña, genérale una clave temporal y envíasela por WhatsApp.
+                Cumpleaños, cada cuánto vienen y cuánto han gastado. Toca un cliente para escribirle.
               </p>
             </div>
           </header>
 
-          <div className="card" style={{ marginBottom: 18 }}>
+          {cumplenPronto.length > 0 && (
+            <div className="card cumple-aviso">
+              <div className="card__title">🎂 Cumpleaños esta semana</div>
+              <p>
+                {cumplenPronto.map((c) => `${c.nombre} (${diaMes(c.proximoCumple)})`).join(' · ')}
+              </p>
+              <p className="hint">En la semana de su cumpleaños el corte es gratis: ¡avísales!</p>
+            </div>
+          )}
+
+          <div className="card filters" style={{ marginBottom: 18 }}>
             <div className="field">
               <label htmlFor="buscar-cliente">Buscar</label>
               <input
@@ -72,6 +130,16 @@ export default function Clientes() {
                 onChange={(e) => setQ(e.target.value)}
               />
             </div>
+            <div className="field">
+              <label htmlFor="orden-clientes">Ordenar por</label>
+              <select id="orden-clientes" value={orden} onChange={(e) => setOrden(e.target.value)}>
+                {Object.entries(ORDENES).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {temporal && (
@@ -80,10 +148,10 @@ export default function Clientes() {
               <div className="clave-temporal__clave">{temporal.clave}</div>
               <p className="hint">Solo se muestra ahora. Envíasela y pídele que la cambie al entrar.</p>
               <div className="cita__actions">
-                {linkWhatsapp(temporal.cliente.telefono, mensaje) && (
+                {linkWhatsapp(temporal.cliente.telefono, mensajeClave) && (
                   <a
                     className="btn btn--primary btn--whatsapp"
-                    href={linkWhatsapp(temporal.cliente.telefono, mensaje)}
+                    href={linkWhatsapp(temporal.cliente.telefono, mensajeClave)}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -109,42 +177,87 @@ export default function Clientes() {
 
           {cargando ? (
             <div className="spinner" />
-          ) : lista.length === 0 ? (
+          ) : ordenados.length === 0 ? (
             <div className="empty">{q ? 'Ningún cliente coincide' : 'Aún no hay clientes registrados'}</div>
           ) : (
-            <div className="card admin-table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Teléfono</th>
-                    <th>Acceso</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lista.map((c) => (
-                    <tr key={c.id}>
-                      <td className="td--principal">
+            <div className="fichas">
+              {ordenados.map((c) => {
+                const wsp = linkWhatsapp(c.telefono, `Hola ${c.nombre}, te escribe Yumpi de DERON CUTS.`)
+                const cumpleCerca = c.diasParaCumple != null && c.diasParaCumple <= 7
+                return (
+                  <article className={`ficha${cumpleCerca ? ' ficha--cumple' : ''}`} key={c.id}>
+                    <header className="ficha__head">
+                      <div className="ficha__avatar" aria-hidden="true">
+                        {(c.nombre || '?').trim().charAt(0).toUpperCase()}
+                      </div>
+                      <div className="ficha__titulo">
                         <strong>{c.nombre}</strong>
-                        <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{c.email}</div>
-                      </td>
-                      <td data-label="Teléfono">{c.telefono || '—'}</td>
-                      <td data-label="Acceso">
-                        {[c.tienePassword && 'Contraseña', c.googleVinculado && 'Google'].filter(Boolean).join(' · ') ||
-                          '—'}
-                      </td>
-                      <td className="td--acciones">
-                        <div className="row-actions">
-                          <button className="btn btn--sm btn--outline" onClick={() => restablecer(c)}>
-                            Clave temporal
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <span>{c.email}</span>
+                        <span>{c.telefono || 'Sin teléfono'}</span>
+                      </div>
+                    </header>
+
+                    <div className="ficha__datos">
+                      <div className="dato">
+                        <span className="dato__k">🎂 Cumpleaños</span>
+                        <span className="dato__v">
+                          {c.fechaNacimiento ? diaMes(c.fechaNacimiento) : 'No registrado'}
+                        </span>
+                        {textoCumple(c) && <span className="dato__s">{textoCumple(c)}</span>}
+                      </div>
+                      <div className="dato">
+                        <span className="dato__k">🔁 Frecuencia</span>
+                        <span className="dato__v">{textoFrecuencia(c)}</span>
+                        <span className="dato__s">
+                          {c.visitas} visita{c.visitas === 1 ? '' : 's'} · {c.canceladas} cancelada
+                          {c.canceladas === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                      <div className="dato">
+                        <span className="dato__k">✂️ Última visita</span>
+                        <span className="dato__v">{c.ultimaVisita ? fechaCorta(c.ultimaVisita) : '—'}</span>
+                        {c.diasSinVenir != null && (
+                          <span className="dato__s">
+                            {c.diasSinVenir <= 0 ? 'Hoy' : c.diasSinVenir === 1 ? 'Ayer' : `Hace ${c.diasSinVenir} días`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="dato">
+                        <span className="dato__k">📅 Próxima cita</span>
+                        <span className="dato__v">
+                          {c.proximaCita
+                            ? `${fechaCorta(c.proximaCita)} · ${String(c.proximaCita).slice(11, 16)}`
+                            : 'Sin reservar'}
+                        </span>
+                      </div>
+                      <div className="dato">
+                        <span className="dato__k">💰 Ha gastado</span>
+                        <span className="dato__v">{formatMoney(c.totalGastado)}</span>
+                      </div>
+                      <div className="dato">
+                        <span className="dato__k">⭐ Corte favorito</span>
+                        <span className="dato__v">{c.servicioFavorito || '—'}</span>
+                      </div>
+                    </div>
+
+                    <div className="ficha__acciones">
+                      {wsp && (
+                        <a className="btn btn--sm btn--whatsapp" href={wsp} target="_blank" rel="noreferrer">
+                          WhatsApp
+                        </a>
+                      )}
+                      <button className="btn btn--sm btn--outline" onClick={() => restablecer(c)}>
+                        Clave temporal
+                      </button>
+                      <span className="ficha__desde">
+                        Cliente desde {c.registradoEn ? fechaCorta(c.registradoEn) : '—'} ·{' '}
+                        {[c.tienePassword && 'contraseña', c.googleVinculado && 'Google'].filter(Boolean).join(' + ') ||
+                          'sin acceso'}
+                      </span>
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           )}
         </div>

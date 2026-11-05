@@ -1,6 +1,10 @@
 package com.deroncuts.barberia.service;
 
+import com.deroncuts.barberia.dto.ClienteAdminDto;
 import com.deroncuts.barberia.dto.ClienteDto;
+import com.deroncuts.barberia.model.Cita;
+import com.deroncuts.barberia.model.EstadoCita;
+import com.deroncuts.barberia.repository.CitaRepository;
 import com.deroncuts.barberia.dto.request.CambiarPasswordRequest;
 import com.deroncuts.barberia.exception.BusinessException;
 import com.deroncuts.barberia.exception.NotFoundException;
@@ -13,6 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
@@ -27,27 +34,105 @@ public class CuentaService {
     private final ClienteRepository clienteRepository;
     private final UsuarioAdminRepository usuarioAdminRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CitaRepository citaRepository;
 
     public CuentaService(ClienteRepository clienteRepository,
                          UsuarioAdminRepository usuarioAdminRepository,
-                         PasswordEncoder passwordEncoder) {
+                         PasswordEncoder passwordEncoder,
+                         CitaRepository citaRepository) {
+        this.citaRepository = citaRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioAdminRepository = usuarioAdminRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional(readOnly = true)
-    public List<ClienteDto> listarClientes(String q) {
+    public List<ClienteAdminDto> listarClientes(String q) {
         String filtro = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
+        // Una sola consulta de citas para todos (negocio pequeño: evita N+1 consultas).
+        java.util.Map<Long, List<Cita>> citasPorCliente = citaRepository.findAll().stream()
+                .filter(c -> c.getCliente() != null)
+                .collect(java.util.stream.Collectors.groupingBy(c -> c.getCliente().getId()));
+        LocalDate hoy = LocalDate.now();
         return clienteRepository.findAll().stream()
                 .filter(c -> filtro.isEmpty()
                         || contiene(c.getNombre(), filtro)
                         || contiene(c.getEmail(), filtro)
                         || contiene(c.getTelefono(), filtro))
                 .sorted((a, b) -> b.getId().compareTo(a.getId()))
-                .limit(100)
-                .map(ClienteDto::from)
+                .limit(200)
+                .map(c -> ficha(c, citasPorCliente.getOrDefault(c.getId(), List.of()), hoy))
                 .toList();
+    }
+
+    private ClienteAdminDto ficha(Cliente c, List<Cita> citas, LocalDate hoy) {
+        ClienteDto base = ClienteDto.from(c);
+        ClienteAdminDto f = new ClienteAdminDto();
+        f.id = c.getId();
+        f.nombre = c.getNombre();
+        f.email = c.getEmail();
+        f.telefono = c.getTelefono();
+        f.tienePassword = base.isTienePassword();
+        f.googleVinculado = base.isGoogleVinculado();
+        f.registradoEn = c.getCreatedAt();
+
+        LocalDate nac = c.getFechaNacimiento();
+        if (nac != null) {
+            f.fechaNacimiento = nac;
+            LocalDate cumple = proximoCumple(nac, hoy);
+            f.proximoCumple = cumple;
+            f.diasParaCumple = (int) java.time.temporal.ChronoUnit.DAYS.between(hoy, cumple);
+            f.edadQueCumple = cumple.getYear() - nac.getYear();
+        }
+
+        List<Cita> completadas = citas.stream()
+                .filter(x -> x.getEstado() == EstadoCita.COMPLETADA)
+                .sorted(java.util.Comparator.comparing(Cita::getFechaHoraInicio))
+                .toList();
+        f.visitas = completadas.size();
+        f.canceladas = citas.stream().filter(x -> x.getEstado() == EstadoCita.CANCELADA).count();
+        f.reservas = citas.size() - f.canceladas;
+        if (!completadas.isEmpty()) {
+            LocalDateTime ultima = completadas.get(completadas.size() - 1).getFechaHoraInicio();
+            f.ultimaVisita = ultima;
+            f.diasSinVenir = (int) Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(ultima.toLocalDate(), hoy));
+        }
+        if (completadas.size() >= 2) {
+            long dias = java.time.temporal.ChronoUnit.DAYS.between(
+                    completadas.get(0).getFechaHoraInicio().toLocalDate(),
+                    completadas.get(completadas.size() - 1).getFechaHoraInicio().toLocalDate());
+            f.frecuenciaDias = (int) Math.max(1, Math.round(dias / (double) (completadas.size() - 1)));
+        }
+        LocalDateTime ahora = LocalDateTime.now();
+        citas.stream()
+                .filter(x -> (x.getEstado() == EstadoCita.PENDIENTE || x.getEstado() == EstadoCita.CONFIRMADA)
+                        && x.getFechaHoraInicio().isAfter(ahora))
+                .map(Cita::getFechaHoraInicio)
+                .min(LocalDateTime::compareTo)
+                .ifPresent(p -> f.proximaCita = p);
+        citas.stream()
+                .filter(x -> x.getEstado() != EstadoCita.CANCELADA && x.getServicio() != null)
+                .collect(java.util.stream.Collectors.groupingBy(x -> x.getServicio().getNombre(),
+                        java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .ifPresent(e -> f.servicioFavorito = e.getKey());
+        f.totalGastado = citas.stream()
+                .map(x -> (x.isAdelantoPagado() && x.getAdelantoMonto() != null ? x.getAdelantoMonto() : BigDecimal.ZERO)
+                        .add(x.isPagada() && x.getMontoPagado() != null ? x.getMontoPagado() : BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return f;
+    }
+
+    private static LocalDate proximoCumple(LocalDate nac, LocalDate hoy) {
+        for (int anio = hoy.getYear(); anio <= hoy.getYear() + 1; anio++) {
+            // 29 de febrero en años no bisiestos → 28 de febrero
+            LocalDate c = nac.getMonthValue() == 2 && nac.getDayOfMonth() == 29 && !java.time.Year.isLeap(anio)
+                    ? LocalDate.of(anio, 2, 28)
+                    : nac.withYear(anio);
+            if (!c.isBefore(hoy)) return c;
+        }
+        return nac.withYear(hoy.getYear() + 1);
     }
 
     /** Genera una clave temporal para un cliente que olvidó la suya. Se devuelve una sola vez. */

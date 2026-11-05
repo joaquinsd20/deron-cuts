@@ -55,9 +55,10 @@ public class Cita {
     @Column(nullable = false, length = 20)
     private EstadoCita estado = EstadoCita.PENDIENTE;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "metodo_pago", length = 20)
-    private MetodoPago metodoPago;
+    // Texto libre: los métodos los configura el barbero (EFECTIVO, YAPE, PLIN, …).
+    // Columna nueva para no tocar la antigua "metodo_pago" (tipo ENUM); ver DataSeeder.
+    @Column(name = "medio_pago", length = 30)
+    private String metodoPago;
 
     @Column(name = "monto_pagado", precision = 10, scale = 2)
     private BigDecimal montoPagado;
@@ -83,9 +84,8 @@ public class Cita {
     @Column(name = "adelanto_aplicado", nullable = false)
     private boolean adelantoAplicado = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "metodo_adelanto", length = 20)
-    private MetodoPago metodoAdelanto;
+    @Column(name = "medio_adelanto", length = 30)
+    private String metodoAdelanto;
 
     @Column(name = "fecha_adelanto")
     private LocalDateTime fechaAdelanto;
@@ -194,11 +194,11 @@ public class Cita {
         this.estado = estado;
     }
 
-    public MetodoPago getMetodoPago() {
+    public String getMetodoPago() {
         return metodoPago;
     }
 
-    public void setMetodoPago(MetodoPago metodoPago) {
+    public void setMetodoPago(String metodoPago) {
         this.metodoPago = metodoPago;
     }
 
@@ -266,11 +266,11 @@ public class Cita {
         this.adelantoAplicado = adelantoAplicado;
     }
 
-    public MetodoPago getMetodoAdelanto() {
+    public String getMetodoAdelanto() {
         return metodoAdelanto;
     }
 
-    public void setMetodoAdelanto(MetodoPago metodoAdelanto) {
+    public void setMetodoAdelanto(String metodoAdelanto) {
         this.metodoAdelanto = metodoAdelanto;
     }
 

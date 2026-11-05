@@ -1,20 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
+import { MetodoIcono, nombreMetodo, useMetodosPago } from '../components/MetodoPago.jsx'
 import { getResumenPagos, getPagos } from '../services/api.js'
-import {
-  formatMoneyLargo,
-  formatFechaHora,
-  METODOS_PAGO
-} from '../services/format.js'
-
-const METODO_LABEL = {
-  EFECTIVO: 'Efectivo',
-  YAPE: 'Yape',
-  PLIN: 'Plin',
-  TARJETA: 'Tarjeta',
-  TRANSFERENCIA: 'Transferencia'
-}
+import { subscribeCitas } from '../services/websocket.js'
+import { formatMoneyLargo, formatFechaHora } from '../services/format.js'
 
 export default function Pagos() {
   const [resumen, setResumen] = useState(null)
@@ -24,9 +14,9 @@ export default function Pagos() {
   const [metodo, setMetodo] = useState('')
   const [cargando, setCargando] = useState(true)
   const [toast, setToast] = useState(null)
+  const metodos = useMetodosPago()
 
   const cargar = useCallback(async () => {
-    setCargando(true)
     const params = {}
     if (desde) params.desde = desde
     if (hasta) params.hasta = hasta
@@ -43,15 +33,18 @@ export default function Pagos() {
   }, [desde, hasta, metodo])
 
   useEffect(() => {
+    setCargando(true)
     cargar()
   }, [cargar])
+
+  // Un adelanto o cobro hecho en otra pantalla actualiza las ganancias al instante.
+  useEffect(() => subscribeCitas(() => cargar()), [cargar])
 
   const stats = [
     { label: 'Total cobrado', valor: resumen?.total ?? 0, resaltar: true },
     { label: 'Hoy', valor: resumen?.totalHoy ?? 0 },
     { label: 'Esta semana', valor: resumen?.totalSemana ?? 0 },
-    { label: 'Este mes', valor: resumen?.totalMes ?? 0 },
-    { label: 'Pagos registrados', valor: resumen?.cantidad ?? 0 }
+    { label: 'Este mes', valor: resumen?.totalMes ?? 0 }
   ]
 
   return (
@@ -64,7 +57,9 @@ export default function Pagos() {
               <h1>
                 Módulo de <span>pagos</span>
               </h1>
-              <div className="page-head__sub">¿Cuánto estás ganando?</div>
+              <div className="page-head__sub">
+                Adelantos y cobros de saldo, cada uno con su fecha y método.
+              </div>
             </div>
           </header>
 
@@ -79,12 +74,13 @@ export default function Pagos() {
 
           {resumen && resumen.desglose?.length > 0 && (
             <section className="card">
-              <div className="card__title">Desglose por método</div>
+              <div className="card__title">Por método · {resumen.cantidad} ingreso(s)</div>
               <div className="metodos">
                 {resumen.desglose.map((d) => (
                   <div className="metodo" key={d.metodoPago}>
-                    <div className="metodo__name">
-                      {METODO_LABEL[d.metodoPago] || d.metodoPago}
+                    <MetodoIcono metodo={d.metodoPago} tamano={40} />
+                    <div className="metodo__info">
+                      <div className="metodo__name">{nombreMetodo(d.metodoPago)}</div>
                       <span className="metodo__count">{d.cantidad} pago(s)</span>
                     </div>
                     <div className="metodo__total">{formatMoneyLargo(d.total)}</div>
@@ -107,9 +103,9 @@ export default function Pagos() {
               <label>Método</label>
               <select value={metodo} onChange={(e) => setMetodo(e.target.value)}>
                 <option value="">Todos</option>
-                {METODOS_PAGO.map((m) => (
+                {metodos.map((m) => (
                   <option key={m} value={m}>
-                    {METODO_LABEL[m] || m}
+                    {nombreMetodo(m)}
                   </option>
                 ))}
               </select>
@@ -117,38 +113,29 @@ export default function Pagos() {
           </div>
 
           <div className="card">
-            <div className="card__title">Historial de pagos</div>
+            <div className="card__title">Historial de ingresos</div>
             {cargando ? (
               <div className="spinner" />
             ) : pagos.length === 0 ? (
               <div className="empty">Aún no hay pagos con esos filtros</div>
             ) : (
-              <table className="tabla">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Servicio</th>
-                    <th>Método</th>
-                    <th className="tabla__num">Monto</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagos.map((p) => (
-                    <tr key={p.id}>
-                      <td data-label="Fecha">{formatFechaHora(p.fechaPago)}</td>
-                      <td data-label="Cliente">{p.nombreCliente}</td>
-                      <td data-label="Servicio">{p.nombreServicio}</td>
-                      <td data-label="Método">
-                        <span className={`tag tag--metodo ${'tag--' + (p.metodoPago || '').toLowerCase()}`}>
-                          {METODO_LABEL[p.metodoPago] || p.metodoPago}
-                        </span>
-                      </td>
-                      <td className="tabla__num" data-label="Monto">{formatMoneyLargo(p.montoPagado)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="ingresos">
+                {pagos.map((p) => (
+                  <div className="ingreso" key={p.id}>
+                    <MetodoIcono metodo={p.metodoPago} tamano={42} />
+                    <div className="ingreso__info">
+                      <strong>{p.nombreCliente}</strong>
+                      <span>
+                        {p.concepto === 'ADELANTO' ? 'Adelanto' : 'Saldo'} · {p.nombreServicio}
+                      </span>
+                      <span className="ingreso__fecha">
+                        {formatFechaHora(p.fechaPago)} · {nombreMetodo(p.metodoPago)}
+                      </span>
+                    </div>
+                    <div className="ingreso__monto">{formatMoneyLargo(p.montoPagado)}</div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>

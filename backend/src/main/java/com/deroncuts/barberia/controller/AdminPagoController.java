@@ -1,6 +1,6 @@
 package com.deroncuts.barberia.controller;
 
-import com.deroncuts.barberia.dto.CitaDto;
+import com.deroncuts.barberia.dto.PagoDto;
 import com.deroncuts.barberia.dto.PagosResumen;
 import com.deroncuts.barberia.service.CitaService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,7 +28,7 @@ public class AdminPagoController {
     }
 
     @GetMapping
-    public List<CitaDto> listar(
+    public List<PagoDto> listar(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(required = false) String metodo) {

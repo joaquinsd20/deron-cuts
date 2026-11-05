@@ -1,12 +1,6 @@
 import { formatMoney, formatHora } from '../services/format.js'
+import { nombreMetodo } from './MetodoPago.jsx'
 
-const METODO_LABEL = {
-  EFECTIVO: 'Efectivo',
-  YAPE: 'Yape',
-  PLIN: 'Plin',
-  TARJETA: 'Tarjeta',
-  TRANSFERENCIA: 'Transferencia'
-}
 
 export default function AppointmentCard({
   cita,
@@ -45,7 +39,7 @@ export default function AppointmentCard({
             <>
               {' · '}
               <span className="badge badge--pago">
-                PAGADO {formatMoney(cita.montoPagado)} · {METODO_LABEL[cita.metodoPago] || cita.metodoPago}
+                PAGADO {formatMoney(cita.montoPagado)} · {nombreMetodo(cita.metodoPago)}
               </span>
             </>
           )}
@@ -79,7 +73,7 @@ export default function AppointmentCard({
                 <span className="badge badge--adelanto">
                   ADELANTO {formatMoney(adelanto)}
                   {cita.metodoAdelanto
-                    ? ` · ${METODO_LABEL[cita.metodoAdelanto] || cita.metodoAdelanto}`
+                    ? ` · ${nombreMetodo(cita.metodoAdelanto)}`
                     : ''}
                 </span>
               ) : (
