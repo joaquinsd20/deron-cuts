@@ -69,6 +69,7 @@ function aTarjeta(servicio) {
     label: servicio.nombre,
     precio: formatPrecio(servicio.precio),
     desc: servicio.descripcion || local?.desc || '',
+    duracion: servicio.duracionMinutos,
     custom: !(servicio.imagenUrl || local?.img)
   }
 }
@@ -217,7 +218,13 @@ export default function Services() {
                 aria-label={`Ver detalle de ${s.label}`}
               >
                 {s.img ? (
-                  <img src={s.img} alt={s.label} loading="lazy" draggable={false} />
+                  <span className="shot__media">
+                    <img src={s.img} alt={s.label} loading="lazy" draggable={false} />
+                    <span className="shot__hint" aria-hidden="true">
+                      Ver detalle →
+                    </span>
+                    {s.duracion ? <span className="shot__dur">{s.duracion} min</span> : null}
+                  </span>
                 ) : (
                   <span className="shot__custom-art" aria-hidden="true">
                     <span>✂</span>
@@ -305,7 +312,10 @@ export default function Services() {
             )}
 
             <div className="shot-modal__body">
-              <span className="shot-modal__price">{detalle.precio}</span>
+              <span className="shot-modal__price">
+                {detalle.precio}
+                {detalle.duracion ? <small className="shot-modal__dur"> · {detalle.duracion} min</small> : null}
+              </span>
               <h3 className="shot-modal__title" id="shot-modal-title">
                 {detalle.label}
               </h3>

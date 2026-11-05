@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
@@ -8,6 +8,45 @@ export default function Navbar() {
   const navigate = useNavigate()
   const { cliente, cerrarSesion } = useAuth()
   const onHome = location.pathname === '/'
+  const [compacta, setCompacta] = useState(false)
+  const [activa, setActiva] = useState(null)
+  const progresoRef = useRef(null)
+
+  // Navbar compacta al bajar, barra de progreso y sección activa (solo en el inicio).
+  useEffect(() => {
+    let frame = 0
+    const secciones = ['servicios', 'yumpi', 'ubicacion']
+    const actualizar = () => {
+      frame = 0
+      const y = window.scrollY
+      setCompacta(y > 40)
+      const total = document.documentElement.scrollHeight - window.innerHeight
+      if (progresoRef.current) {
+        progresoRef.current.style.transform = `scaleX(${total > 0 ? Math.min(1, y / total) : 0})`
+      }
+      if (!onHome) return
+      const linea = window.innerHeight * 0.35
+      let actual = null
+      secciones.forEach((id) => {
+        const el = document.getElementById(id)
+        if (el && el.getBoundingClientRect().top <= linea) actual = id
+      })
+      setActiva(actual)
+    }
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(actualizar)
+    }
+    actualizar()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
+  }, [onHome])
+
+  const claseLink = (id) => `nav__link${activa === id ? ' nav__link--active' : ''}`
 
   useEffect(() => {
     if (!open) return
@@ -45,7 +84,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className="navbar">
+    <header className={`navbar${compacta ? ' navbar--compacta' : ''}`}>
       <div className="container navbar__inner">
         <Link to="/" className="brand" onClick={() => setOpen(false)}>
           <span className="brand__name">
@@ -57,18 +96,18 @@ export default function Navbar() {
         <nav id="menu-principal" className={`nav__list${open ? ' nav__list--open' : ''}`} aria-label="Menú principal">
           <span className="nav__eyebrow" aria-hidden="true">Menú</span>
           <div className="nav__item nav__drop">
-            <a className="nav__link" href="#servicios" onClick={() => anchor('servicios')}>
+            <a className={claseLink('servicios')} href="#servicios" onClick={() => anchor('servicios')}>
               Servicios
             </a>
             
           </div>
           <div className="nav__item">
-            <a className="nav__link" href="#yumpi" onClick={() => anchor('yumpi')}>
+            <a className={claseLink('yumpi')} href="#yumpi" onClick={() => anchor('yumpi')}>
               Sobre Yumpi
             </a>
           </div>
           <div className="nav__item">
-            <a className="nav__link" href="#ubicacion" onClick={() => anchor('ubicacion')}>
+            <a className={claseLink('ubicacion')} href="#ubicacion" onClick={() => anchor('ubicacion')}>
               Ubicación
             </a>
           </div>
@@ -115,6 +154,7 @@ export default function Navbar() {
           </svg>
         </button>
       </div>
+      <div className="navbar__progreso" ref={progresoRef} aria-hidden="true" />
     </header>
   )
 }

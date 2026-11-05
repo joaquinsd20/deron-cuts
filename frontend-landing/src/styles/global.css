@@ -2772,3 +2772,323 @@ ul {
   padding: 8px 14px;
   font-size: 0.8rem;
 }
+
+/* =========================================================
+   Toques "pro": estado en vivo, navbar inteligente, tarjetas
+   interactivas y "Cómo reservar"
+   ========================================================= */
+
+/* Estado en vivo (abierto / cerrado) */
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  font-family: var(--font-head);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--neon-dim);
+}
+
+.live-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8a8a92;
+  flex: 0 0 8px;
+}
+
+.live-status--open {
+  color: var(--ink);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.live-status--open .live-status__dot {
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6);
+  animation: pulso 2s infinite;
+}
+
+.schedule .live-status {
+  margin-top: 14px;
+}
+
+@keyframes pulso {
+  0% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(74, 222, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+  }
+}
+
+/* Horario: día de hoy */
+.sched-cell {
+  transition: background 0.2s ease;
+}
+
+.sched-cell--hoy {
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(255, 255, 255, 0.12), transparent 60%),
+    linear-gradient(145deg, rgba(44, 44, 52, 0.95), rgba(22, 22, 27, 0.8));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.sched-cell__hoy {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--neon);
+  color: var(--ink-solid);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  vertical-align: middle;
+}
+
+/* Navbar: compacta al bajar, sección activa y progreso */
+.navbar {
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navbar__inner {
+  transition: height 0.2s ease;
+}
+
+.navbar--compacta {
+  background: rgba(11, 11, 13, 0.97);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.navbar--compacta .navbar__inner {
+  height: 58px;
+}
+
+.nav__link {
+  position: relative;
+}
+
+.nav__link--active {
+  color: var(--neon);
+}
+
+@media (min-width: 901px) {
+  .nav__link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    height: 2px;
+    background: var(--neon);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s ease;
+  }
+
+  .nav__link:hover::after,
+  .nav__link--active::after {
+    transform: scaleX(1);
+  }
+}
+
+.navbar__progreso {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), #fff);
+  transform: scaleX(0);
+  transform-origin: left;
+  pointer-events: none;
+}
+
+/* Tarjetas de cortes */
+.shot__media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.shot__media img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.15);
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1), filter 0.4s ease;
+}
+
+.shot__hint {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 40px 14px 12px;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.75));
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.shot__dur {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: var(--font-head);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.shot:hover .shot__media img,
+.shot:focus-visible .shot__media img {
+  transform: scale(1.06);
+  filter: grayscale(0);
+}
+
+.shot:hover .shot__hint,
+.shot:focus-visible .shot__hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.shot:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 3px;
+}
+
+.shot-modal__dur {
+  font-family: var(--font-head);
+  font-size: 0.85rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+/* En celular no hay hover: la pista se muestra siempre, discreta */
+@media (hover: none) {
+  .shot__hint {
+    opacity: 1;
+    transform: none;
+    font-size: 0.68rem;
+    padding-top: 28px;
+  }
+}
+
+/* Cómo reservar */
+.pasos__grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 36px;
+  padding: 0;
+}
+
+.paso {
+  position: relative;
+  padding: 26px 22px 24px;
+  border: 1px solid var(--line);
+  background: var(--panel-soft);
+  box-shadow: var(--panel-glow);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.paso:hover {
+  transform: translateY(-4px);
+  border-color: var(--neon-dim);
+}
+
+.paso__n {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.45);
+  margin-bottom: 14px;
+}
+
+.paso__titulo {
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.paso__texto {
+  color: var(--neon-dim);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.pasos__cta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.pasos__nota {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 760px) {
+  .pasos__grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .paso {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 16px;
+    padding: 18px;
+  }
+
+  .paso__n {
+    grid-row: span 2;
+    font-size: 2rem;
+    margin: 0;
+  }
+
+  .pasos__cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-status--open .live-status__dot {
+    animation: none;
+  }
+
+  .shot__media img,
+  .shot__hint,
+  .paso,
+  .navbar,
+  .navbar__inner {
+    transition: none;
+  }
+}

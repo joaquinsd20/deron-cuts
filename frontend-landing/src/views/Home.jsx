@@ -7,13 +7,23 @@ import Schedule from '../components/Schedule.jsx'
 import LocationContact from '../components/LocationContact.jsx'
 import Footer from '../components/Footer.jsx'
 import ScrollReveal from '../components/ScrollReveal.jsx'
+import Pasos from '../components/Pasos.jsx'
 import { getConfiguracion } from '../services/api.js'
+import { estadoNegocio } from '../lib/horario.js'
 
 export default function Home() {
   const [config, setConfig] = useState(null)
   const [error, setError] = useState(false)
   const [videoPaused, setVideoPaused] = useState(false)
   const videoRef = useRef(null)
+  const [, setTick] = useState(0)
+  const estado = config ? estadoNegocio(config.horario) : null
+
+  // Refresca "Abierto ahora / Cerrado" cada minuto sin recargar la página.
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((n) => n + 1), 60000)
+    return () => window.clearInterval(id)
+  }, [])
 
   useEffect(() => {
     getConfiguracion()
@@ -38,11 +48,14 @@ export default function Home() {
       <>
         <Navbar />
         <div className="error-state container">
-          <h2>No pudimos conectar con el servidor</h2>
+          <h2>Estamos despertando el sistema</h2>
           <p>
-            Verifica que el servidor de DERON CUTS esté corriendo en <b>http://localhost:8082</b> y
-            recarga la página.
+            La página tardó en responder. Espera unos segundos y recarga; si sigue igual,
+            escríbenos por WhatsApp y te agendamos al toque.
           </p>
+          <button type="button" className="btn btn--outline" onClick={() => window.location.reload()}>
+            Recargar
+          </button>
           <Link to="/reservar" className="btn btn--primary">
             Intentar reservar igual
           </Link>
@@ -79,6 +92,12 @@ export default function Home() {
                   Ver cortes
                 </a>
               </div>
+              {estado && (
+                <div className={`live-status${estado.abierto ? ' live-status--open' : ''}`}>
+                  <span className="live-status__dot" aria-hidden="true" />
+                  {estado.texto}
+                </div>
+              )}
               <ul className="barber-film__points">
                 <li>Reserva en línea</li>
                 <li>Atención personalizada</li>
@@ -122,6 +141,7 @@ export default function Home() {
           </div>
         </section>
         <Services />
+        <Pasos />
         <AboutYumpi config={config} />
         <Schedule config={config} />
         <LocationContact config={config} />
