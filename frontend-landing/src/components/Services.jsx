@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { beginLoading, endLoading } from '../lib/loading.js'
+import { getServicios } from '../services/api.js'
 
 const SHOTS = [
   {
@@ -48,12 +49,51 @@ const PERSONALIZADO = {
   custom: true
 }
 
+function formatPrecio(valor) {
+  const n = Number(valor)
+  if (!Number.isFinite(n)) return ''
+  return `S/ ${Number.isInteger(n) ? n : n.toFixed(2)}`
+}
+
+function normalizar(texto) {
+  return String(texto || '').trim().toLowerCase()
+}
+
+// Convierte un servicio del backend (catálogo del admin) al formato de la tarjeta.
+// Si el servicio no tiene imagen, reutiliza la foto local con el mismo nombre.
+function aTarjeta(servicio) {
+  const local = SHOTS.find((s) => normalizar(s.label) === normalizar(servicio.nombre))
+  return {
+    id: servicio.id,
+    img: servicio.imagenUrl || local?.img || null,
+    label: servicio.nombre,
+    precio: formatPrecio(servicio.precio),
+    desc: servicio.descripcion || local?.desc || '',
+    custom: !(servicio.imagenUrl || local?.img)
+  }
+}
+
 export default function Services() {
+  const [shots, setShots] = useState(SHOTS)
   const trackRef = useRef(null)
   const drag = useRef({ activo: false, inicioX: 0, ultimoX: 0, scrollInicial: 0, movido: false })
   const [detalle, setDetalle] = useState(null)
   const [puedeAtras, setPuedeAtras] = useState(false)
   const [puedeAdelante, setPuedeAdelante] = useState(true)
+
+  useEffect(() => {
+    let activo = true
+    getServicios()
+      .then((lista) => {
+        if (!activo || !Array.isArray(lista)) return
+        const visibles = lista.filter((s) => s.activo !== false)
+        if (visibles.length) setShots(visibles.map(aTarjeta))
+      })
+      .catch(() => {})
+    return () => {
+      activo = false
+    }
+  }, [])
 
   useEffect(() => {
     const track = trackRef.current
@@ -168,15 +208,21 @@ export default function Services() {
             onPointerCancel={terminarArrastre}
             onDragStart={(e) => e.preventDefault()}
           >
-            {SHOTS.map((s) => (
+            {shots.map((s) => (
               <button
                 type="button"
-                className="shot"
-                key={s.label}
+                className={s.img ? 'shot' : 'shot shot--custom'}
+                key={s.id ?? s.label}
                 onClick={() => abrirDetalle(s)}
                 aria-label={`Ver detalle de ${s.label}`}
               >
-                <img src={s.img} alt={s.label} loading="lazy" draggable={false} />
+                {s.img ? (
+                  <img src={s.img} alt={s.label} loading="lazy" draggable={false} />
+                ) : (
+                  <span className="shot__custom-art" aria-hidden="true">
+                    <span>✂</span>
+                  </span>
+                )}
                 <span className="shot__meta">
                   <span className="shot__label">{s.label}</span>
                   <span className="shot__price">{s.precio}</span>
@@ -250,7 +296,7 @@ export default function Services() {
               ×
             </button>
 
-            {detalle.custom ? (
+            {detalle.custom || !detalle.img ? (
               <div className="shot-modal__art" aria-hidden="true">
                 <span>+</span>
               </div>

@@ -21,6 +21,7 @@ import com.deroncuts.barberia.model.EstadoCita;
 import com.deroncuts.barberia.model.MetodoPago;
 import com.deroncuts.barberia.model.Servicio;
 import com.deroncuts.barberia.repository.CitaRepository;
+import com.deroncuts.barberia.repository.ConfiguracionNegocioRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class CitaService {
             List.of(EstadoCita.PENDIENTE, EstadoCita.CONFIRMADA);
 
     private final CitaRepository citaRepository;
+    private final ConfiguracionNegocioRepository configuracionRepository;
     private final ServicioService servicioService;
     private final DisponibilidadService disponibilidadService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -53,6 +55,7 @@ public class CitaService {
     private final BigDecimal penalidadTardanza;
 
     public CitaService(CitaRepository citaRepository,
+                       ConfiguracionNegocioRepository configuracionRepository,
                        ServicioService servicioService,
                        DisponibilidadService disponibilidadService,
                        SimpMessagingTemplate messagingTemplate,
@@ -60,6 +63,7 @@ public class CitaService {
                        @Value("${app.reservas.adelanto-porcentaje:50}") int adelantoPorcentaje,
                        @Value("${app.reservas.penalidad-tardanza:10}") BigDecimal penalidadTardanza) {
         this.citaRepository = citaRepository;
+        this.configuracionRepository = configuracionRepository;
         this.servicioService = servicioService;
         this.disponibilidadService = disponibilidadService;
         this.messagingTemplate = messagingTemplate;
@@ -442,6 +446,11 @@ public class CitaService {
 
     private void validarBloqueDisponible(LocalDateTime inicio, LocalDateTime fin, Long excluirCitaId) {
         LocalDate fecha = inicio.toLocalDate();
+
+        // Candado (SELECT ... FOR UPDATE) hasta el fin de la transacción: dos reservas
+        // simultáneas para el mismo horario se procesan una tras otra, y la segunda
+        // ve la primera y recibe "Ese horario ya está reservado".
+        configuracionRepository.findFirstByOrderByIdAsc();
 
         if (!disponibilidadService.estaDentroDeHorarioDeAtencion(inicio, fin)) {
             throw new ConflictException("El horario elegido está fuera del horario de atención de " + fecha);

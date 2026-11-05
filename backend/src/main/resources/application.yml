@@ -9,8 +9,13 @@ spring:
     username: ${DERON_DB_USER:deroncuts}
     password: ${DERON_DB_PASSWORD:DeronApp2026}
     hikari:
-      connection-timeout: 10000
+      # TiDB Serverless puede tardar en "despertar": 30s evita fallos al arrancar.
+      connection-timeout: 30000
       maximum-pool-size: 5
+      minimum-idle: 1
+      # TiDB cierra conexiones inactivas; se renuevan antes de que ocurra.
+      max-lifetime: 240000
+      keepalive-time: 60000
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,6 +28,8 @@ spring:
       write-dates-as-timestamps: false
 
 app:
+  # Zona horaria del negocio (se aplica en DeronCutsApplication via APP_TIMEZONE).
+  timezone: ${APP_TIMEZONE:America/Lima}
   jwt:
     # SECRETO - reemplazar en producción con una variable de entorno JWT_SECRET (mínimo 32 bytes)
     secret: ${JWT_SECRET:deron-cuts-proyecto2026-clave-jwt-super-secreta-cambiar-en-produccion-1234567890}
@@ -37,7 +44,7 @@ app:
     tolerancia-minutos: ${RESERVA_TOLERANCIA_MINUTOS:15}
     penalidad-tardanza: ${RESERVA_PENALIDAD_TARDANZA:10}
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5174,https://deron-cuts.vercel.app}
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:5174,https://deron-cuts.vercel.app,https://deron-cuts-admin.vercel.app}
   recordatorios:
     # Cada cuántos ms se revisan los recordatorios programados (por defecto 30s).
     poll-ms: ${RECORDATORIOS_POLL_MS:30000}

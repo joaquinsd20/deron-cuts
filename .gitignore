@@ -24,3 +24,5 @@ Thumbs.db
 .env.*
 !.env.example
 *.local
+# Volcado local de variables de Render (contiene secretos)
+render-env.json

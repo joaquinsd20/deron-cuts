@@ -77,11 +77,14 @@ public class SecurityConfig {
         for (String o : List.of(
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "https://deron-cuts.vercel.app"
+                "https://deron-cuts.vercel.app",
+                "https://deron-cuts-admin.vercel.app",
+                // Previews de Vercel de ambos proyectos
+                "https://deron-cuts-*.vercel.app"
         )) {
             if (!origins.contains(o)) origins.add(o);
         }
-        config.setAllowedOrigins(origins);
+        config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);
