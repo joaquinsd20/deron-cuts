@@ -3,7 +3,8 @@ import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
 import Reloj from '../components/Reloj.jsx'
 import AppointmentCard from '../components/AppointmentCard.jsx'
-import { getResumen, getCitas, cambiarEstadoCita } from '../services/api.js'
+import { getResumen, getCitas } from '../services/api.js'
+import { useAccionesCita } from '../components/AccionesCita.jsx'
 import { subscribeCitas, subscribeRecordatorios } from '../services/websocket.js'
 import { fechaLocal, formatFechaHora, formatMoney } from '../services/format.js'
 
@@ -106,14 +107,7 @@ export default function Dashboard() {
     return () => unsubs.forEach((u) => u())
   }, [cargar])
 
-  const cambiarEstado = async (id, estado) => {
-    try {
-      await cambiarEstadoCita(id, estado)
-      await cargar()
-    } catch {
-      setToast({ message: 'No se pudo actualizar la cita', tipo: 'error' })
-    }
-  }
+  const { accionesTarjeta, ventana } = useAccionesCita({ alCambiar: cargar, avisar: setToast })
 
   if (cargando && !resumen) {
     return (
@@ -160,7 +154,7 @@ export default function Dashboard() {
               <div className="card__title">
                 Próxima cita · {formatFechaHora(resumen.proximaCita.fechaHoraInicio)}
               </div>
-              <AppointmentCard cita={resumen.proximaCita} onEstado={cambiarEstado} />
+              <AppointmentCard cita={resumen.proximaCita} {...accionesTarjeta} />
             </section>
           )}
 
@@ -173,12 +167,13 @@ export default function Dashboard() {
                 .slice()
                 .sort((a, b) => a.fechaHoraInicio.localeCompare(b.fechaHoraInicio))
                 .map((c) => (
-                  <AppointmentCard key={c.id} cita={c} onEstado={cambiarEstado} />
+                  <AppointmentCard key={c.id} cita={c} {...accionesTarjeta} />
                 ))
             )}
           </section>
         </div>
       </main>
+      {ventana}
       <Toast message={toast?.message} tipo={toast?.tipo} onClose={() => setToast(null)} />
     </div>
   )

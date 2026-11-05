@@ -13,12 +13,12 @@ export const METODOS_PAGO = ['EFECTIVO', 'YAPE', 'PLIN', 'TARJETA', 'TRANSFERENC
 
 export function formatHora(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
 }
 
 export function formatFechaCorta(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleDateString('es-MX', {
+  return new Date(iso).toLocaleDateString('es-PE', {
     weekday: 'long',
     day: '2-digit',
     month: 'long',
@@ -28,7 +28,7 @@ export function formatFechaCorta(iso) {
 
 export function formatFechaHora(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleString('es-MX', {
+  return new Date(iso).toLocaleString('es-PE', {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',
@@ -52,7 +52,7 @@ export function aInputLocal(fechaHora) {
 
 export function formatFechaHoraLarga(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleString('es-MX', {
+  return new Date(iso).toLocaleString('es-PE', {
     weekday: 'long',
     day: '2-digit',
     month: 'long',

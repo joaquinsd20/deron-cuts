@@ -2,15 +2,10 @@ import { useEffect, useState, useCallback } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
 import AppointmentCard from '../components/AppointmentCard.jsx'
-import {
-  getCitas,
-  cambiarEstadoCita,
-  reprogramarCita,
-  registrarPagoCita,
-  confirmarAdelantoCita,
-  aplicarTardanzaCita
-} from '../services/api.js'
-import { fechaLocal, aInputLocal, formatMoney, METODOS_PAGO } from '../services/format.js'
+import { useAccionesCita } from '../components/AccionesCita.jsx'
+import { getCitas } from '../services/api.js'
+import { subscribeCitas } from '../services/websocket.js'
+import { fechaLocal } from '../services/format.js'
 
 const ESTADOS = [
   { value: '', label: 'Todos los estados' },
@@ -26,17 +21,9 @@ export default function CitasManager() {
   const [estado, setEstado] = useState('')
   const [citas, setCitas] = useState([])
   const [cargando, setCargando] = useState(true)
-  const [reprogramando, setReprogramando] = useState(null)
-  const [nuevaFecha, setNuevaFecha] = useState('')
-  const [cobrando, setCobrando] = useState(null)
-  const [metodoPago, setMetodoPago] = useState('EFECTIVO')
-  const [montoPago, setMontoPago] = useState('')
-  const [adelantando, setAdelantando] = useState(null)
-  const [metodoAdelanto, setMetodoAdelanto] = useState('YAPE')
   const [toast, setToast] = useState(null)
 
   const cargar = useCallback(async () => {
-    setCargando(true)
     const params = {}
     if (desde) params.desde = desde
     if (hasta) params.hasta = hasta
@@ -51,95 +38,14 @@ export default function CitasManager() {
   }, [desde, hasta, estado])
 
   useEffect(() => {
+    setCargando(true)
     cargar()
   }, [cargar])
 
-  const cambiarEstado = async (id, nuevo) => {
-    try {
-      await cambiarEstadoCita(id, nuevo)
-      await cargar()
-    } catch {
-      setToast({ message: 'No se pudo actualizar la cita', tipo: 'error' })
-    }
-  }
+  // Nuevas reservas o cambios hechos desde otro dispositivo aparecen solos.
+  useEffect(() => subscribeCitas(() => cargar()), [cargar])
 
-  const abrirReprogramar = (cita) => {
-    setReprogramando(cita)
-    setNuevaFecha(aInputLocal(cita.fechaHoraInicio))
-  }
-
-  const guardarReprogramacion = async () => {
-    if (!nuevaFecha || !reprogramando) return
-    try {
-      await reprogramarCita(reprogramando.id, nuevaFecha)
-      setReprogramando(null)
-      setToast({ message: 'Cita reprogramada' })
-      await cargar()
-    } catch {
-      setToast({ message: 'No se pudo reprogramar la cita', tipo: 'error' })
-    }
-  }
-
-  const abrirCobro = (cita) => {
-    setCobrando(cita)
-    setMetodoPago('EFECTIVO')
-    setMontoPago(String(cita.saldoPendiente ?? ''))
-  }
-
-  const confirmarCobro = async () => {
-    if (!cobrando) return
-    const payload = { metodoPago }
-    const montoNum = Number(montoPago)
-    if (montoPago && (Number.isNaN(montoNum) || montoNum <= 0)) {
-      setToast({ message: 'Monto inválido', tipo: 'error' })
-      return
-    }
-    if (montoPago) payload.monto = montoNum
-    try {
-      await registrarPagoCita(cobrando.id, payload)
-      setCobrando(null)
-      setToast({
-        message: `Pago de ${formatMoney(payload.monto ?? cobrando.saldoPendiente)} registrado`
-      })
-      await cargar()
-    } catch {
-      setToast({ message: 'No se pudo registrar el pago', tipo: 'error' })
-    }
-  }
-
-  const abrirAdelanto = (cita) => {
-    setAdelantando(cita)
-    setMetodoAdelanto(cita.metodoAdelanto || 'YAPE')
-  }
-
-  const guardarAdelanto = async (pagado) => {
-    if (!adelantando) return
-    try {
-      await confirmarAdelantoCita(adelantando.id, pagado, metodoAdelanto)
-      setAdelantando(null)
-      setToast({
-        message: pagado ? 'Adelanto registrado y cita confirmada' : 'Adelanto marcado como pendiente'
-      })
-      await cargar()
-    } catch {
-      setToast({ message: 'No se pudo actualizar el adelanto', tipo: 'error' })
-    }
-  }
-
-  const alternarTardanza = async (cita) => {
-    try {
-      const aplicar = !cita.tardanzaAplicada
-      await aplicarTardanzaCita(cita.id, aplicar)
-      setToast({
-        message: aplicar
-          ? 'Tardanza aplicada: se perdió el adelanto y se sumaron S/ 10'
-          : 'Tardanza retirada'
-      })
-      await cargar()
-    } catch {
-      setToast({ message: 'No se pudo actualizar la tardanza', tipo: 'error' })
-    }
-  }
+  const { accionesTarjeta, ventana } = useAccionesCita({ alCambiar: cargar, avisar: setToast })
 
   return (
     <div className="admin">
@@ -175,120 +81,6 @@ export default function CitasManager() {
             </div>
           </div>
 
-          {reprogramando && (
-            <div className="card">
-              <div className="card__title">
-                Reprogramar · {reprogramando.nombreCliente} / {reprogramando.nombreServicio}
-              </div>
-              <div className="form-grid">
-                <div className="field">
-                  <label>
-                    Nueva fecha y hora <span className="req">*</span>
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={nuevaFecha}
-                    onChange={(e) => setNuevaFecha(e.target.value)}
-                  />
-                </div>
-                <div className="cita__actions">
-                  <button className="btn btn--primary btn--sm" onClick={guardarReprogramacion}>
-                    Guardar
-                  </button>
-                  <button className="btn btn--outline btn--sm" onClick={() => setReprogramando(null)}>
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {adelantando && (
-            <div className="card">
-              <div className="card__title">
-                Adelanto · {adelantando.nombreCliente} / {adelantando.nombreServicio} (
-                {formatMoney(adelantando.adelantoMonto)})
-              </div>
-              <div className="form-grid">
-                <div className="field">
-                  <label>Método del adelanto</label>
-                  <select
-                    value={metodoAdelanto}
-                    onChange={(e) => setMetodoAdelanto(e.target.value)}
-                  >
-                    {METODOS_PAGO.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="cita__actions">
-                  {!adelantando.adelantoPagado && (
-                    <button className="btn btn--pago btn--sm" onClick={() => guardarAdelanto(true)}>
-                      Confirmar adelanto
-                    </button>
-                  )}
-                  {adelantando.adelantoPagado && (
-                    <>
-                      <span className="badge badge--adelanto">ADELANTO RECIBIDO</span>
-                      <button
-                        className="btn btn--danger btn--sm"
-                        onClick={() => guardarAdelanto(false)}
-                      >
-                        Quitar adelanto
-                      </button>
-                    </>
-                  )}
-                  <button className="btn btn--outline btn--sm" onClick={() => setAdelantando(null)}>
-                    Cerrar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {cobrando && (
-            <div className="card">
-              <div className="card__title">
-                Cobrar · {cobrando.nombreCliente} / {cobrando.nombreServicio} (Total{' '}
-                {formatMoney(cobrando.totalAPagar)} · Saldo {formatMoney(cobrando.saldoPendiente)})
-              </div>
-              <div className="form-grid">
-                <div className="field">
-                  <label>
-                    Método de pago <span className="req">*</span>
-                  </label>
-                  <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
-                    {METODOS_PAGO.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>Monto (deja vacío para cobrar el saldo pendiente)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={montoPago}
-                    onChange={(e) => setMontoPago(e.target.value)}
-                  />
-                </div>
-                <div className="cita__actions">
-                  <button className="btn btn--pago btn--sm" onClick={confirmarCobro}>
-                    Registrar pago
-                  </button>
-                  <button className="btn btn--outline btn--sm" onClick={() => setCobrando(null)}>
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div style={{ marginTop: 18 }}>
             {cargando ? (
               <div className="spinner" />
@@ -298,21 +90,12 @@ export default function CitasManager() {
               citas
                 .slice()
                 .sort((a, b) => a.fechaHoraInicio.localeCompare(b.fechaHoraInicio))
-                .map((c) => (
-                  <AppointmentCard
-                    key={c.id}
-                    cita={c}
-                    onEstado={cambiarEstado}
-                    onReprogramar={abrirReprogramar}
-                    onRegistrarPago={abrirCobro}
-                    onAdelanto={abrirAdelanto}
-                    onTardanza={alternarTardanza}
-                  />
-                ))
+                .map((c) => <AppointmentCard key={c.id} cita={c} {...accionesTarjeta} />)
             )}
           </div>
         </div>
       </main>
+      {ventana}
       <Toast message={toast?.message} tipo={toast?.tipo} onClose={() => setToast(null)} />
     </div>
   )

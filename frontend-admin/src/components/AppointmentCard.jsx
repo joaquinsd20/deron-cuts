@@ -14,7 +14,8 @@ export default function AppointmentCard({
   onReprogramar,
   onRegistrarPago,
   onAdelanto,
-  onTardanza
+  onTardanza,
+  onEliminar
 }) {
   const telNumerico = (cita.telefonoWhatsapp || '').replace(/\D/g, '')
   const estado = (cita.estado || '').toUpperCase()
@@ -102,18 +103,18 @@ export default function AppointmentCard({
 
       <div className="cita__actions">
         {estado === 'PENDIENTE' && (!requiereAdelanto || cita.adelantoPagado) && (
-          <button className="btn btn--sm" onClick={() => onEstado('CONFIRMADA')}>
+          <button className="btn btn--sm" onClick={() => onEstado(cita.id, 'CONFIRMADA')}>
             Confirmar
           </button>
         )}
         {estado === 'CONFIRMADA' && (
           <>
-            <button className="btn btn--sm" onClick={() => onEstado('COMPLETADA')}>
+            <button className="btn btn--sm" onClick={() => onEstado(cita.id, 'COMPLETADA')}>
               Completar
             </button>
             <button
               className="btn btn--sm btn--outline"
-              onClick={() => onEstado('PENDIENTE')}
+              onClick={() => onEstado(cita.id, 'PENDIENTE')}
             >
               Reabrir
             </button>
@@ -150,7 +151,7 @@ export default function AppointmentCard({
           <button
             className="btn btn--sm btn--danger"
             onClick={() => {
-              if (window.confirm(`¿Cancelar la cita de ${cita.nombreCliente}?`)) onEstado('CANCELADA')
+              if (window.confirm(`¿Cancelar la cita de ${cita.nombreCliente}?`)) onEstado(cita.id, 'CANCELADA')
             }}
           >
             Cancelar cita
@@ -159,6 +160,11 @@ export default function AppointmentCard({
         {onReprogramar && abierta && (
           <button className="btn btn--sm btn--outline" onClick={() => onReprogramar(cita)}>
             Reprogramar
+          </button>
+        )}
+        {onEliminar && !cita.pagada && !cita.adelantoPagado && (
+          <button className="btn btn--sm btn--outline cita__eliminar" onClick={() => onEliminar(cita)}>
+            Eliminar
           </button>
         )}
       </div>

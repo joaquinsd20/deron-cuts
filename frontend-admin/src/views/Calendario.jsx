@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
 import AppointmentCard from '../components/AppointmentCard.jsx'
-import { getCitas, cambiarEstadoCita } from '../services/api.js'
+import { getCitas } from '../services/api.js'
+import { useAccionesCita } from '../components/AccionesCita.jsx'
 import { fechaLocal } from '../services/format.js'
 
 const MESES = [
@@ -67,17 +68,14 @@ export default function Calendario() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursor, porDia, seleccion])
 
-  const cambiarEstado = async (id, estado) => {
-    try {
-      await cambiarEstadoCita(id, estado)
-      const desde = fechaLocal(cursor)
-      const hasta = fechaLocal(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0))
-      setCitas(await getCitas({ desde, hasta }))
-      setCitasDia(await getCitas({ fecha: seleccion }))
-    } catch {
-      setToast({ message: 'No se pudo actualizar la cita', tipo: 'error' })
-    }
+  const recargar = async () => {
+    const desde = fechaLocal(cursor)
+    const hasta = fechaLocal(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0))
+    setCitas(await getCitas({ desde, hasta }))
+    setCitasDia(await getCitas({ fecha: seleccion }))
   }
+
+  const { accionesTarjeta, ventana } = useAccionesCita({ alCambiar: recargar, avisar: setToast })
 
   const moverMes = (delta) => {
     setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + delta, 1))
@@ -135,7 +133,7 @@ export default function Calendario() {
               </div>
 
               <h2 className="cal-day-title">
-                {diaSel.toLocaleDateString('es-MX', { weekday: 'long', day: '2-digit', month: 'long' })}
+                {diaSel.toLocaleDateString('es-PE', { weekday: 'long', day: '2-digit', month: 'long' })}
               </h2>
               {citasDia.length === 0 ? (
                 <div className="empty">Sin citas este día</div>
@@ -143,12 +141,13 @@ export default function Calendario() {
                 citasDia
                   .slice()
                   .sort((a, b) => a.fechaHoraInicio.localeCompare(b.fechaHoraInicio))
-                  .map((c) => <AppointmentCard key={c.id} cita={c} onEstado={cambiarEstado} />)
+                  .map((c) => <AppointmentCard key={c.id} cita={c} {...accionesTarjeta} />)
               )}
             </>
           )}
         </div>
       </main>
+      {ventana}
       <Toast message={toast?.message} tipo={toast?.tipo} onClose={() => setToast(null)} />
     </div>
   )

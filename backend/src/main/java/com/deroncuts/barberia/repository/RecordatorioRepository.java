@@ -17,6 +17,8 @@ public interface RecordatorioRepository extends JpaRepository<Recordatorio, Long
 
     List<Recordatorio> findByEstadoInOrderByProgramadoParaDesc(List<EstadoRecordatorio> estados);
 
+    void deleteByCitaId(Long citaId);
+
     List<Recordatorio> findByCitaIdAndEstadoAndTipo(Long citaId, EstadoRecordatorio estado, TipoRecordatorio tipo);
 
     long countByEstado(EstadoRecordatorio estado);

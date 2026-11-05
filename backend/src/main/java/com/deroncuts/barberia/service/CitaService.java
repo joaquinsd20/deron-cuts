@@ -47,6 +47,7 @@ public class CitaService {
 
     private final CitaRepository citaRepository;
     private final ConfiguracionNegocioRepository configuracionRepository;
+    private final com.deroncuts.barberia.repository.RecordatorioRepository recordatorioRepository;
     private final ServicioService servicioService;
     private final DisponibilidadService disponibilidadService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -56,6 +57,7 @@ public class CitaService {
 
     public CitaService(CitaRepository citaRepository,
                        ConfiguracionNegocioRepository configuracionRepository,
+                       com.deroncuts.barberia.repository.RecordatorioRepository recordatorioRepository,
                        ServicioService servicioService,
                        DisponibilidadService disponibilidadService,
                        SimpMessagingTemplate messagingTemplate,
@@ -64,6 +66,7 @@ public class CitaService {
                        @Value("${app.reservas.penalidad-tardanza:10}") BigDecimal penalidadTardanza) {
         this.citaRepository = citaRepository;
         this.configuracionRepository = configuracionRepository;
+        this.recordatorioRepository = recordatorioRepository;
         this.servicioService = servicioService;
         this.disponibilidadService = disponibilidadService;
         this.messagingTemplate = messagingTemplate;
@@ -298,6 +301,24 @@ public class CitaService {
         }
         publicarEvento("ESTADO", guardada);
         return CitaDto.from(guardada);
+    }
+
+    /**
+     * Borra una cita (por ejemplo, una de prueba o duplicada). No se permite si ya tiene
+     * dinero registrado (pago o adelanto), para no descuadrar el historial de Pagos:
+     * en ese caso hay que cancelarla.
+     */
+    @Transactional
+    public void eliminar(Long id) {
+        Cita cita = obtenerEntity(id);
+        if (cita.isPagada() || cita.isAdelantoPagado()) {
+            throw new BusinessException(
+                    "Esta cita tiene un pago o adelanto registrado; cancélala en lugar de eliminarla");
+        }
+        CitaDto dto = CitaDto.from(cita);
+        recordatorioRepository.deleteByCitaId(id);
+        citaRepository.delete(cita);
+        messagingTemplate.convertAndSend("/topic/citas", new EventoCita("ELIMINADA", dto));
     }
 
     @Transactional

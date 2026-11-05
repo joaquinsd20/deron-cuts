@@ -8,13 +8,13 @@ export default function Reloj() {
     return () => clearInterval(t)
   }, [])
 
-  const fecha = ahora.toLocaleDateString('es-MX', {
+  const fecha = ahora.toLocaleDateString('es-PE', {
     weekday: 'long',
     day: '2-digit',
     month: 'long'
   })
 
-  const hora = ahora.toLocaleTimeString('es-MX', {
+  const hora = ahora.toLocaleTimeString('es-PE', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'

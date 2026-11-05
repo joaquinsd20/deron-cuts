@@ -43,6 +43,15 @@ export function cambiarEstadoCita(citaId, estado) {
   return api.patch(`/api/admin/citas/${citaId}/estado`, { estado }).then((r) => r.data)
 }
 
+export function eliminarCita(citaId) {
+  return api.delete(`/api/admin/citas/${citaId}`)
+}
+
+/** Mensaje del backend ("Ese horario ya está reservado", etc.) o uno genérico. */
+export function mensajeError(err, porDefecto) {
+  return err?.response?.data?.message || porDefecto
+}
+
 export function reprogramarCita(citaId, fechaHoraInicio) {
   return api.put(`/api/admin/citas/${citaId}`, { fechaHoraInicio }).then((r) => r.data)
 }

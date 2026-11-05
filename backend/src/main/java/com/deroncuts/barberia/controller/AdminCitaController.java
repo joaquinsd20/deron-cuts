@@ -78,6 +78,12 @@ public class AdminCitaController {
         return citaService.reprogramar(id, request);
     }
 
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public org.springframework.http.ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        citaService.eliminar(id);
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/resumen")
     public DashboardResumen resumen() {
         return citaService.resumen();
