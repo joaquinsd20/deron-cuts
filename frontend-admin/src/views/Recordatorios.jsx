@@ -32,6 +32,15 @@ const ESTADOS = {
   CANCELADO: 'Cancelado'
 }
 
+// Abre WhatsApp con el mensaje ya escrito; el barbero solo toca "Enviar".
+// Números de 9 dígitos se asumen de Perú (+51).
+function linkWhatsapp(r) {
+  let numero = String(r.destinatarioTelefono || '').replace(/\D/g, '')
+  if (!numero) return null
+  if (numero.length === 9) numero = `51${numero}`
+  return `https://wa.me/${numero}?text=${encodeURIComponent(r.mensaje || '')}`
+}
+
 const FORM = {
   mensaje: '',
   destinatarioNombre: '',
@@ -97,11 +106,11 @@ export default function Recordatorios() {
     }
   }
 
-  const entregar = async (id) => {
+  const entregar = async (id, porWhatsapp = false) => {
     try {
       await enviarRecordatorio(id)
       await cargar(filtroRef.current)
-      setToast({ message: 'Recordatorio entregado' })
+      setToast({ message: porWhatsapp ? 'Marcado como enviado por WhatsApp' : 'Recordatorio entregado' })
     } catch {
       setToast({ message: 'No se pudo entregar el recordatorio', tipo: 'error' })
     }
@@ -267,10 +276,20 @@ export default function Recordatorios() {
                       </span>
                     </div>
                     <div className="record-card__actions">
-                      {r.canal === 'WHATSAPP' && r.estado === 'PENDIENTE' && (
-                        <span className="hint">En cola hasta conectar la integración WhatsApp</span>
+                      {r.estado !== 'CANCELADO' && linkWhatsapp(r) && (
+                        <a
+                          className="btn btn--sm btn--whatsapp"
+                          href={linkWhatsapp(r)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => {
+                            if (r.estado === 'PENDIENTE') entregar(r.id, true)
+                          }}
+                        >
+                          Enviar por WhatsApp
+                        </a>
                       )}
-                      {r.estado === 'PENDIENTE' && r.canal === 'INTERNO' && (
+                      {r.estado === 'PENDIENTE' && !linkWhatsapp(r) && (
                         <button className="btn btn--sm" onClick={() => entregar(r.id)}>
                           Entregar ya
                         </button>

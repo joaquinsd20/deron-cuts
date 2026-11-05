@@ -111,11 +111,9 @@ public class RecordatorioService {
 
     @Transactional
     public RecordatorioDto enviarAhora(Long id) {
+        // Para WhatsApp, el barbero lo envía desde su celular (botón "Enviar por WhatsApp")
+        // y aquí solo queda registrado como enviado.
         Recordatorio r = obtener(id);
-        if (r.getCanal() != CanalRecordatorio.INTERNO) {
-            throw new BusinessException(
-                    "Los recordatorios por WhatsApp se envían al conectar la integración");
-        }
         if (r.getEstado() == EstadoRecordatorio.CANCELADO) {
             throw new BusinessException("El recordatorio está cancelado");
         }

@@ -24,10 +24,13 @@ public class ClienteController {
 
     private final ClienteService clienteService;
     private final CitaService citaService;
+    private final com.deroncuts.barberia.service.CuentaService cuentaService;
 
-    public ClienteController(ClienteService clienteService, CitaService citaService) {
+    public ClienteController(ClienteService clienteService, CitaService citaService,
+                             com.deroncuts.barberia.service.CuentaService cuentaService) {
         this.clienteService = clienteService;
         this.citaService = citaService;
+        this.cuentaService = cuentaService;
     }
 
     @GetMapping("/perfil")
@@ -47,6 +50,13 @@ public class ClienteController {
         Cliente cliente = clienteService.obtenerPorEmail(authentication.getName());
         CitaDto cita = citaService.crearParaCliente(cliente, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(cita);
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/password")
+    public ResponseEntity<Void> cambiarPassword(Authentication authentication,
+                                                @Valid @RequestBody com.deroncuts.barberia.dto.request.CambiarPasswordRequest request) {
+        cuentaService.cambiarPasswordCliente(authentication.getName(), request);
+        return ResponseEntity.noContent().build();
     }
 
     @org.springframework.web.bind.annotation.PatchMapping("/citas/{id}/cancelar")

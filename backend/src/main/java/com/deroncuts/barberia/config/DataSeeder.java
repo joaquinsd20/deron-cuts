@@ -31,13 +31,16 @@ public class DataSeeder implements CommandLineRunner {
     private final ConfiguracionService configuracionService;
     private final PasswordEncoder passwordEncoder;
     private final String adminDefaultPassword;
+    private final com.deroncuts.barberia.service.ServicioService servicioService;
 
     public DataSeeder(UsuarioAdminRepository usuarioAdminRepository,
                       ServicioRepository servicioRepository,
                       CitaRepository citaRepository,
                       ConfiguracionService configuracionService,
                       PasswordEncoder passwordEncoder,
-                      @Value("${app.admin.default-password}") String adminDefaultPassword) {
+                      @Value("${app.admin.default-password}") String adminDefaultPassword,
+                      com.deroncuts.barberia.service.ServicioService servicioService) {
+        this.servicioService = servicioService;
         this.usuarioAdminRepository = usuarioAdminRepository;
         this.servicioRepository = servicioRepository;
         this.citaRepository = citaRepository;
@@ -51,6 +54,7 @@ public class DataSeeder implements CommandLineRunner {
         configuracionService.obtenerOMeterDefault();
         sembrarAdmin();
         sembrarServicios();
+        limpiarServiciosDemoAntiguos();
         // Citas ficticias ("Luis Torres", etc.) solo para desarrollo, nunca en producción.
         if (Boolean.parseBoolean(System.getenv().getOrDefault("APP_DEMO_DATA", "false"))) {
             sembrarCitasDemo();
@@ -60,10 +64,16 @@ public class DataSeeder implements CommandLineRunner {
     private void sembrarAdmin() {
         java.util.Optional<UsuarioAdmin> existente = usuarioAdminRepository.findByUsername("yumpi");
         if (existente.isPresent()) {
-            // APP_ADMIN_PASSWORD (Render) es la fuente de verdad: si cambia, se actualiza aquí.
+            // APP_ADMIN_PASSWORD (Render) manda mientras el barbero no cambie su clave en el panel.
+            // Si la olvida: APP_ADMIN_FORCE_RESET=true en Render, redeploy, entrar y quitar la variable.
             UsuarioAdmin admin = existente.get();
-            if (!passwordEncoder.matches(adminDefaultPassword, admin.getPasswordHash())) {
+            boolean forzar = Boolean.parseBoolean(System.getenv().getOrDefault("APP_ADMIN_FORCE_RESET", "false"));
+            if (admin.isPasswordDesdePanel() && !forzar) {
+                return;
+            }
+            if (forzar || !passwordEncoder.matches(adminDefaultPassword, admin.getPasswordHash())) {
                 admin.setPasswordHash(passwordEncoder.encode(adminDefaultPassword));
+                admin.setPasswordDesdePanel(false);
                 usuarioAdminRepository.save(admin);
                 log.info("Contraseña del admin 'yumpi' sincronizada con APP_ADMIN_PASSWORD.");
             }
@@ -111,6 +121,26 @@ public class DataSeeder implements CommandLineRunner {
         }
         crearCortesLanding();
         log.info("Servicios sembrados desde la landing. Administra desde el panel.");
+    }
+
+    /**
+     * Quita del panel los servicios demo antiguos que quedaron desactivados tras la migración
+     * (sin foto). Si alguno tiene citas en el historial se oculta en lugar de borrarse.
+     */
+    private void limpiarServiciosDemoAntiguos() {
+        List<Servicio> actuales = servicioRepository.findAll();
+        boolean hayCortesLanding = actuales.stream()
+                .anyMatch(s -> !s.isEliminado() && CORTES_LANDING.contains(s.getNombre()));
+        if (!hayCortesLanding) {
+            return;
+        }
+        for (Servicio s : actuales) {
+            if (SERVICIOS_DEMO_ANTIGUOS.contains(s.getNombre()) && !s.isActivo()
+                    && !s.isEliminado() && s.getImagenUrl() == null) {
+                servicioService.eliminar(s.getId());
+                log.info("Servicio demo antiguo eliminado: {}", s.getNombre());
+            }
+        }
     }
 
     private void crearCortesLanding() {

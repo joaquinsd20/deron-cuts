@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getMisCitas, cancelarCita } from '../services/api.js'
+import { getMisCitas, cancelarCita, cambiarPassword } from '../services/api.js'
 import { formatCurrency, formatFechaLarga } from '../config.js'
 
 export default function Cuenta() {
@@ -41,6 +41,28 @@ export default function Cuenta() {
       setErrorCancelar(err?.response?.data?.message || 'No pudimos cancelar la cita. Inténtalo de nuevo.')
     } finally {
       setCancelando(null)
+    }
+  }
+
+  const [pwdAbierto, setPwdAbierto] = useState(false)
+  const [pwd, setPwd] = useState({ actual: '', nueva: '', repetir: '' })
+  const [pwdMsg, setPwdMsg] = useState(null)
+  const [pwdGuardando, setPwdGuardando] = useState(false)
+
+  const guardarPassword = async (e) => {
+    e.preventDefault()
+    if (pwd.nueva.length < 8) return setPwdMsg({ error: true, texto: 'Mínimo 8 caracteres.' })
+    if (pwd.nueva !== pwd.repetir) return setPwdMsg({ error: true, texto: 'Las contraseñas no coinciden.' })
+    setPwdGuardando(true)
+    setPwdMsg(null)
+    try {
+      await cambiarPassword(pwd.actual || null, pwd.nueva)
+      setPwd({ actual: '', nueva: '', repetir: '' })
+      setPwdMsg({ error: false, texto: 'Contraseña actualizada.' })
+    } catch (err) {
+      setPwdMsg({ error: true, texto: err?.response?.data?.message || 'No se pudo cambiar la contraseña.' })
+    } finally {
+      setPwdGuardando(false)
     }
   }
 
@@ -95,6 +117,49 @@ export default function Cuenta() {
                   Cerrar sesión
                 </button>
               </div>
+              <button type="button" className="auth__olvido" onClick={() => setPwdAbierto((v) => !v)}>
+                {pwdAbierto ? 'Ocultar' : 'Cambiar mi contraseña'}
+              </button>
+              {pwdAbierto && (
+                <form className="auth__form" onSubmit={guardarPassword}>
+                  {cliente?.tienePassword !== false && (
+                    <div className="field">
+                      <label htmlFor="pwd-actual">Contraseña actual (o la clave temporal)</label>
+                      <input
+                        id="pwd-actual"
+                        type="password"
+                        autoComplete="current-password"
+                        value={pwd.actual}
+                        onChange={(e) => setPwd((p) => ({ ...p, actual: e.target.value }))}
+                      />
+                    </div>
+                  )}
+                  <div className="field">
+                    <label htmlFor="pwd-nueva">Nueva contraseña</label>
+                    <input
+                      id="pwd-nueva"
+                      type="password"
+                      autoComplete="new-password"
+                      value={pwd.nueva}
+                      onChange={(e) => setPwd((p) => ({ ...p, nueva: e.target.value }))}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="pwd-repetir">Repite la nueva contraseña</label>
+                    <input
+                      id="pwd-repetir"
+                      type="password"
+                      autoComplete="new-password"
+                      value={pwd.repetir}
+                      onChange={(e) => setPwd((p) => ({ ...p, repetir: e.target.value }))}
+                    />
+                  </div>
+                  {pwdMsg && <div className={pwdMsg.error ? 'alert' : 'policy policy--ok'}>{pwdMsg.texto}</div>}
+                  <button type="submit" className="btn btn--primary" disabled={pwdGuardando}>
+                    {pwdGuardando ? 'Guardando…' : 'Guardar contraseña'}
+                  </button>
+                </form>
+              )}
               <div className="policy">
                 <b>Cumpleaños:</b> corte gratis durante la semana de tu cumpleaños.
                 <br />

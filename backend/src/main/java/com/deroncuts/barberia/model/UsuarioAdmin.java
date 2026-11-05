@@ -31,6 +31,18 @@ public class UsuarioAdmin {
     @Column(nullable = false)
     private boolean activo = true;
 
+    /** true cuando el barbero cambió su contraseña desde el panel (APP_ADMIN_PASSWORD deja de aplicarse). */
+    @Column(name = "password_desde_panel", nullable = false, columnDefinition = "boolean default false")
+    private boolean passwordDesdePanel = false;
+
+    public boolean isPasswordDesdePanel() {
+        return passwordDesdePanel;
+    }
+
+    public void setPasswordDesdePanel(boolean passwordDesdePanel) {
+        this.passwordDesdePanel = passwordDesdePanel;
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

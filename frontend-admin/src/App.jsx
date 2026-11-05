@@ -9,6 +9,8 @@ import CatalogoManager from './views/CatalogoManager.jsx'
 import Pagos from './views/Pagos.jsx'
 import Recordatorios from './views/Recordatorios.jsx'
 import ConfiguracionView from './views/ConfiguracionView.jsx'
+import Clientes from './views/Clientes.jsx'
+import Ayuda from './views/Ayuda.jsx'
 
 export default function App() {
   return (
@@ -67,6 +69,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ConfiguracionView />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/clientes"
+        element={
+          <ProtectedRoute>
+            <Clientes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ayuda"
+        element={
+          <ProtectedRoute>
+            <Ayuda />
           </ProtectedRoute>
         }
       />

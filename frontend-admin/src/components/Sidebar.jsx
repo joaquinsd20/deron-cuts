@@ -12,6 +12,8 @@ const ICONOS = {
   servicios: 'M6 6a3 3 0 1 0 0 .01M6 18a3 3 0 1 0 0 .01M8.5 7.5 20 18M8.5 16.5 20 6',
   configuracion: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.6 15H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9.7 4.4V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1.3z',
   mas: 'M5 12h.01M12 12h.01M19 12h.01',
+  clientes: 'M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM21 20v-1a4 4 0 0 0-3-3.9M15.5 4.1a3.5 3.5 0 0 1 0 6.8',
+  ayuda: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5M12 17.5h.01',
   instalar: 'M12 3v12M7 10l5 5 5-5M5 21h14',
   salir: 'M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3'
 }
@@ -30,8 +32,10 @@ const LINKS = [
   { to: '/calendario', label: 'Calendario', icono: 'calendario', tab: true },
   { to: '/servicios', label: 'Servicios', icono: 'servicios', tab: true },
   { to: '/pagos', label: 'Pagos', icono: 'pagos' },
+  { to: '/clientes', label: 'Clientes', icono: 'clientes' },
   { to: '/recordatorios', label: 'Recordatorios', icono: 'recordatorios' },
-  { to: '/configuracion', label: 'Configuración', icono: 'configuracion' }
+  { to: '/configuracion', label: 'Configuración', icono: 'configuracion' },
+  { to: '/ayuda', label: 'Cuenta y ayuda', icono: 'ayuda' }
 ]
 
 const claseLink = (base) => ({ isActive }) => `${base}${isActive ? ` ${base}--active` : ''}`

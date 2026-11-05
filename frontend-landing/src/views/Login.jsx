@@ -4,6 +4,8 @@ import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import GoogleButton from '../components/GoogleButton.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
+import { getConfiguracion } from '../services/api.js'
+import { buildWhatsappLink } from '../config.js'
 
 const VACIO_REGISTRO = {
   nombre: '',
@@ -23,6 +25,19 @@ export default function Login() {
   const [registro, setRegistro] = useState(VACIO_REGISTRO)
   const [error, setError] = useState(null)
   const [enviando, setEnviando] = useState(false)
+  const [ayudaClave, setAyudaClave] = useState(false)
+  const [config, setConfig] = useState(null)
+
+  useEffect(() => {
+    getConfiguracion().then(setConfig).catch(() => {})
+  }, [])
+
+  const whatsappClave = config
+    ? buildWhatsappLink(
+        config.telefono,
+        `Hola ${config.nombreBarbero}, olvidé mi contraseña de la página. Mi correo es: ${login.identificador || ''}`
+      )
+    : null
 
   const destino = location.state?.from
     ? `${location.state.from.pathname}${location.state.from.search || ''}`
@@ -157,6 +172,20 @@ export default function Login() {
                 <button className="btn btn--primary" type="submit" disabled={enviando}>
                   {enviando ? 'Entrando…' : 'Entrar'}
                 </button>
+                <button type="button" className="auth__olvido" onClick={() => setAyudaClave((v) => !v)}>
+                  ¿Olvidaste tu contraseña?
+                </button>
+                {ayudaClave && (
+                  <div className="policy auth__olvido-ayuda">
+                    Escríbele a {config?.nombreBarbero || 'Yumpi'} por WhatsApp y te envía una clave
+                    temporal. Luego la cambias en <b>Mi cuenta</b>.
+                    {whatsappClave && (
+                      <a className="btn btn--outline" href={whatsappClave} target="_blank" rel="noreferrer">
+                        Pedir clave por WhatsApp
+                      </a>
+                    )}
+                  </div>
+                )}
               </form>
             ) : (
               <form className="auth__form" onSubmit={enviarRegistro}>

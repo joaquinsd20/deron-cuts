@@ -1517,3 +1517,61 @@ a {
     grid-column: 1 / -1;
   }
 }
+
+/* WhatsApp, clave temporal y guía */
+.btn--whatsapp {
+  background: #25d366;
+  color: #0b1f12;
+  border: none;
+}
+
+.btn--whatsapp:hover {
+  background: #2ee370;
+  color: #0b1f12;
+}
+
+.clave-temporal {
+  margin-bottom: 18px;
+  border: 1px solid var(--neon);
+}
+
+.clave-temporal__clave {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 1.6rem;
+  letter-spacing: 0.12em;
+  padding: 12px 0;
+  user-select: all;
+  word-break: break-all;
+}
+
+.guia {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.guia__item {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.guia__item strong {
+  font-family: var(--font-head);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+}
+
+.guia__item p {
+  margin-top: 6px;
+  color: var(--neon-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.record-card__actions .hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+}

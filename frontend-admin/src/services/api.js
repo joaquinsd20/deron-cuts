@@ -87,6 +87,18 @@ export function cambiarActivoServicio(id, activo) {
   return api.patch(`/api/admin/servicios/${id}/activo`, null, { params: { activo } }).then((r) => r.data)
 }
 
+export function getClientes(q) {
+  return api.get('/api/admin/clientes', { params: q ? { q } : {} }).then((r) => r.data)
+}
+
+export function restablecerPasswordCliente(id) {
+  return api.post(`/api/admin/clientes/${id}/restablecer-password`).then((r) => r.data)
+}
+
+export function cambiarMiPassword(actual, nueva) {
+  return api.put('/api/admin/cuenta/password', { actual, nueva })
+}
+
 export function subirImagenServicio(id, archivo) {
   const data = new FormData()
   data.append('archivo', archivo)
