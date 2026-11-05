@@ -2766,3 +2766,9 @@ ul {
     animation: none;
   }
 }
+
+.account__cancel {
+  margin-top: 10px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+}

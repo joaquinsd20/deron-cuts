@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getMisCitas } from '../services/api.js'
+import { getMisCitas, cancelarCita } from '../services/api.js'
 import { formatCurrency, formatFechaLarga } from '../config.js'
 
 export default function Cuenta() {
@@ -18,6 +18,31 @@ export default function Cuenta() {
       .catch(() => setCitas([]))
       .finally(() => setCargando(false))
   }, [])
+
+  const [cancelando, setCancelando] = useState(null)
+  const [errorCancelar, setErrorCancelar] = useState(null)
+
+  const puedeCancelar = (cita) =>
+    (cita.estado === 'PENDIENTE' || cita.estado === 'CONFIRMADA') &&
+    new Date(cita.fechaHoraInicio) > new Date()
+
+  const cancelar = async (cita) => {
+    const aviso =
+      cita.adelantoPagado && cita.adelantoMonto > 0
+        ? '\n\nTu adelanto ya fue recibido: coordina la devolución por WhatsApp.'
+        : ''
+    if (!window.confirm(`¿Cancelar tu cita de ${cita.nombreServicio}?${aviso}`)) return
+    setCancelando(cita.id)
+    setErrorCancelar(null)
+    try {
+      const actualizada = await cancelarCita(cita.id)
+      setCitas((lista) => lista.map((c) => (c.id === actualizada.id ? actualizada : c)))
+    } catch (err) {
+      setErrorCancelar(err?.response?.data?.message || 'No pudimos cancelar la cita. Inténtalo de nuevo.')
+    } finally {
+      setCancelando(null)
+    }
+  }
 
   const salir = () => {
     cerrarSesion()
@@ -80,6 +105,7 @@ export default function Cuenta() {
 
             <div className="account__card">
               <div className="aside__title">Mis citas</div>
+              {errorCancelar && <div className="alert">{errorCancelar}</div>}
               {cargando ? (
                 <div className="spinner" />
               ) : citas.length === 0 ? (
@@ -116,6 +142,16 @@ export default function Cuenta() {
                           </>
                         )}
                       </div>
+                      {puedeCancelar(cita) && (
+                        <button
+                          type="button"
+                          className="btn btn--outline account__cancel"
+                          onClick={() => cancelar(cita)}
+                          disabled={cancelando === cita.id}
+                        >
+                          {cancelando === cita.id ? 'Cancelando…' : 'Cancelar cita'}
+                        </button>
+                      )}
                     </article>
                   ))}
                 </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { beginLoading, endLoading } from '../lib/loading.js'
-import { getServicios } from '../services/api.js'
+import { getServicios, resolverImagen } from '../services/api.js'
 
 const SHOTS = [
   {
@@ -65,7 +65,7 @@ function aTarjeta(servicio) {
   const local = SHOTS.find((s) => normalizar(s.label) === normalizar(servicio.nombre))
   return {
     id: servicio.id,
-    img: servicio.imagenUrl || local?.img || null,
+    img: resolverImagen(servicio.imagenUrl) || local?.img || null,
     label: servicio.nombre,
     precio: formatPrecio(servicio.precio),
     desc: servicio.descripcion || local?.desc || '',
@@ -310,7 +310,11 @@ export default function Services() {
                 {detalle.label}
               </h3>
               <p className="shot-modal__desc">{detalle.desc}</p>
-              <Link to="/reservar" className="btn btn--primary" onClick={() => setDetalle(null)}>
+              <Link
+                to={detalle.id ? `/reservar?servicio=${detalle.id}` : '/reservar'}
+                className="btn btn--primary"
+                onClick={() => setDetalle(null)}
+              >
                 Reservar este corte
               </Link>
             </div>

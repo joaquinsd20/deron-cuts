@@ -48,4 +48,11 @@ public class ClienteController {
         CitaDto cita = citaService.crearParaCliente(cliente, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(cita);
     }
+
+    @org.springframework.web.bind.annotation.PatchMapping("/citas/{id}/cancelar")
+    public CitaDto cancelar(Authentication authentication,
+                            @org.springframework.web.bind.annotation.PathVariable Long id) {
+        Cliente cliente = clienteService.obtenerPorEmail(authentication.getName());
+        return citaService.cancelarPorCliente(cliente, id);
+    }
 }

@@ -114,8 +114,6 @@ export default function Booking() {
     if (!validarPaso()) return
     if (step < 3) {
       setStep(step + 1)
-    } else if (step === 3) {
-      setStep(4)
     } else {
       enviar()
     }
@@ -301,7 +299,7 @@ export default function Booking() {
             </div>
 
             <div className="progress" aria-label="Progreso">
-              {[1, 2, 3, 4].map((n) => (
+              {[1, 2, 3].map((n) => (
                 <div
                   key={n}
                   className={`progress__step${n < step ? ' progress__step--done' : ''}${n === step ? ' progress__step--current' : ''}`}
@@ -313,7 +311,7 @@ export default function Booking() {
               <div className="wizard__main">
                 {step === 1 && (
                   <>
-                    <span className="wizard__label">Paso 1 de 4</span>
+                    <span className="wizard__label">Paso 1 de 3</span>
                     <h2 className="wizard__title">Elige tu servicio</h2>
                     <div className="pick-grid">
                       {servicios.map((svc) => (
@@ -338,7 +336,7 @@ export default function Booking() {
 
                 {step === 2 && (
                   <>
-                    <span className="wizard__label">Paso 2 de 4</span>
+                    <span className="wizard__label">Paso 2 de 3</span>
                     <h2 className="wizard__title">Fecha y hora</h2>
                     <p className="wizard__sub">
                       Servicio: <b>{servicio?.nombre}</b> ({servicio?.duracionMinutos} min)
@@ -394,54 +392,7 @@ export default function Booking() {
 
                 {step === 3 && (
                   <>
-                    <span className="wizard__label">Paso 3 de 4</span>
-                    <h2 className="wizard__title">Tus datos</h2>
-                    <p className="wizard__sub">
-                      Usaremos los datos de tu cuenta para la reserva.
-                    </p>
-                    <div className="summary">
-                      <div className="summary__row">
-                        <span className="k">Nombre</span>
-                        <span className="v">{cuenta?.nombre}</span>
-                      </div>
-                      <div className="summary__row">
-                        <span className="k">Correo</span>
-                        <span className="v">{cuenta?.email}</span>
-                      </div>
-                      <div className="summary__row">
-                        <span className="k">WhatsApp</span>
-                        <span className="v">{cuenta?.telefono}</span>
-                      </div>
-                      <div className="summary__row summary__row--accent">
-                        <span className="k">Cumpleaños</span>
-                        <span className="v">
-                          {cuenta?.fechaNacimiento
-                            ? formatFechaLarga(cuenta.fechaNacimiento)
-                            : '—'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className={`field${errores.notas ? ' field--error' : ''}`}>
-                      <label htmlFor="notas">Notas (opcional)</label>
-                      <textarea
-                        id="notas"
-                        rows="3"
-                        placeholder="Cuéntale a Yumpi qué estilo quieres…"
-                        value={notas}
-                        onChange={(e) => setNotas(e.target.value)}
-                      />
-                      {errores.notas && <span className="field__error">{errores.notas}</span>}
-                    </div>
-                    <p className="hint">
-                      ¿Tus datos están mal? Puedes revisarlos en{' '}
-                      <Link to="/cuenta">Mi cuenta</Link>.
-                    </p>
-                  </>
-                )}
-
-                {step === 4 && (
-                  <>
-                    <span className="wizard__label">Paso 4 de 4</span>
+                    <span className="wizard__label">Paso 3 de 3</span>
                     <h2 className="wizard__title">Revisa y confirma</h2>
                     <div className="summary">
                       <div className="summary__row">
@@ -495,6 +446,17 @@ export default function Booking() {
                         <span className="v">{config.direccion}</span>
                       </div>
                     </div>
+                    <div className={`field${errores.notas ? ' field--error' : ''}`}>
+                      <label htmlFor="notas">Notas para {config.nombreBarbero} (opcional)</label>
+                      <textarea
+                        id="notas"
+                        rows="3"
+                        placeholder="Cuéntale qué estilo quieres…"
+                        value={notas}
+                        onChange={(e) => setNotas(e.target.value)}
+                      />
+                      {errores.notas && <span className="field__error">{errores.notas}</span>}
+                    </div>
                     <div className="policy">
                       <b>Reserva con adelanto:</b> el 50% se coordina por Yape o Plin. Tolerancia
                       de 15 minutos; si llegas tarde pierdes el adelanto y se suman S/ 10.
@@ -515,7 +477,7 @@ export default function Booking() {
                     onClick={continuar}
                     disabled={enviando}
                   >
-                    {enviando ? 'Agendando…' : step === 4 ? 'Confirmar mi cita' : 'Continuar'}
+                    {enviando ? 'Agendando…' : step === 3 ? 'Confirmar mi cita' : 'Continuar'}
                   </button>
                 </div>
               </div>

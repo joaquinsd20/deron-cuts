@@ -1120,3 +1120,56 @@ a {
   color: var(--danger);
   border-color: var(--danger);
 }
+
+/* Foto del servicio (catálogo) */
+.foto-picker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.foto-picker__img,
+.foto-picker__vacio {
+  width: 120px;
+  height: 120px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+.foto-picker__vacio {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.foto-picker__acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.foto-picker__acciones label.btn {
+  cursor: pointer;
+}
+.foto-picker__acciones .hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.servicio-celda {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.servicio-celda__img {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+.servicio-celda__img--vacia {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}

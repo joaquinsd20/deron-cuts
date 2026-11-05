@@ -29,6 +29,17 @@ api.interceptors.response.use(
   }
 )
 
+// Fotos subidas desde el admin se sirven desde el backend (/api/...).
+export function resolverImagen(url) {
+  if (!url) return null
+  if (url.startsWith('/api/')) return `${(import.meta.env.VITE_API_URL || '').replace(/\/$/, '')}${url}`
+  return url
+}
+
+export function cancelarCita(id) {
+  return api.patch(`/api/cliente/citas/${id}/cancelar`).then((r) => r.data)
+}
+
 export function getConfiguracion() {
   return api.get('/api/public/configuracion').then((r) => r.data)
 }

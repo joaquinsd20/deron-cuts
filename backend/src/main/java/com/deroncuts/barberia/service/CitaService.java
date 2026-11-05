@@ -301,6 +301,26 @@ public class CitaService {
     }
 
     @Transactional
+    public CitaDto cancelarPorCliente(Cliente cliente, Long citaId) {
+        Cita cita = obtenerEntity(citaId);
+        if (cita.getCliente() == null || !cita.getCliente().getId().equals(cliente.getId())) {
+            // Mismo mensaje que si no existiera: no revelar citas de otros clientes.
+            throw new NotFoundException("Cita no encontrada");
+        }
+        if (cita.getEstado() != EstadoCita.PENDIENTE && cita.getEstado() != EstadoCita.CONFIRMADA) {
+            throw new BusinessException("Esta cita ya no se puede cancelar");
+        }
+        if (!cita.getFechaHoraInicio().isAfter(LocalDateTime.now())) {
+            throw new BusinessException("No puedes cancelar una cita que ya empezó");
+        }
+        cita.setEstado(EstadoCita.CANCELADA);
+        Cita guardada = citaRepository.save(cita);
+        recordatorioService.notificarCancelada(guardada);
+        publicarEvento("ESTADO", guardada);
+        return CitaDto.from(guardada);
+    }
+
+    @Transactional
     public CitaDto reprogramar(Long id, ReprogramarRequest request) {
         Cita cita = obtenerEntity(id);
         if (cita.getEstado() == EstadoCita.COMPLETADA || cita.getEstado() == EstadoCita.CANCELADA) {

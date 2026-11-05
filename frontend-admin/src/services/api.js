@@ -87,6 +87,22 @@ export function cambiarActivoServicio(id, activo) {
   return api.patch(`/api/admin/servicios/${id}/activo`, null, { params: { activo } }).then((r) => r.data)
 }
 
+export function subirImagenServicio(id, archivo) {
+  const data = new FormData()
+  data.append('archivo', archivo)
+  return api.post(`/api/admin/servicios/${id}/imagen`, data).then((r) => r.data)
+}
+
+// Las fotos subidas se sirven desde el backend (/api/...); las de la landing (/cortes/...)
+// viven en el dominio de la landing.
+const LANDING_URL = (import.meta.env.VITE_LANDING_URL || 'https://deron-cuts.vercel.app').replace(/\/$/, '')
+export function resolverImagen(url) {
+  if (!url) return null
+  if (/^https?:\/\//.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url
+  if (url.startsWith('/api/')) return `${(import.meta.env.VITE_API_URL || '').replace(/\/$/, '')}${url}`
+  return `${LANDING_URL}${url}`
+}
+
 export function eliminarServicio(id) {
   return api.delete(`/api/admin/servicios/${id}`).then((r) => r.data)
 }

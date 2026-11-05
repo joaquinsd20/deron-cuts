@@ -146,9 +146,14 @@ export default function AppointmentCard({
         {estado === 'CANCELADA' && cita.pagada && (
           <span className="badge badge--pago">Devolver {formatMoney(cita.montoPagado)}</span>
         )}
-        {estado === 'PENDIENTE' && (
-          <button className="btn btn--sm btn--danger" onClick={() => onEstado('CANCELADA')}>
-            Cancelar
+        {(estado === 'PENDIENTE' || estado === 'CONFIRMADA') && (
+          <button
+            className="btn btn--sm btn--danger"
+            onClick={() => {
+              if (window.confirm(`¿Cancelar la cita de ${cita.nombreCliente}?`)) onEstado('CANCELADA')
+            }}
+          >
+            Cancelar cita
           </button>
         )}
         {onReprogramar && abierta && (

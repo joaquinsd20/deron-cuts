@@ -58,28 +58,9 @@ export default function Navbar() {
           <span className="nav__eyebrow" aria-hidden="true">Menú</span>
           <div className="nav__item nav__drop">
             <a className="nav__link" href="#servicios" onClick={() => anchor('servicios')}>
-              Cortes
+              Servicios
             </a>
-            <div className="nav__drop-menu">
-              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
-                Low Fade
-              </a>
-              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
-                Drop Fade
-              </a>
-              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
-                Taper Fade
-              </a>
-              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
-                Mid Taper Fade
-              </a>
-              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
-                Burst Fade
-              </a>
-              <a className="nav__drop-link" href="#servicios" onClick={() => anchor('servicios')}>
-                Modern Mullet
-              </a>
-            </div>
+            
           </div>
           <div className="nav__item">
             <a className="nav__link" href="#yumpi" onClick={() => anchor('yumpi')}>

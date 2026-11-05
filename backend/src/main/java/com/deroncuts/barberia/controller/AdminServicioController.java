@@ -50,6 +50,12 @@ public class AdminServicioController {
         return servicioService.cambiarActivo(id, activo);
     }
 
+    @PostMapping(value = "/{id}/imagen", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ServicioDto subirImagen(@PathVariable Long id,
+                                   @RequestParam("archivo") org.springframework.web.multipart.MultipartFile archivo) {
+        return servicioService.subirImagen(id, archivo);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         servicioService.cambiarActivo(id, false);

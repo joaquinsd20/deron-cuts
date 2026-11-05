@@ -79,9 +79,7 @@ export default function GoogleButton({ onCredential, disabled }) {
           <GoogleLogo size={20} />
           <span>Continuar con Google</span>
         </button>
-        <span className="hint">
-          Falta configurar <b>VITE_GOOGLE_CLIENT_ID</b> para activar Google.
-        </span>
+  
       </div>
     )
   }

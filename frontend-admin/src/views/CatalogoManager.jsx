@@ -6,9 +6,12 @@ import {
   crearServicio,
   actualizarServicio,
   cambiarActivoServicio,
-  eliminarServicio
+  eliminarServicio,
+  subirImagenServicio,
+  resolverImagen
 } from '../services/api.js'
 import { formatMoney } from '../services/format.js'
+import { comprimirImagen } from '../services/imagen.js'
 
 const VACIO = {
   id: null,
@@ -26,6 +29,30 @@ export default function CatalogoManager() {
   const [editando, setEditando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [toast, setToast] = useState(null)
+  const [archivo, setArchivo] = useState(null)
+  const [preview, setPreview] = useState(null)
+
+  const elegirArchivo = async (e) => {
+    const original = e.target.files?.[0]
+    e.target.value = ''
+    if (!original) return
+    if (!original.type.startsWith('image/')) {
+      setToast({ message: 'Elige un archivo de imagen', tipo: 'error' })
+      return
+    }
+    try {
+      const comprimido = await comprimirImagen(original)
+      setArchivo(comprimido)
+      setPreview(URL.createObjectURL(comprimido))
+    } catch {
+      setToast({ message: 'No se pudo leer la imagen', tipo: 'error' })
+    }
+  }
+
+  const limpiarFoto = () => {
+    setArchivo(null)
+    setPreview(null)
+  }
 
   const cargar = useCallback(async () => {
     try {
@@ -45,12 +72,20 @@ export default function CatalogoManager() {
 
   const abrirNuevo = () => {
     setForm(VACIO)
+    limpiarFoto()
     setEditando(true)
   }
 
   const abrirEditar = (s) => {
-    setForm({ ...s, precio: String(s.precio), duracionMinutos: String(s.duracionMinutos) })
+    setForm({
+      ...s,
+      precio: String(s.precio),
+      duracionMinutos: String(s.duracionMinutos),
+      imagenUrl: s.imagenUrl || ''
+    })
+    limpiarFoto()
     setEditando(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const guardar = async () => {
@@ -60,21 +95,24 @@ export default function CatalogoManager() {
       descripcion: form.descripcion.trim(),
       precio: Number(form.precio),
       duracionMinutos: Number(form.duracionMinutos),
-      imagenUrl: form.imagenUrl.trim()
+      imagenUrl: (form.imagenUrl || '').trim() || null,
+      activo: form.id ? form.activo !== false : true
     }
     try {
-      if (form.id) {
-        await actualizarServicio(form.id, payload)
-        setToast({ message: 'Servicio actualizado' })
-      } else {
-        await crearServicio(payload)
-        setToast({ message: 'Servicio creado' })
+      const guardado = form.id
+        ? await actualizarServicio(form.id, payload)
+        : await crearServicio(payload)
+      if (archivo) {
+        await subirImagenServicio(guardado.id, archivo)
       }
+      setToast({ message: form.id ? 'Servicio actualizado' : 'Servicio creado' })
       setEditando(false)
       setForm(VACIO)
+      limpiarFoto()
       await cargar()
-    } catch {
-      setToast({ message: 'No se pudo guardar el servicio', tipo: 'error' })
+    } catch (err) {
+      const msg = err?.response?.data?.message
+      setToast({ message: msg || 'No se pudo guardar el servicio', tipo: 'error' })
     } finally {
       setGuardando(false)
     }
@@ -143,10 +181,10 @@ export default function CatalogoManager() {
                     onChange={(e) => setCampo('descripcion', e.target.value)}
                   />
                 </div>
-                <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                   <div className="field">
                     <label>
-                      Precio (MXN) <span className="req">*</span>
+                      Precio (S/) <span className="req">*</span>
                     </label>
                     <input
                       type="number"
@@ -168,12 +206,38 @@ export default function CatalogoManager() {
                       onChange={(e) => setCampo('duracionMinutos', e.target.value)}
                     />
                   </div>
-                  <div className="field">
-                    <label>URL de imagen</label>
-                    <input
-                      value={form.imagenUrl}
-                      onChange={(e) => setCampo('imagenUrl', e.target.value)}
-                    />
+                </div>
+                <div className="field">
+                  <label>Foto del corte</label>
+                  <div className="foto-picker">
+                    {preview || form.imagenUrl ? (
+                      <img
+                        className="foto-picker__img"
+                        src={preview || resolverImagen(form.imagenUrl)}
+                        alt="Vista previa"
+                      />
+                    ) : (
+                      <div className="foto-picker__vacio">Sin foto</div>
+                    )}
+                    <div className="foto-picker__acciones">
+                      <label className="btn btn--outline btn--sm">
+                        {preview || form.imagenUrl ? 'Cambiar foto' : 'Subir foto'}
+                        <input type="file" accept="image/*" hidden onChange={elegirArchivo} />
+                      </label>
+                      {(preview || form.imagenUrl) && (
+                        <button
+                          type="button"
+                          className="btn btn--outline btn--sm"
+                          onClick={() => {
+                            limpiarFoto()
+                            setCampo('imagenUrl', '')
+                          }}
+                        >
+                          Quitar foto
+                        </button>
+                      )}
+                      <span className="hint">JPG o PNG. Se ajusta automáticamente.</span>
+                    </div>
                   </div>
                 </div>
                 <div className="cita__actions">
@@ -208,8 +272,17 @@ export default function CatalogoManager() {
                   {visibles.map((s) => (
                     <tr key={s.id}>
                       <td>
-                        <strong>{s.nombre}</strong>
-                        <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{s.descripcion}</div>
+                        <div className="servicio-celda">
+                          {s.imagenUrl ? (
+                            <img className="servicio-celda__img" src={resolverImagen(s.imagenUrl)} alt="" />
+                          ) : (
+                            <div className="servicio-celda__img servicio-celda__img--vacia">✂</div>
+                          )}
+                          <div>
+                            <strong>{s.nombre}</strong>
+                            <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{s.descripcion}</div>
+                          </div>
+                        </div>
                       </td>
                       <td>{formatMoney(s.precio)}</td>
                       <td>{s.duracionMinutos} min</td>
