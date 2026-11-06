@@ -98,11 +98,7 @@ export default function Home() {
                   {estado.texto}
                 </div>
               )}
-              <ul className="barber-film__points">
-                <li>Reserva en línea</li>
-                <li>Atención personalizada</li>
-                <li>Yape y Plin</li>
-              </ul>
+         
             </div>
 
             <div className="barber-film__stage">
