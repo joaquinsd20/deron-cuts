@@ -23,7 +23,7 @@ Base de Datos: TiDB y MySql.
 
 Despliegue y Hosting: Vercel (Frontend) y Render (Backend / Servicios).
 
-Asistencia de Desarrollo: Desarrollado con el apoyo de Claude Open Code.
+Asistencia de Desarrollo: Desarrollado con el apoyo de Claude Code y Open Code.
 
 ⚙️ Instalación y Configuración Local
 
