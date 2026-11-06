@@ -89,6 +89,17 @@ export default function CatalogoManager() {
   }
 
   const guardar = async () => {
+    const precio = Number(form.precio)
+    const duracion = Number(form.duracionMinutos)
+    let aviso = null
+    if (!form.nombre.trim()) aviso = 'Escribe el nombre del servicio'
+    else if (form.precio === '' || Number.isNaN(precio) || precio < 0) aviso = 'Escribe un precio válido'
+    else if (form.duracionMinutos === '' || Number.isNaN(duracion) || duracion < 15)
+      aviso = 'La duración mínima es 15 minutos'
+    if (aviso) {
+      setToast({ message: aviso, tipo: 'error' })
+      return
+    }
     setGuardando(true)
     const payload = {
       nombre: form.nombre.trim(),
@@ -111,8 +122,9 @@ export default function CatalogoManager() {
       limpiarFoto()
       await cargar()
     } catch (err) {
-      const msg = err?.response?.data?.message
-      setToast({ message: msg || 'No se pudo guardar el servicio', tipo: 'error' })
+      const data = err?.response?.data
+      const detalle = data?.fieldErrors ? Object.values(data.fieldErrors).join(' · ') : null
+      setToast({ message: detalle || data?.message || 'No se pudo guardar el servicio', tipo: 'error' })
     } finally {
       setGuardando(false)
     }
@@ -180,9 +192,7 @@ export default function CatalogoManager() {
                   />
                 </div>
                 <div className="field">
-                  <label>
-                    Descripción <span className="req">*</span>
-                  </label>
+                  <label>Descripción</label>
                   <textarea
                     rows={3}
                     value={form.descripcion}

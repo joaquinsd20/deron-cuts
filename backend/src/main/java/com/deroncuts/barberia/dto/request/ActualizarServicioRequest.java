@@ -14,7 +14,7 @@ public class ActualizarServicioRequest {
     @Size(max = 100, message = "El nombre no puede superar 100 caracteres")
     private String nombre;
 
-    @NotBlank(message = "La descripción es obligatoria")
+    // Opcional: si viene vacía se guarda como texto vacío
     @Size(max = 500, message = "La descripción no puede superar 500 caracteres")
     private String descripcion;
 

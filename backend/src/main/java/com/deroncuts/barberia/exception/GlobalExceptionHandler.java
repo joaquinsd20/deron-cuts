@@ -42,8 +42,10 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
         }
+        // El primer error va en "message" para que el admin muestre qué campo corregir
+        String mensaje = errors.isEmpty() ? "Datos inv\u00e1lidos" : errors.values().iterator().next();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError(HttpStatus.BAD_REQUEST.value(), "Datos invÃ¡lidos", errors));
+                .body(new ApiError(HttpStatus.BAD_REQUEST.value(), mensaje, errors));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

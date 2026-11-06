@@ -145,8 +145,8 @@ public class ServicioService {
     private void aplicarCampos(Servicio servicio, String nombre, String descripcion,
                                java.math.BigDecimal precio, Integer duracionMinutos,
                                String imagenUrl, boolean activo) {
-        servicio.setNombre(nombre);
-        servicio.setDescripcion(descripcion);
+        servicio.setNombre(nombre.trim());
+        servicio.setDescripcion(descripcion == null ? "" : descripcion.trim());
         servicio.setPrecio(precio);
         servicio.setDuracionMinutos(duracionMinutos);
         servicio.setImagenUrl(imagenUrl);
