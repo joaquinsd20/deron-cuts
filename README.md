@@ -4,7 +4,8 @@ Plataforma web moderna diseñada para un estudio de barbería, enfocada en ofrec
 
 🚀 Enlaces de Producción
 
-Frontend: https://deron-cuts.vercel.app/
+Landing: https://deron-cuts.vercel.app/
+Admin: https://deron-cuts-admin.vercel.app/
 
 💻 Características Principales
 
