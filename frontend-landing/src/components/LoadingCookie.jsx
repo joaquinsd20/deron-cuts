@@ -48,7 +48,7 @@ export default function LoadingCookie() {
         )}
       </button>
       <span className="loading-cookie__text">
-        {cracked ? '¡Se rompió! Horneando otra...' : 'Horneando tu página...'}
+        {cracked ? '¡Se rompió! Horneando otra...' : 'Cargando...'}
       </span>
       {lento && (
         <span className="loading-cookie__lento">
