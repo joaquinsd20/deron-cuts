@@ -42,13 +42,6 @@ const SHOTS = [
   }
 ]
 
-const PERSONALIZADO = {
-  label: 'Personalizado',
-  precio: 'S/ 30',
-  desc: 'Líneas, diseños y detalles a tu medida. Cuéntanos tu idea y la trabajamos contigo.',
-  custom: true
-}
-
 function formatPrecio(valor) {
   const n = Number(valor)
   if (!Number.isFinite(n)) return ''
@@ -237,20 +230,6 @@ export default function Services() {
               </button>
             ))}
 
-            <button
-              type="button"
-              className="shot shot--custom"
-              onClick={() => abrirDetalle(PERSONALIZADO)}
-              aria-label="Ver detalle de corte personalizado"
-            >
-              <span className="shot__custom-art" aria-hidden="true">
-                <span>+</span>
-              </span>
-              <span className="shot__meta">
-                <span className="shot__label">{PERSONALIZADO.label}</span>
-                <span className="shot__price">{PERSONALIZADO.precio}</span>
-              </span>
-            </button>
           </div>
 
           <div className="services__nav">
