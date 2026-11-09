@@ -25,9 +25,21 @@ public class ConfiguracionService {
         this.objectMapper = objectMapper;
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Copia en memoria de la configuración (cambia muy poco). Así la portada, el ping de
+     * cron-job.org y el chequeo de salud de Render siguen respondiendo aunque TiDB tenga
+     * un corte breve: antes, un corte de la base hacía que Render reiniciara el servidor.
+     * Sin @Transactional a propósito: una transacción pediría conexión aunque haya copia.
+     */
+    private volatile ConfiguracionDto cache;
+
     public ConfiguracionDto obtener() {
-        return toDto(obtenerOMeterDefault());
+        ConfiguracionDto actual = cache;
+        if (actual == null) {
+            actual = toDto(obtenerOMeterDefault());
+            cache = actual;
+        }
+        return actual;
     }
 
     @Transactional
@@ -53,7 +65,9 @@ public class ConfiguracionService {
             }
             config.setMetodosPago(String.join(",", metodos));
         }
-        return toDto(repository.save(config));
+        ConfiguracionDto guardada = toDto(repository.save(config));
+        cache = guardada;
+        return guardada;
     }
 
     public static final String METODOS_DEFAULT = "EFECTIVO,YAPE,PLIN";
