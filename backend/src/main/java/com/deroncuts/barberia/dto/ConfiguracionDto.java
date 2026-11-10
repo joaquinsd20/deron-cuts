@@ -170,4 +170,18 @@ public class ConfiguracionDto {
     public void setMetodosPago(java.util.List<String> metodosPago) {
         this.metodosPago = metodosPago;
     }
+
+    private String yapeNumero;
+    private String yapeTitular;
+    private String qrPagoUrl;
+    private String correoReportes;
+
+    public String getYapeNumero() { return yapeNumero; }
+    public void setYapeNumero(String yapeNumero) { this.yapeNumero = yapeNumero; }
+    public String getYapeTitular() { return yapeTitular; }
+    public void setYapeTitular(String yapeTitular) { this.yapeTitular = yapeTitular; }
+    public String getQrPagoUrl() { return qrPagoUrl; }
+    public void setQrPagoUrl(String qrPagoUrl) { this.qrPagoUrl = qrPagoUrl; }
+    public String getCorreoReportes() { return correoReportes; }
+    public void setCorreoReportes(String correoReportes) { this.correoReportes = correoReportes; }
 }

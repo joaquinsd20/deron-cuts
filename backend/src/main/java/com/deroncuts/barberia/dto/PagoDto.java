@@ -32,6 +32,20 @@ public class PagoDto {
         return p;
     }
 
+    /** Ingreso registrado a mano por el barbero (id "M-…", sin cita asociada). */
+    public static PagoDto manual(Long ingresoId, LocalDateTime fecha, String metodo, BigDecimal monto,
+                                 String titulo, String concepto) {
+        PagoDto p = new PagoDto();
+        p.id = "M-" + ingresoId;
+        p.concepto = "MANUAL";
+        p.fechaPago = fecha;
+        p.metodoPago = metodo;
+        p.montoPagado = monto;
+        p.nombreCliente = titulo;
+        p.nombreServicio = concepto;
+        return p;
+    }
+
     public String getId() { return id; }
     public Long getCitaId() { return citaId; }
     public String getConcepto() { return concepto; }

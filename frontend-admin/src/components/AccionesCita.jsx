@@ -6,6 +6,7 @@ import {
   confirmarAdelantoCita,
   aplicarTardanzaCita,
   eliminarCita,
+  urlComprobante,
   mensajeError
 } from '../services/api.js'
 import { aInputLocal, formatMoney } from '../services/format.js'
@@ -27,6 +28,7 @@ export function useAccionesCita({ alCambiar, avisar }) {
   const [metodo, setMetodo] = useState('EFECTIVO')
   const [monto, setMonto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [captura, setCaptura] = useState(null)
   const metodos = useMetodosPago()
   const preferido = (m) => (metodos.includes(m) ? m : metodos[0])
 
@@ -91,11 +93,76 @@ export function useAccionesCita({ alCambiar, avisar }) {
         `¿Eliminar la cita de ${cita.nombreCliente}?\n\nSe borra por completo y no se puede deshacer.`
       )
       if (ok) ejecutar(() => eliminarCita(cita.id), 'Cita eliminada', 'No se pudo eliminar la cita')
+    },
+    onVerPago: (cita) => {
+      setCaptura(null)
+      setModal({ tipo: 'pago', cita })
+      if (cita.comprobanteEnviado) {
+        urlComprobante(cita.id)
+          .then(setCaptura)
+          .catch(() => setCaptura('error'))
+      }
     }
   }
 
   let contenido = null
   const c = modal?.cita
+
+  if (modal?.tipo === 'pago') {
+    contenido = (
+      <>
+        <div className="card__title">Verificar pago del adelanto</div>
+        <p className="modal__sub">
+          {c.nombreCliente} · {c.nombreServicio} · Adelanto {formatMoney(c.adelantoMonto)}
+        </p>
+        <div className="pago-reportado">
+          <MetodoIcono metodo={c.pagoMetodoReportado} tamano={40} />
+          <div>
+            <strong>Pagó por {nombreMetodo(c.pagoMetodoReportado)}</strong>
+            <span>N.º de operación: {c.pagoOperacion || 'no lo escribió'}</span>
+          </div>
+        </div>
+        {c.comprobanteEnviado &&
+          (captura && captura !== 'error' ? (
+            <a href={captura} target="_blank" rel="noreferrer" className="captura">
+              <img src={captura} alt="Captura del pago enviada por el cliente" />
+            </a>
+          ) : (
+            <p className="hint">{captura === 'error' ? 'No se pudo cargar la captura.' : 'Cargando captura…'}</p>
+          ))}
+        <p className="hint">Revisa en tu app de Yape/Plin que llegó el monto antes de confirmar.</p>
+        <div className="modal__acciones">
+          <button
+            className="btn btn--pago"
+            disabled={enviando}
+            onClick={() =>
+              ejecutar(
+                () => confirmarAdelantoCita(c.id, true, c.pagoMetodoReportado || preferido('YAPE')),
+                'Pago confirmado: la cita quedó confirmada y se avisó al cliente',
+                'No se pudo confirmar el pago'
+              )
+            }
+          >
+            ✓ Llegó, confirmar
+          </button>
+          <button
+            className="btn btn--danger"
+            disabled={enviando}
+            onClick={() => {
+              if (window.confirm('¿No llegó el pago? La cita se cancelará y se liberará el horario.')) {
+                ejecutar(() => cambiarEstadoCita(c.id, 'CANCELADA'), 'Cita cancelada', 'No se pudo cancelar')
+              }
+            }}
+          >
+            No llegó, cancelar
+          </button>
+          <button className="btn btn--outline" onClick={cerrar}>
+            Cerrar
+          </button>
+        </div>
+      </>
+    )
+  }
 
   if (modal?.tipo === 'reprogramar') {
     contenido = (

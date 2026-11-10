@@ -15,7 +15,9 @@ import com.deroncuts.barberia.dto.request.ReprogramarRequest;
 import com.deroncuts.barberia.exception.BusinessException;
 import com.deroncuts.barberia.exception.ConflictException;
 import com.deroncuts.barberia.exception.NotFoundException;
+import com.deroncuts.barberia.model.ArchivoBinario;
 import com.deroncuts.barberia.model.Cita;
+import com.deroncuts.barberia.model.IngresoManual;
 import com.deroncuts.barberia.model.Cliente;
 import com.deroncuts.barberia.model.EstadoCita;
 import com.deroncuts.barberia.dto.PagoDto;
@@ -51,6 +53,9 @@ public class CitaService {
     private final ServicioService servicioService;
     private final ConfiguracionService configuracionService;
     private final NotificacionService notificaciones;
+    private final ArchivoService archivoService;
+    private final com.deroncuts.barberia.repository.ClienteRepository clienteRepository;
+    private final com.deroncuts.barberia.repository.IngresoManualRepository ingresoManualRepository;
     private final DisponibilidadService disponibilidadService;
     private final SimpMessagingTemplate messagingTemplate;
     private final RecordatorioService recordatorioService;
@@ -63,6 +68,9 @@ public class CitaService {
                        ServicioService servicioService,
                        ConfiguracionService configuracionService,
                        NotificacionService notificaciones,
+                       ArchivoService archivoService,
+                       com.deroncuts.barberia.repository.ClienteRepository clienteRepository,
+                       com.deroncuts.barberia.repository.IngresoManualRepository ingresoManualRepository,
                        DisponibilidadService disponibilidadService,
                        SimpMessagingTemplate messagingTemplate,
                        RecordatorioService recordatorioService,
@@ -74,6 +82,9 @@ public class CitaService {
         this.servicioService = servicioService;
         this.configuracionService = configuracionService;
         this.notificaciones = notificaciones;
+        this.archivoService = archivoService;
+        this.clienteRepository = clienteRepository;
+        this.ingresoManualRepository = ingresoManualRepository;
         this.disponibilidadService = disponibilidadService;
         this.messagingTemplate = messagingTemplate;
         this.recordatorioService = recordatorioService;
@@ -82,9 +93,14 @@ public class CitaService {
     }
 
     @Transactional
+    /**
+     * Cita agendada por el barbero desde el panel (llamada, WhatsApp, cliente en persona).
+     * Puede ligarse a un cliente existente o ser de un cliente de paso; si ya pagó el
+     * adelanto se registra y la cita queda confirmada.
+     */
     public CitaDto crear(CrearCitaRequest request) {
         Servicio servicio = servicioService.obtenerEntity(request.getServicioId());
-        if (!servicio.isActivo()) {
+        if (!servicio.isActivo() || servicio.isEliminado()) {
             throw new BusinessException("El servicio seleccionado no está disponible");
         }
 
@@ -95,23 +111,91 @@ public class CitaService {
         LocalDateTime fin = inicio.plusMinutes(servicio.getDuracionMinutos());
         validarBloqueDisponible(inicio, fin, null);
 
+        Cliente cliente = request.getClienteId() == null ? null
+                : clienteRepository.findById(request.getClienteId())
+                        .orElseThrow(() -> new NotFoundException("Cliente no encontrado"));
+
         Cita cita = new Cita();
         cita.setServicio(servicio);
-        cita.setNombreCliente(request.getNombreCliente().trim());
-        cita.setTelefonoWhatsapp(request.getTelefonoWhatsapp().trim());
-        cita.setEmail(request.getEmail());
+        cita.setCliente(cliente);
+        cita.setNombreCliente(cliente != null ? cliente.getNombre() : request.getNombreCliente().trim());
+        cita.setTelefonoWhatsapp(cliente != null ? cliente.getTelefono() : request.getTelefonoWhatsapp().trim());
+        cita.setEmail(cliente != null ? cliente.getEmail() : request.getEmail());
         cita.setNotas(request.getNotas());
         cita.setFechaHoraInicio(inicio);
         cita.setFechaHoraFin(fin);
         cita.setEstado(EstadoCita.PENDIENTE);
-        cita.setPrecioFinal(servicio.getPrecio());
-        cita.setAdelantoMonto(calcularAdelanto(servicio.getPrecio()));
+
+        boolean cumpleanos = cliente != null
+                && esSemanaDeCumpleanos(cliente.getFechaNacimiento(), inicio.toLocalDate());
+        BigDecimal precioFinal = cumpleanos ? BigDecimal.ZERO : servicio.getPrecio();
+        cita.setPrecioFinal(precioFinal);
+        cita.setDescuentoCumpleanos(cumpleanos);
+        cita.setAdelantoMonto(cumpleanos ? BigDecimal.ZERO : calcularAdelanto(precioFinal));
         cita.setPenalidadTardanza(BigDecimal.ZERO);
+
+        if (Boolean.TRUE.equals(request.getAdelantoPagado())
+                && cita.getAdelantoMonto().compareTo(BigDecimal.ZERO) > 0) {
+            cita.setAdelantoPagado(true);
+            cita.setAdelantoAplicado(true);
+            cita.setMetodoAdelanto(parseMetodoPago(request.getMetodoAdelanto()));
+            cita.setFechaAdelanto(LocalDateTime.now());
+            cita.setEstado(EstadoCita.CONFIRMADA);
+        } else if (Boolean.TRUE.equals(request.getConfirmar()) || cumpleanos) {
+            cita.setEstado(EstadoCita.CONFIRMADA);
+        }
 
         Cita guardada = citaRepository.save(cita);
         publicarEvento("CREADA", guardada);
         recordatorioService.notificarNuevaCita(guardada);
+        avisarClienteDe(guardada, "📅 Te agendamos una cita",
+                servicio.getNombre() + " · " + fechaTexto(guardada.getFechaHoraInicio()) + ". Te esperamos.");
         return CitaDto.from(guardada);
+    }
+
+    // ---------- Ingresos manuales ----------
+
+    @Transactional
+    public PagoDto registrarIngresoManual(BigDecimal monto, String metodo, String concepto,
+                                          LocalDateTime fecha, Long clienteId) {
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("El monto debe ser mayor a cero");
+        }
+        if (concepto == null || concepto.isBlank()) {
+            throw new BusinessException("Escribe un concepto (ej.: corte sin reserva, propina, producto)");
+        }
+        IngresoManual ingreso = new IngresoManual();
+        ingreso.setMonto(monto.setScale(2, RoundingMode.HALF_UP));
+        ingreso.setMetodo(parseMetodoPago(metodo));
+        ingreso.setConcepto(concepto.trim().length() > 120 ? concepto.trim().substring(0, 120) : concepto.trim());
+        LocalDateTime cuando = fecha == null ? LocalDateTime.now() : fecha;
+        if (cuando.isAfter(LocalDateTime.now().plusMinutes(5))) {
+            throw new BusinessException("La fecha del ingreso no puede ser futura");
+        }
+        ingreso.setFecha(cuando);
+        if (clienteId != null) {
+            Cliente c = clienteRepository.findById(clienteId)
+                    .orElseThrow(() -> new NotFoundException("Cliente no encontrado"));
+            ingreso.setClienteId(c.getId());
+            ingreso.setNombreCliente(c.getNombre());
+        }
+        IngresoManual guardado = ingresoManualRepository.save(ingreso);
+        messagingTemplate.convertAndSend("/topic/citas", Map.of("accion", "INGRESO"));
+        return aPago(guardado);
+    }
+
+    @Transactional
+    public void eliminarIngresoManual(Long id) {
+        if (!ingresoManualRepository.existsById(id)) {
+            throw new NotFoundException("Ingreso no encontrado");
+        }
+        ingresoManualRepository.deleteById(id);
+        messagingTemplate.convertAndSend("/topic/citas", Map.of("accion", "INGRESO"));
+    }
+
+    private static PagoDto aPago(IngresoManual i) {
+        return PagoDto.manual(i.getId(), i.getFecha(), i.getMetodo(), i.getMonto(),
+                i.getNombreCliente() != null ? i.getNombreCliente() : i.getConcepto(), i.getConcepto());
     }
 
     @Transactional
@@ -148,12 +232,35 @@ public class CitaService {
         cita.setAdelantoAplicado(false);
         cita.setPenalidadTardanza(BigDecimal.ZERO);
 
+        // Pago del adelanto obligatorio para guardar la reserva (salvo cumpleaños = gratis).
+        // Yape personal no confirma pagos automáticamente: el cliente reporta el n.º de
+        // operación y/o sube la captura, y el barbero lo verifica en el panel.
+        boolean requierePago = cita.getAdelantoMonto().compareTo(BigDecimal.ZERO) > 0;
+        String operacion = request.getNumeroOperacion() == null ? "" : request.getNumeroOperacion().trim();
+        boolean hayCaptura = request.getComprobante() != null && !request.getComprobante().isBlank();
+        if (requierePago) {
+            if (operacion.isEmpty() && !hayCaptura) {
+                throw new BusinessException(
+                        "Para reservar paga el adelanto y escribe el número de operación o sube la captura del pago");
+            }
+            cita.setPagoMetodoReportado(parseMetodoPago(
+                    request.getMetodoPago() == null || request.getMetodoPago().isBlank() ? "YAPE" : request.getMetodoPago()));
+            cita.setPagoOperacion(operacion.isEmpty() ? null : operacion);
+            cita.setPagoReportadoEn(LocalDateTime.now());
+            cita.setComprobanteEnviado(hayCaptura);
+        }
+
         Cita guardada = citaRepository.save(cita);
+        if (requierePago && hayCaptura) {
+            archivoService.guardarDataUrl(ArchivoBinario.comprobante(guardada.getId()), request.getComprobante());
+        }
         publicarEvento("CREADA", guardada);
         recordatorioService.notificarNuevaCita(guardada);
-        notificaciones.avisarAdmins("📅 Nueva reserva",
+        notificaciones.avisarAdmins(requierePago ? "💳 Nueva reserva · verifica el pago" : "📅 Nueva reserva",
                 guardada.getNombreCliente() + " · " + servicio.getNombre() + " · "
                         + fechaTexto(guardada.getFechaHoraInicio())
+                        + (requierePago ? " · adelanto " + formatoSoles(cita.getAdelantoMonto())
+                                + " por " + cita.getPagoMetodoReportado() : "")
                         + (cumpleanos ? " · 🎂 semana de cumpleaños" : ""),
                 "/citas");
         return CitaDto.from(guardada);
@@ -315,6 +422,9 @@ public class CitaService {
                         c.getMontoPagado(), c.getNombreCliente(), c.getServicio().getNombre()));
             }
         }
+        for (IngresoManual i : ingresoManualRepository.findByFechaBetween(inicio, fin)) {
+            lista.add(aPago(i));
+        }
         lista.sort((a, b) -> b.getFechaPago().compareTo(a.getFechaPago()));
         return lista;
     }
@@ -372,6 +482,7 @@ public class CitaService {
         }
         CitaDto dto = CitaDto.from(cita);
         recordatorioRepository.deleteByCitaId(id);
+        archivoService.borrar(ArchivoBinario.comprobante(id));
         citaRepository.delete(cita);
         messagingTemplate.convertAndSend("/topic/citas", new EventoCita("ELIMINADA", dto));
     }
@@ -404,6 +515,10 @@ public class CitaService {
 
     private static final java.time.format.DateTimeFormatter FMT_AVISO =
             java.time.format.DateTimeFormatter.ofPattern("EEEE d 'de' MMMM, HH:mm", new java.util.Locale("es", "PE"));
+
+    static String formatoSoles(BigDecimal monto) {
+        return "S/ " + monto.setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
 
     static String fechaTexto(LocalDateTime fecha) {
         return fecha.format(FMT_AVISO);

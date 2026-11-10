@@ -19,8 +19,11 @@ public class ConfiguracionService {
 
     private final ConfiguracionNegocioRepository repository;
     private final ObjectMapper objectMapper;
+    private final ArchivoService archivoService;
 
-    public ConfiguracionService(ConfiguracionNegocioRepository repository, ObjectMapper objectMapper) {
+    public ConfiguracionService(ConfiguracionNegocioRepository repository, ObjectMapper objectMapper,
+                                ArchivoService archivoService) {
+        this.archivoService = archivoService;
         this.repository = repository;
         this.objectMapper = objectMapper;
     }
@@ -32,6 +35,18 @@ public class ConfiguracionService {
      * Sin @Transactional a propósito: una transacción pediría conexión aunque haya copia.
      */
     private volatile ConfiguracionDto cache;
+
+    /** Vacía la copia en memoria (por ejemplo, tras subir un QR nuevo). */
+    public void refrescar() {
+        cache = null;
+    }
+
+    /** Número de Yape configurado o, si no hay, el teléfono del negocio (9 dígitos). */
+    public static String numeroYape(ConfiguracionNegocio c) {
+        if (c.getYapeNumero() != null && !c.getYapeNumero().isBlank()) return c.getYapeNumero();
+        String tel = c.getTelefono() == null ? "" : c.getTelefono().replaceAll("[^0-9]", "");
+        return tel.length() > 9 ? tel.substring(tel.length() - 9) : tel;
+    }
 
     public ConfiguracionDto obtener() {
         ConfiguracionDto actual = cache;
@@ -58,6 +73,16 @@ public class ConfiguracionService {
         config.setRecordatoriosActivo(request.getRecordatoriosActivo());
         config.setRecordatoriosAntesHoras(request.getRecordatoriosAntesHoras());
         config.setWhatsappActivo(request.getWhatsappActivo());
+        if (request.getYapeNumero() != null) {
+            String num = request.getYapeNumero().replaceAll("[^0-9]", "");
+            config.setYapeNumero(num.isEmpty() ? null : num);
+        }
+        if (request.getYapeTitular() != null) {
+            config.setYapeTitular(request.getYapeTitular().isBlank() ? null : request.getYapeTitular().trim());
+        }
+        if (request.getCorreoReportes() != null) {
+            config.setCorreoReportes(request.getCorreoReportes().isBlank() ? null : request.getCorreoReportes().trim());
+        }
         if (request.getMetodosPago() != null) {
             List<String> metodos = normalizarMetodos(request.getMetodosPago());
             if (metodos.isEmpty()) {
@@ -175,6 +200,13 @@ public class ConfiguracionService {
         dto.setDescripcionBarbero(config.getDescripcionBarbero());
         dto.setHorario(parsearHorario(config.getHorarioJson()));
         dto.setMetodosPago(metodosDe(config));
+        dto.setYapeNumero(numeroYape(config));
+        dto.setYapeTitular(config.getYapeTitular());
+        dto.setCorreoReportes(config.getCorreoReportes());
+        java.time.LocalDateTime qr = archivoService.fechaDe(ArchivoService.QR_PAGO);
+        // Sin QR subido desde el panel se usa el de la landing (/pagos/yape-qr.jpg).
+        dto.setQrPagoUrl(qr == null ? "/pagos/yape-qr.jpg"
+                : "/api/public/pagos/qr?v=" + qr.toEpochSecond(java.time.ZoneOffset.UTC));
         dto.setRecordatoriosActivo(config.getRecordatoriosActivo() == null
                 ? true
                 : config.getRecordatoriosActivo());

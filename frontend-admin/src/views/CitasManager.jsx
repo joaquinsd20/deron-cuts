@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
 import AppointmentCard from '../components/AppointmentCard.jsx'
 import { useAccionesCita } from '../components/AccionesCita.jsx'
+import AgendarCita from '../components/AgendarCita.jsx'
 import { getCitas } from '../services/api.js'
 import { subscribeCitas } from '../services/websocket.js'
 import { fechaLocal } from '../services/format.js'
@@ -22,6 +23,7 @@ export default function CitasManager() {
   const [citas, setCitas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [toast, setToast] = useState(null)
+  const [agendando, setAgendando] = useState(false)
 
   const cargar = useCallback(async () => {
     const params = {}
@@ -58,7 +60,13 @@ export default function CitasManager() {
                 Gestión de <span>citas</span>
               </h1>
             </div>
+            <button type="button" className="btn btn--primary" onClick={() => setAgendando(true)}>
+              + Agendar cita
+            </button>
           </header>
+          {agendando && (
+            <AgendarCita onCerrar={() => setAgendando(false)} onCreada={() => cargar()} avisar={setToast} />
+          )}
 
           <div className="filters card">
             <div className="field">

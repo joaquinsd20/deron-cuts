@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
-import { getConfiguracionAdmin, actualizarConfiguracion, mensajeError } from '../services/api.js'
+import {
+  getConfiguracionAdmin,
+  actualizarConfiguracion,
+  mensajeError,
+  subirQrPago,
+  resolverImagen
+} from '../services/api.js'
+import { comprimirImagen } from '../services/imagen.js'
 import { MetodoIcono, nombreMetodo, refrescarMetodosPago } from '../components/MetodoPago.jsx'
 
 const DIAS = [
@@ -59,6 +66,26 @@ export default function ConfiguracionView() {
         }
       }
     }))
+
+  const [subiendoQr, setSubiendoQr] = useState(false)
+
+  const cambiarQr = async (e) => {
+    const archivo = e.target.files?.[0]
+    e.target.value = ''
+    if (!archivo) return
+    setSubiendoQr(true)
+    try {
+      // El QR debe quedar nítido: solo se reduce si es muy pesado.
+      const final = archivo.size > 2_500_000 ? await comprimirImagen(archivo, 1400, 0.92) : archivo
+      const guardada = await subirQrPago(final)
+      setConfig((c) => ({ ...c, qrPagoUrl: guardada.qrPagoUrl }))
+      setToast({ message: 'QR actualizado: los clientes ya ven el nuevo' })
+    } catch (err) {
+      setToast({ message: mensajeError(err, 'No se pudo subir el QR'), tipo: 'error' })
+    } finally {
+      setSubiendoQr(false)
+    }
+  }
 
   const [nuevoMetodo, setNuevoMetodo] = useState('')
   const metodos = config.metodosPago || ['EFECTIVO', 'YAPE', 'PLIN']
@@ -125,6 +152,53 @@ export default function ConfiguracionView() {
               {guardando ? 'Guardando…' : 'Guardar'}
             </button>
           </header>
+
+          <div className="card">
+            <div className="card__title">Cobro del adelanto al reservar</div>
+            <p className="page-head__sub" style={{ marginBottom: 14 }}>
+              Los clientes ven este QR y número al reservar, pagan el 50% y suben la captura. Tú lo verificas en
+              Citas con "Verificar pago".
+            </p>
+            <div className="cobro-config">
+              <div className="cobro-config__qr">
+                {config.qrPagoUrl && <img src={resolverImagen(config.qrPagoUrl)} alt="QR de pago" />}
+                <label className="btn btn--outline btn--sm">
+                  {subiendoQr ? 'Subiendo…' : 'Cambiar QR'}
+                  <input type="file" accept="image/*" hidden onChange={cambiarQr} disabled={subiendoQr} />
+                </label>
+              </div>
+              <div className="form-grid" style={{ flex: 1 }}>
+                <div className="field">
+                  <label htmlFor="cfg-yape">Número de Yape / Plin</label>
+                  <input
+                    id="cfg-yape"
+                    inputMode="tel"
+                    value={config.yapeNumero || ''}
+                    onChange={(e) => setCampo('yapeNumero', e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="cfg-titular">Nombre del titular (lo ve el cliente al yapear)</label>
+                  <input
+                    id="cfg-titular"
+                    placeholder="Ej.: Yumpi D."
+                    value={config.yapeTitular || ''}
+                    onChange={(e) => setCampo('yapeTitular', e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="cfg-correo-rep">Correo para el reporte semanal (PDF)</label>
+                  <input
+                    id="cfg-correo-rep"
+                    type="email"
+                    placeholder="tucorreo@gmail.com"
+                    value={config.correoReportes || ''}
+                    onChange={(e) => setCampo('correoReportes', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="card">
             <div className="card__title">Métodos de pago</div>

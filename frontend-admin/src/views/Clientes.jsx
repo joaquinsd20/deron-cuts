@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
-import { getClientes, restablecerPasswordCliente } from '../services/api.js'
+import { getClientes, restablecerPasswordCliente, crearClienteExterno, mensajeError } from '../services/api.js'
 import { formatMoney } from '../services/format.js'
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
@@ -60,6 +60,30 @@ export default function Clientes() {
   const [cargando, setCargando] = useState(true)
   const [toast, setToast] = useState(null)
   const [temporal, setTemporal] = useState(null) // { cliente, clave }
+  const [creando, setCreando] = useState(false)
+  const [guardandoNuevo, setGuardandoNuevo] = useState(false)
+  const VACIO = { nombre: '', telefono: '', email: '', fechaNacimiento: '' }
+  const [nuevo, setNuevo] = useState(VACIO)
+
+  const guardarNuevo = async () => {
+    setGuardandoNuevo(true)
+    try {
+      const c = await crearClienteExterno({
+        nombre: nuevo.nombre,
+        telefono: nuevo.telefono,
+        email: nuevo.email || null,
+        fechaNacimiento: nuevo.fechaNacimiento || null
+      })
+      setLista((l) => [c, ...l])
+      setNuevo(VACIO)
+      setCreando(false)
+      setToast({ message: `${c.nombre} agregado a tus clientes` })
+    } catch (err) {
+      setToast({ message: mensajeError(err, 'No se pudo crear el cliente'), tipo: 'error' })
+    } finally {
+      setGuardandoNuevo(false)
+    }
+  }
 
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -108,7 +132,47 @@ export default function Clientes() {
                 Cumpleaños, cada cuánto vienen y cuánto han gastado. Toca un cliente para escribirle.
               </p>
             </div>
+            <button type="button" className="btn btn--primary" onClick={() => setCreando(true)}>
+              + Nuevo cliente
+            </button>
           </header>
+
+          {creando && (
+            <div className="modal" role="presentation" onClick={() => !guardandoNuevo && setCreando(false)}>
+              <div className="modal__panel" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+                <div className="card__title">Nuevo cliente</div>
+                <p className="modal__sub">
+                  Para clientes que llegan por WhatsApp o en persona. Si luego se registra en la web con este
+                  teléfono, recupera su historial.
+                </p>
+                {[
+                  ['nombre', 'Nombre', 'text'],
+                  ['telefono', 'Teléfono / WhatsApp', 'tel'],
+                  ['email', 'Correo (opcional)', 'email'],
+                  ['fechaNacimiento', 'Cumpleaños (opcional)', 'date']
+                ].map(([k, label, tipo]) => (
+                  <div className="field" key={k}>
+                    <label htmlFor={`nc-${k}`}>{label}</label>
+                    <input
+                      id={`nc-${k}`}
+                      type={tipo}
+                      inputMode={tipo === 'tel' ? 'tel' : undefined}
+                      value={nuevo[k]}
+                      onChange={(e) => setNuevo({ ...nuevo, [k]: e.target.value })}
+                    />
+                  </div>
+                ))}
+                <div className="modal__acciones">
+                  <button type="button" className="btn btn--primary" onClick={guardarNuevo} disabled={guardandoNuevo}>
+                    {guardandoNuevo ? 'Guardando…' : 'Guardar cliente'}
+                  </button>
+                  <button type="button" className="btn btn--outline" onClick={() => setCreando(false)}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {cumplenPronto.length > 0 && (
             <div className="card cumple-aviso">
@@ -191,8 +255,10 @@ export default function Clientes() {
                         {(c.nombre || '?').trim().charAt(0).toUpperCase()}
                       </div>
                       <div className="ficha__titulo">
-                        <strong>{c.nombre}</strong>
-                        <span>{c.email}</span>
+                        <strong>
+                          {c.nombre} {c.externo && <span className="etiqueta-externo">Externo</span>}
+                        </strong>
+                        <span>{c.email || 'Sin correo'}</span>
                         <span>{c.telefono || 'Sin teléfono'}</span>
                       </div>
                     </header>
@@ -246,13 +312,17 @@ export default function Clientes() {
                           WhatsApp
                         </a>
                       )}
-                      <button className="btn btn--sm btn--outline" onClick={() => restablecer(c)}>
-                        Clave temporal
-                      </button>
+                      {c.email && (
+                        <button className="btn btn--sm btn--outline" onClick={() => restablecer(c)}>
+                          Clave temporal
+                        </button>
+                      )}
                       <span className="ficha__desde">
                         Cliente desde {c.registradoEn ? fechaCorta(c.registradoEn) : '—'} ·{' '}
-                        {[c.tienePassword && 'contraseña', c.googleVinculado && 'Google'].filter(Boolean).join(' + ') ||
-                          'sin acceso'}
+                        {c.externo
+                          ? 'agregado por ti (sin cuenta web)'
+                          : [c.tienePassword && 'contraseña', c.googleVinculado && 'Google'].filter(Boolean).join(' + ') ||
+                            'sin acceso'}
                       </span>
                     </div>
                   </article>

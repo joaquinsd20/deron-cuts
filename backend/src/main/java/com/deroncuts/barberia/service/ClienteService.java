@@ -43,14 +43,19 @@ public class ClienteService {
         if (clienteRepository.existsByEmailIgnoreCase(email)) {
             throw new ConflictException("Ya existe una cuenta con ese correo");
         }
-        if (clienteRepository.existsByTelefono(telefono)) {
+        // Un cliente "externo" (creado por el barbero, sin cuenta) que ahora se registra
+        // con su teléfono recupera su ficha e historial en vez de chocar con el duplicado.
+        Cliente externo = clienteRepository.findByTelefono(telefono)
+                .filter(ClienteService::esExterno)
+                .orElse(null);
+        if (externo == null && clienteRepository.existsByTelefono(telefono)) {
             throw new ConflictException("Ya existe una cuenta con ese teléfono");
         }
         if (request.getFechaNacimiento() == null || !request.getFechaNacimiento().isBefore(LocalDate.now())) {
             throw new BusinessException("La fecha de nacimiento debe estar en el pasado");
         }
 
-        Cliente cliente = new Cliente();
+        Cliente cliente = externo != null ? externo : new Cliente();
         cliente.setNombre(request.getNombre().trim());
         cliente.setEmail(email);
         cliente.setTelefono(telefono);
@@ -95,14 +100,17 @@ public class ClienteService {
                         "Para crear tu cuenta con Google, completa tu teléfono y fecha de nacimiento");
             }
             String telefono = normalizarTelefono(request.getTelefono());
-            if (clienteRepository.existsByTelefono(telefono)) {
+            Cliente externo = clienteRepository.findByTelefono(telefono)
+                    .filter(ClienteService::esExterno)
+                    .orElse(null);
+            if (externo == null && clienteRepository.existsByTelefono(telefono)) {
                 throw new ConflictException("Ya existe una cuenta con ese teléfono");
             }
             if (!request.getFechaNacimiento().isBefore(LocalDate.now())) {
                 throw new BusinessException("La fecha de nacimiento debe estar en el pasado");
             }
 
-            cliente = new Cliente();
+            cliente = externo != null ? externo : new Cliente();
             cliente.setNombre(limitar(google.nombre(), 120));
             cliente.setEmail(email);
             cliente.setTelefono(telefono);
@@ -132,6 +140,40 @@ public class ClienteService {
     public Cliente obtenerPorEmail(String email) {
         return clienteRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new NotFoundException("Cliente no encontrado"));
+    }
+
+    /** Creado por el barbero desde el panel: aún no tiene forma de iniciar sesión. */
+    public static boolean esExterno(Cliente c) {
+        return (c.getPasswordHash() == null || c.getPasswordHash().isBlank()) && c.getGoogleId() == null;
+    }
+
+    /** Alta de un cliente externo desde el panel (sin cuenta; correo y cumpleaños opcionales). */
+    @Transactional
+    public Cliente crearExterno(String nombre, String telefono, String email, LocalDate fechaNacimiento) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new BusinessException("Escribe el nombre del cliente");
+        }
+        String tel = normalizarTelefono(telefono == null ? "" : telefono);
+        if (tel.replaceAll("\\D", "").length() < 6) {
+            throw new BusinessException("Escribe un teléfono válido");
+        }
+        if (clienteRepository.existsByTelefono(tel)) {
+            throw new ConflictException("Ya existe un cliente con ese teléfono");
+        }
+        String correo = (email == null || email.isBlank()) ? null : normalizarEmail(email);
+        if (correo != null && clienteRepository.existsByEmailIgnoreCase(correo)) {
+            throw new ConflictException("Ya existe un cliente con ese correo");
+        }
+        if (fechaNacimiento != null && !fechaNacimiento.isBefore(LocalDate.now())) {
+            throw new BusinessException("La fecha de nacimiento debe estar en el pasado");
+        }
+        Cliente c = new Cliente();
+        c.setNombre(limitar(nombre.trim(), 120));
+        c.setTelefono(tel);
+        c.setEmail(correo);
+        c.setFechaNacimiento(fechaNacimiento);
+        c.setActivo(true);
+        return clienteRepository.save(c);
     }
 
     private ClienteLoginResponse respuesta(Cliente cliente) {

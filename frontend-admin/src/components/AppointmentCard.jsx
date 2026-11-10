@@ -9,7 +9,8 @@ export default function AppointmentCard({
   onRegistrarPago,
   onAdelanto,
   onTardanza,
-  onEliminar
+  onEliminar,
+  onVerPago
 }) {
   const telNumerico = (cita.telefonoWhatsapp || '').replace(/\D/g, '')
   const estado = (cita.estado || '').toUpperCase()
@@ -96,6 +97,11 @@ export default function AppointmentCard({
       </div>
 
       <div className="cita__actions">
+        {onVerPago && abierta && !cita.adelantoPagado && (cita.pagoOperacion || cita.comprobanteEnviado) && (
+          <button className="btn btn--sm btn--pago btn--verificar" onClick={() => onVerPago(cita)}>
+            💳 Verificar pago
+          </button>
+        )}
         {estado === 'PENDIENTE' && (!requiereAdelanto || cita.adelantoPagado) && (
           <button className="btn btn--sm" onClick={() => onEstado(cita.id, 'CONFIRMADA')}>
             Confirmar

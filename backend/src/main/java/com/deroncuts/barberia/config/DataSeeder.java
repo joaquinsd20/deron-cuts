@@ -62,6 +62,7 @@ public class DataSeeder implements CommandLineRunner {
         sembrarServicios();
         limpiarServiciosDemoAntiguos();
         migrarMetodosPago();
+        permitirClientesExternos();
         // Citas ficticias ("Luis Torres", etc.) solo para desarrollo, nunca en producción.
         if (Boolean.parseBoolean(System.getenv().getOrDefault("APP_DEMO_DATA", "false"))) {
             sembrarCitasDemo();
@@ -210,6 +211,28 @@ public class DataSeeder implements CommandLineRunner {
                 if (n > 0) log.info("Migrados {} métodos de pago a {}", n, p[0]);
             } catch (Exception e) {
                 // Base nueva: la columna antigua no existe. Nada que migrar.
+            }
+        }
+    }
+
+    /**
+     * Clientes externos (creados por el barbero) pueden no tener correo ni cumpleaños.
+     * ddl-auto=update no quita restricciones NOT NULL, así que se hace aquí una sola vez.
+     */
+    private void permitirClientesExternos() {
+        String[][] columnas = {{"email", "VARCHAR(150)"}, {"fecha_nacimiento", "DATE"}};
+        for (String[] col : columnas) {
+            try {
+                String nulo = jdbcTemplate.queryForObject(
+                        "SELECT IS_NULLABLE FROM information_schema.COLUMNS "
+                                + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clientes' AND COLUMN_NAME = ?",
+                        String.class, col[0]);
+                if ("NO".equalsIgnoreCase(nulo)) {
+                    jdbcTemplate.execute("ALTER TABLE clientes MODIFY COLUMN " + col[0] + " " + col[1] + " NULL");
+                    log.info("Columna clientes.{} ahora es opcional (clientes externos).", col[0]);
+                }
+            } catch (Exception e) {
+                log.warn("No se pudo ajustar clientes.{}: {}", col[0], e.getMessage());
             }
         }
     }

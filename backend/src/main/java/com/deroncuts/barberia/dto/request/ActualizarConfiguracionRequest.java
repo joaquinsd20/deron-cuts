@@ -159,4 +159,15 @@ public class ActualizarConfiguracionRequest {
     public void setMetodosPago(java.util.List<String> metodosPago) {
         this.metodosPago = metodosPago;
     }
+
+    private String yapeNumero;
+    private String yapeTitular;
+    private String correoReportes;
+
+    public String getYapeNumero() { return yapeNumero; }
+    public void setYapeNumero(String yapeNumero) { this.yapeNumero = yapeNumero; }
+    public String getYapeTitular() { return yapeTitular; }
+    public void setYapeTitular(String yapeTitular) { this.yapeTitular = yapeTitular; }
+    public String getCorreoReportes() { return correoReportes; }
+    public void setCorreoReportes(String correoReportes) { this.correoReportes = correoReportes; }
 }

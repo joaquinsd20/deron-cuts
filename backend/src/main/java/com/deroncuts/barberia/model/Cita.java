@@ -317,4 +317,27 @@ public class Cita {
     public void setAvisoPrevioEnviado(boolean avisoPrevioEnviado) {
         this.avisoPrevioEnviado = avisoPrevioEnviado;
     }
+
+    // ---- Pago reportado por el cliente al reservar (lo verifica el barbero) ----
+
+    @Column(name = "pago_operacion", length = 40)
+    private String pagoOperacion;
+
+    @Column(name = "pago_metodo_reportado", length = 30)
+    private String pagoMetodoReportado;
+
+    @Column(name = "pago_reportado_en")
+    private LocalDateTime pagoReportadoEn;
+
+    @Column(name = "comprobante_enviado", nullable = false, columnDefinition = "boolean default false")
+    private boolean comprobanteEnviado = false;
+
+    public String getPagoOperacion() { return pagoOperacion; }
+    public void setPagoOperacion(String pagoOperacion) { this.pagoOperacion = pagoOperacion; }
+    public String getPagoMetodoReportado() { return pagoMetodoReportado; }
+    public void setPagoMetodoReportado(String pagoMetodoReportado) { this.pagoMetodoReportado = pagoMetodoReportado; }
+    public LocalDateTime getPagoReportadoEn() { return pagoReportadoEn; }
+    public void setPagoReportadoEn(LocalDateTime pagoReportadoEn) { this.pagoReportadoEn = pagoReportadoEn; }
+    public boolean isComprobanteEnviado() { return comprobanteEnviado; }
+    public void setComprobanteEnviado(boolean comprobanteEnviado) { this.comprobanteEnviado = comprobanteEnviado; }
 }

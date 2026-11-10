@@ -34,4 +34,20 @@ public class AdminPagoController {
             @RequestParam(required = false) String metodo) {
         return citaService.listarPagos(desde, hasta, metodo);
     }
+
+    public record IngresoManualRequest(java.math.BigDecimal monto, String metodo, String concepto,
+                                       java.time.LocalDateTime fecha, Long clienteId) {
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/manual")
+    public PagoDto registrarManual(@org.springframework.web.bind.annotation.RequestBody IngresoManualRequest r) {
+        return citaService.registrarIngresoManual(r.monto(), r.metodo(), r.concepto(), r.fecha(), r.clienteId());
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/manual/{id}")
+    public org.springframework.http.ResponseEntity<Void> eliminarManual(
+            @org.springframework.web.bind.annotation.PathVariable Long id) {
+        citaService.eliminarIngresoManual(id);
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
 }

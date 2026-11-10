@@ -29,4 +29,5 @@ public class ClienteAdminDto {
     public Integer diasSinVenir;
     public String servicioFavorito;
     public BigDecimal totalGastado;
+    public boolean externo;         // creado por el barbero, sin cuenta en la web
 }

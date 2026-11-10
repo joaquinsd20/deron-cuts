@@ -79,4 +79,26 @@ public class CrearCitaRequest {
     public void setFechaHoraInicio(LocalDateTime fechaHoraInicio) {
         this.fechaHoraInicio = fechaHoraInicio;
     }
+
+    // ---- Solo para citas agendadas desde el panel ----
+
+    /** Cliente existente (si se indica, se usan su nombre, teléfono y cumpleaños). */
+    private Long clienteId;
+
+    /** true si el cliente ya pagó el adelanto: la cita queda confirmada. */
+    private Boolean adelantoPagado;
+
+    private String metodoAdelanto;
+
+    /** true para confirmar la cita sin adelanto (cliente de confianza). */
+    private Boolean confirmar;
+
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public Boolean getAdelantoPagado() { return adelantoPagado; }
+    public void setAdelantoPagado(Boolean adelantoPagado) { this.adelantoPagado = adelantoPagado; }
+    public String getMetodoAdelanto() { return metodoAdelanto; }
+    public void setMetodoAdelanto(String metodoAdelanto) { this.metodoAdelanto = metodoAdelanto; }
+    public Boolean getConfirmar() { return confirmar; }
+    public void setConfirmar(Boolean confirmar) { this.confirmar = confirmar; }
 }

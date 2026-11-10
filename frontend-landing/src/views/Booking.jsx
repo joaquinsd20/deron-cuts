@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import AvisosCita from '../components/AvisosCita.jsx'
+import PagoAdelanto from '../components/PagoAdelanto.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
   getConfiguracion,
@@ -42,6 +43,8 @@ export default function Booking() {
   const [enviando, setEnviando] = useState(false)
   const [errorSubmit, setErrorSubmit] = useState(null)
   const [creada, setCreada] = useState(null)
+  const [pago, setPago] = useState({ metodo: 'YAPE', operacion: '', comprobante: null })
+  const [errorPago, setErrorPago] = useState(null)
 
   useEffect(() => {
     Promise.all([getConfiguracion(), getServicios()])
@@ -90,6 +93,7 @@ export default function Booking() {
   const precioFinal = cumpleBeneficio ? 0 : Number(servicio?.precio || 0)
   const adelanto = cumpleBeneficio ? 0 : Number((precioFinal * 0.5).toFixed(2))
   const saldo = Math.max(0, Number((precioFinal - adelanto).toFixed(2)))
+  const requierePago = !cumpleBeneficio && adelanto > 0
 
   const validarPaso = () => {
     const nuevosErrores = {}
@@ -125,12 +129,25 @@ export default function Booking() {
   }
 
   const enviar = () => {
+    if (requierePago && !pago.operacion.trim() && !pago.comprobante) {
+      setErrorPago('Paga el adelanto y escribe el número de operación o sube la captura para guardar tu cita.')
+      document.getElementById('pago-titulo')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    setErrorPago(null)
     setEnviando(true)
     setErrorSubmit(null)
     crearCita({
       servicioId,
       notas: notas.trim() || null,
-      fechaHoraInicio: `${fecha}T${hora}:00`
+      fechaHoraInicio: `${fecha}T${hora}:00`,
+      ...(requierePago
+        ? {
+            metodoPago: pago.metodo,
+            numeroOperacion: pago.operacion.trim() || null,
+            comprobante: pago.comprobante
+          }
+        : {})
     })
       .then((cita) => setCreada(cita))
       .catch((err) => {
@@ -171,7 +188,7 @@ export default function Booking() {
   if (creada) {
     const mensaje = buildWhatsappLink(
       config.telefono,
-      `Hola ${config.nombreBarbero}, acabo de reservar "${creada.nombreServicio}" el ${formatFechaLarga(creada.fechaHoraInicio)} a las ${horaHora(creada.fechaHoraInicio)}. Mi adelanto es ${formatCurrency(creada.adelantoMonto)}.`
+      `Hola ${config.nombreBarbero}, acabo de reservar "${creada.nombreServicio}" el ${formatFechaLarga(creada.fechaHoraInicio)} a las ${horaHora(creada.fechaHoraInicio)}. Ya pagué el adelanto de ${formatCurrency(creada.adelantoMonto)}.`
     )
 
     return (
@@ -220,7 +237,7 @@ export default function Booking() {
                         <span className="k">Adelanto 50%</span>
                         <span className="v">
                           {formatCurrency(creada.adelantoMonto)} ·{' '}
-                          {creada.adelantoPagado ? 'Recibido' : 'Pendiente'}
+                          {creada.adelantoPagado ? 'Recibido' : 'En verificación'}
                         </span>
                       </div>
                     )}
@@ -249,9 +266,9 @@ export default function Booking() {
                     </div>
                   ) : (
                     <div className="policy">
-                      <b>Para confirmar tu reserva</b>, envía el 50% del adelanto por Yape o Plin
-                      al WhatsApp de {config.nombreBarbero}. El adelanto quedará como pendiente
-                      hasta que se reciba.
+                      <b>Tu horario quedó apartado.</b> {config.nombreBarbero} está verificando tu pago
+                      de {formatCurrency(creada.adelantoMonto)}; cuando lo confirme te avisaremos y la
+                      verás como CONFIRMADA en Mi cuenta.
                     </div>
                   )}
 
@@ -261,19 +278,14 @@ export default function Booking() {
                   </div>
 
                   <div className="hero__actions" style={{ marginTop: 24 }}>
-                    {creada.adelantoMonto > 0 && mensaje && (
-                      <a
-                        className="btn btn--primary"
-                        href={mensaje}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Coordinar adelanto por WhatsApp
-                      </a>
-                    )}
-                    <Link to="/cuenta" className="btn btn--outline">
+                    <Link to="/cuenta" className="btn btn--primary">
                       Ver mis citas
                     </Link>
+                    {mensaje && (
+                      <a className="btn btn--outline" href={mensaje} target="_blank" rel="noreferrer">
+                        ¿Dudas? Escríbenos
+                      </a>
+                    )}
                     <Link to="/" className="btn btn--outline">
                       Volver al inicio
                     </Link>
@@ -460,9 +472,25 @@ export default function Booking() {
                       />
                       {errores.notas && <span className="field__error">{errores.notas}</span>}
                     </div>
+                    {requierePago ? (
+                      <PagoAdelanto
+                        monto={adelanto}
+                        config={config}
+                        valor={pago}
+                        onChange={(v) => {
+                          setPago(v)
+                          setErrorPago(null)
+                        }}
+                        error={errorPago}
+                      />
+                    ) : (
+                      <div className="policy policy--ok">
+                        Tu cita cae en la semana de tu cumpleaños: el corte es gratis y no pagas adelanto.
+                      </div>
+                    )}
                     <div className="policy">
-                      <b>Reserva con adelanto:</b> el 50% se coordina por Yape o Plin. Tolerancia
-                      de 15 minutos; si llegas tarde pierdes el adelanto y se suman S/ 10.
+                      <b>Política:</b> el adelanto (50%) guarda tu horario y se descuenta del total.
+                      Tolerancia de 15 minutos; si llegas tarde pierdes el adelanto y se suman S/ 10.
                     </div>
                     {errorSubmit && <div className="alert">{errorSubmit}</div>}
                   </>
@@ -480,7 +508,13 @@ export default function Booking() {
                     onClick={continuar}
                     disabled={enviando}
                   >
-                    {enviando ? 'Agendando…' : step === 3 ? 'Confirmar mi cita' : 'Continuar'}
+                    {enviando
+                      ? 'Guardando tu cita…'
+                      : step === 3
+                        ? requierePago
+                          ? 'Ya pagué, reservar'
+                          : 'Confirmar mi cita'
+                        : 'Continuar'}
                   </button>
                 </div>
               </div>

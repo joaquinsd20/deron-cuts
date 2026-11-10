@@ -23,14 +23,29 @@ import java.util.Map;
 public class AdminClienteController {
 
     private final CuentaService cuentaService;
+    private final com.deroncuts.barberia.service.ClienteService clienteService;
 
-    public AdminClienteController(CuentaService cuentaService) {
+    public AdminClienteController(CuentaService cuentaService,
+                                  com.deroncuts.barberia.service.ClienteService clienteService) {
+        this.clienteService = clienteService;
         this.cuentaService = cuentaService;
     }
 
     @GetMapping("/clientes")
     public List<com.deroncuts.barberia.dto.ClienteAdminDto> listar(@RequestParam(required = false) String q) {
         return cuentaService.listarClientes(q);
+    }
+
+    public record NuevoClienteRequest(String nombre, String telefono, String email,
+                                      java.time.LocalDate fechaNacimiento) {
+    }
+
+    /** Cliente externo creado por el barbero (sin cuenta en la web). */
+    @PostMapping("/clientes")
+    public com.deroncuts.barberia.dto.ClienteAdminDto crear(@RequestBody NuevoClienteRequest r) {
+        var c = clienteService.crearExterno(r.nombre(), r.telefono(), r.email(), r.fechaNacimiento());
+        return cuentaService.listarClientes(c.getTelefono()).stream()
+                .filter(x -> x.id.equals(c.getId())).findFirst().orElseThrow();
     }
 
     @PostMapping("/clientes/{id}/restablecer-password")

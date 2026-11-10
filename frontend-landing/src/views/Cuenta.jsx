@@ -195,7 +195,11 @@ export default function Cuenta() {
                         {cita.adelantoMonto > 0 && (
                           <>
                             {' · '}Adelanto {formatCurrency(cita.adelantoMonto)}:{' '}
-                            {cita.adelantoPagado ? 'recibido' : 'pendiente'}
+                            {cita.adelantoPagado
+                              ? 'recibido'
+                              : cita.pagoOperacion || cita.comprobanteEnviado
+                                ? 'en verificación'
+                                : 'pendiente'}
                           </>
                         )}
                         {cita.saldoPendiente > 0 && (

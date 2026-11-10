@@ -81,6 +81,10 @@ public class CitaDto {
         dto.setAdelantoPagado(cita.isAdelantoPagado());
         dto.setAdelantoAplicado(cita.isAdelantoAplicado());
         dto.setMetodoAdelanto(cita.getMetodoAdelanto());
+        dto.pagoOperacion = cita.getPagoOperacion();
+        dto.pagoMetodoReportado = cita.getPagoMetodoReportado();
+        dto.pagoReportadoEn = cita.getPagoReportadoEn();
+        dto.comprobanteEnviado = cita.isComprobanteEnviado();
         dto.setFechaAdelanto(cita.getFechaAdelanto());
         dto.setTardanzaAplicada(cita.isTardanzaAplicada());
         dto.setPenalidadTardanza(penalidad);
@@ -338,4 +342,15 @@ public class CitaDto {
     public void setSaldoPendiente(BigDecimal saldoPendiente) {
         this.saldoPendiente = saldoPendiente;
     }
+
+    // Pago del adelanto reportado por el cliente al reservar (lo verifica el barbero).
+    private String pagoOperacion;
+    private String pagoMetodoReportado;
+    private java.time.LocalDateTime pagoReportadoEn;
+    private boolean comprobanteEnviado;
+
+    public String getPagoOperacion() { return pagoOperacion; }
+    public String getPagoMetodoReportado() { return pagoMetodoReportado; }
+    public java.time.LocalDateTime getPagoReportadoEn() { return pagoReportadoEn; }
+    public boolean isComprobanteEnviado() { return comprobanteEnviado; }
 }

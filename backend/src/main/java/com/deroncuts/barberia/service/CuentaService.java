@@ -35,12 +35,15 @@ public class CuentaService {
     private final UsuarioAdminRepository usuarioAdminRepository;
     private final PasswordEncoder passwordEncoder;
     private final CitaRepository citaRepository;
+    private final com.deroncuts.barberia.repository.IngresoManualRepository ingresoManualRepository;
 
     public CuentaService(ClienteRepository clienteRepository,
                          UsuarioAdminRepository usuarioAdminRepository,
                          PasswordEncoder passwordEncoder,
-                         CitaRepository citaRepository) {
+                         CitaRepository citaRepository,
+                         com.deroncuts.barberia.repository.IngresoManualRepository ingresoManualRepository) {
         this.citaRepository = citaRepository;
+        this.ingresoManualRepository = ingresoManualRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioAdminRepository = usuarioAdminRepository;
         this.passwordEncoder = passwordEncoder;
@@ -120,7 +123,11 @@ public class CuentaService {
         f.totalGastado = citas.stream()
                 .map(x -> (x.isAdelantoPagado() && x.getAdelantoMonto() != null ? x.getAdelantoMonto() : BigDecimal.ZERO)
                         .add(x.isPagada() && x.getMontoPagado() != null ? x.getMontoPagado() : BigDecimal.ZERO))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .add(ingresoManualRepository.findByClienteId(c.getId()).stream()
+                        .map(com.deroncuts.barberia.model.IngresoManual::getMonto)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
+        f.externo = ClienteService.esExterno(c);
         return f;
     }
 
@@ -140,6 +147,10 @@ public class CuentaService {
     public String restablecerPasswordCliente(Long clienteId) {
         Cliente cliente = clienteRepository.findById(clienteId)
                 .orElseThrow(() -> new NotFoundException("Cliente no encontrado"));
+        if (cliente.getEmail() == null || cliente.getEmail().isBlank()) {
+            throw new BusinessException(
+                    "Este cliente no tiene correo. Pídele que se registre en la web con su teléfono: recuperará su historial.");
+        }
         String temporal = generarTemporal();
         cliente.setPasswordHash(passwordEncoder.encode(temporal));
         clienteRepository.save(cliente);

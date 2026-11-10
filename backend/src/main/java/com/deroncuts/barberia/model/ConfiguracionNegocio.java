@@ -230,4 +230,23 @@ public class ConfiguracionNegocio {
     public void setVapidPrivada(String vapidPrivada) {
         this.vapidPrivada = vapidPrivada;
     }
+
+    /** Número al que los clientes pagan el adelanto por Yape/Plin. */
+    @Column(name = "yape_numero", length = 20)
+    private String yapeNumero;
+
+    /** Nombre del titular que el cliente ve al yapear (para que confirme que es correcto). */
+    @Column(name = "yape_titular", length = 80)
+    private String yapeTitular;
+
+    /** Correo donde llega el reporte semanal en PDF. */
+    @Column(name = "correo_reportes", length = 150)
+    private String correoReportes;
+
+    public String getYapeNumero() { return yapeNumero; }
+    public void setYapeNumero(String yapeNumero) { this.yapeNumero = yapeNumero; }
+    public String getYapeTitular() { return yapeTitular; }
+    public void setYapeTitular(String yapeTitular) { this.yapeTitular = yapeTitular; }
+    public String getCorreoReportes() { return correoReportes; }
+    public void setCorreoReportes(String correoReportes) { this.correoReportes = correoReportes; }
 }

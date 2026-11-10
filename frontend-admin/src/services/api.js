@@ -43,6 +43,58 @@ export function cambiarEstadoCita(citaId, estado) {
   return api.patch(`/api/admin/citas/${citaId}/estado`, { estado }).then((r) => r.data)
 }
 
+export function crearCitaAdmin(payload) {
+  return api.post('/api/admin/citas', payload).then((r) => r.data)
+}
+
+export function crearClienteExterno(payload) {
+  return api.post('/api/admin/clientes', payload).then((r) => r.data)
+}
+
+export function getDisponibilidad(fecha, servicioId) {
+  return api.get('/api/public/disponibilidad', { params: { fecha, servicioId } }).then((r) => r.data)
+}
+
+export function registrarIngresoManual(payload) {
+  return api.post('/api/admin/pagos/manual', payload).then((r) => r.data)
+}
+
+export function eliminarIngresoManual(id) {
+  return api.delete(`/api/admin/pagos/manual/${id}`)
+}
+
+/** Devuelve un blob URL para mostrar la captura del pago (la ruta exige token). */
+export function urlComprobante(citaId) {
+  return api
+    .get(`/api/admin/citas/${citaId}/comprobante`, { responseType: 'blob' })
+    .then((r) => URL.createObjectURL(r.data))
+}
+
+export function subirQrPago(archivo) {
+  const data = new FormData()
+  data.append('archivo', archivo)
+  return api.post('/api/admin/configuracion/qr', data).then((r) => r.data)
+}
+
+export async function descargarReporte(desde) {
+  const r = await api.get('/api/admin/reportes/semanal', {
+    params: desde ? { desde } : {},
+    responseType: 'blob'
+  })
+  const url = URL.createObjectURL(r.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `reporte-deron-cuts-${desde || 'semana-pasada'}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 5000)
+}
+
+export function enviarReporte(desde) {
+  return api.post('/api/admin/reportes/semanal/enviar', null, { params: desde ? { desde } : {} }).then((r) => r.data)
+}
+
 export function eliminarCita(citaId) {
   return api.delete(`/api/admin/citas/${citaId}`)
 }

@@ -28,7 +28,7 @@ public class Cliente {
     @Column(nullable = false, length = 120)
     private String nombre;
 
-    @Column(nullable = false, length = 150)
+    @Column(length = 150) // opcional: clientes externos creados por el barbero
     private String email;
 
     @Column(nullable = false, length = 30)
@@ -37,7 +37,7 @@ public class Cliente {
     @Column(name = "password_hash", length = 100)
     private String passwordHash;
 
-    @Column(name = "fecha_nacimiento", nullable = false)
+    @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
     @Column(name = "google_id", length = 100)

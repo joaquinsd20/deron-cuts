@@ -1975,3 +1975,266 @@ a {
   font-size: 0.88rem;
   line-height: 1.45;
 }
+
+/* ---------- Agendar cita, ingresos, pago, reporte ---------- */
+.modal__panel--ancho {
+  max-width: 560px;
+}
+
+.segmentos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.segmento {
+  flex: 1;
+  min-width: 90px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 9px;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.segmento--activo {
+  background: var(--neon);
+  color: var(--ink-solid);
+}
+
+.lista-elegir {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+.elegir {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.elegir span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.elegir--activo {
+  border-color: var(--neon);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dias-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.dia {
+  flex: 0 0 54px;
+  display: grid;
+  gap: 2px;
+  padding: 8px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.dia strong {
+  color: var(--ink);
+  font-size: 1.05rem;
+}
+
+.dia--activo {
+  border-color: var(--neon);
+  background: var(--neon);
+  color: var(--ink-solid);
+}
+
+.dia--activo strong {
+  color: var(--ink-solid);
+}
+
+.horas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 6px;
+}
+
+.hora {
+  padding: 9px 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-head);
+  cursor: pointer;
+}
+
+.hora--activa {
+  background: var(--neon);
+  color: var(--ink-solid);
+  border-color: var(--neon);
+}
+
+.chips-sugerencia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chip-sugerencia {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--neon-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.ingreso__borrar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.pago-reportado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.pago-reportado div {
+  display: grid;
+  gap: 2px;
+}
+
+.pago-reportado span {
+  color: var(--neon-dim);
+  font-size: 0.88rem;
+}
+
+.captura img {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.btn--verificar {
+  animation: pulso-verificar 2s infinite;
+}
+
+@keyframes pulso-verificar {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
+  }
+}
+
+.reporte {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.reporte__texto {
+  flex: 1;
+  min-width: 220px;
+}
+
+.reporte__acciones {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cobro-config {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.cobro-config__qr {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.cobro-config__qr img {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.cobro-config__qr label {
+  cursor: pointer;
+}
+
+.etiqueta-externo {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--font-head);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+@media (max-width: 640px) {
+  .reporte__acciones,
+  .reporte__acciones .btn {
+    width: 100%;
+  }
+}

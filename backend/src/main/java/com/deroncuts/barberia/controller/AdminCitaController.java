@@ -51,6 +51,15 @@ public class AdminCitaController {
         return citaService.obtener(id);
     }
 
+    /** Cita agendada por el barbero (llamada, WhatsApp, cliente en persona). */
+    @PostMapping
+    public org.springframework.http.ResponseEntity<CitaDto> crear(
+            @Valid @org.springframework.web.bind.annotation.RequestBody
+            com.deroncuts.barberia.dto.request.CrearCitaRequest request) {
+        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(citaService.crear(request));
+    }
+
     @PostMapping("/{id}/pago")
     public CitaDto registrarPago(@PathVariable Long id, @Valid @RequestBody RegistrarPagoRequest request) {
         return citaService.registrarPago(id, request);
