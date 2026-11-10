@@ -48,6 +48,20 @@ public class AdminClienteController {
                 .filter(x -> x.id.equals(c.getId())).findFirst().orElseThrow();
     }
 
+    @PutMapping("/clientes/{id}")
+    public com.deroncuts.barberia.dto.ClienteAdminDto actualizar(@PathVariable Long id,
+                                                                 @RequestBody NuevoClienteRequest r) {
+        var c = clienteService.actualizarDesdeAdmin(id, r.nombre(), r.telefono(), r.email(), r.fechaNacimiento());
+        return cuentaService.listarClientes(c.getTelefono()).stream()
+                .filter(x -> x.id.equals(c.getId())).findFirst().orElseThrow();
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/clientes/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        cuentaService.eliminarCliente(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/clientes/{id}/restablecer-password")
     public Map<String, String> restablecer(@PathVariable Long id) {
         return Map.of("passwordTemporal", cuentaService.restablecerPasswordCliente(id));

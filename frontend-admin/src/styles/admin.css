@@ -2238,3 +2238,19 @@ a {
     width: 100%;
   }
 }
+
+/* Editar / borrar movimientos del historial de ingresos */
+.ingreso__botones {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.ingreso__editar {
+  font-size: 0.95rem;
+}
+
+.ingreso__borrar:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text, #fff);
+}

@@ -176,6 +176,41 @@ public class ClienteService {
         return clienteRepository.save(c);
     }
 
+    /** El barbero corrige los datos de un cliente desde el panel. */
+    @Transactional
+    public Cliente actualizarDesdeAdmin(Long id, String nombre, String telefono, String email,
+                                        LocalDate fechaNacimiento) {
+        Cliente c = clienteRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cliente no encontrado"));
+        if (nombre == null || nombre.isBlank()) {
+            throw new BusinessException("Escribe el nombre del cliente");
+        }
+        String tel = normalizarTelefono(telefono == null ? "" : telefono);
+        if (tel.replaceAll("\\D", "").length() < 6) {
+            throw new BusinessException("Escribe un teléfono válido");
+        }
+        if (clienteRepository.existsByTelefonoAndIdNot(tel, id)) {
+            throw new ConflictException("Otro cliente ya tiene ese teléfono");
+        }
+        String correo = (email == null || email.isBlank()) ? null : normalizarEmail(email);
+        boolean tieneCuenta = !esExterno(c);
+        if (correo == null && tieneCuenta) {
+            // Con cuenta web el correo es su usuario para iniciar sesión.
+            throw new BusinessException("Este cliente inicia sesión con su correo: no puede quedar vacío");
+        }
+        if (correo != null && clienteRepository.existsByEmailIgnoreCaseAndIdNot(correo, id)) {
+            throw new ConflictException("Otro cliente ya tiene ese correo");
+        }
+        if (fechaNacimiento != null && !fechaNacimiento.isBefore(LocalDate.now())) {
+            throw new BusinessException("La fecha de nacimiento debe estar en el pasado");
+        }
+        c.setNombre(limitar(nombre.trim(), 120));
+        c.setTelefono(tel);
+        c.setEmail(correo);
+        c.setFechaNacimiento(fechaNacimiento);
+        return clienteRepository.save(c);
+    }
+
     private ClienteLoginResponse respuesta(Cliente cliente) {
         String token = jwtService.generarToken(cliente.getEmail(), "CLIENTE");
         return new ClienteLoginResponse(token, ClienteDto.from(cliente));

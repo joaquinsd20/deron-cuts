@@ -44,6 +44,26 @@ public class AdminPagoController {
         return citaService.registrarIngresoManual(r.monto(), r.metodo(), r.concepto(), r.fecha(), r.clienteId());
     }
 
+    public record EditarPagoRequest(java.math.BigDecimal monto, String metodo,
+                                    java.time.LocalDateTime fecha, String concepto) {
+    }
+
+    /** id: "A-12" adelanto, "S-12" saldo, "M-5" ingreso manual. */
+    @org.springframework.web.bind.annotation.PutMapping("/{id}")
+    public org.springframework.http.ResponseEntity<Void> editar(
+            @org.springframework.web.bind.annotation.PathVariable String id,
+            @org.springframework.web.bind.annotation.RequestBody EditarPagoRequest r) {
+        citaService.editarPago(id, r.monto(), r.metodo(), r.fecha(), r.concepto());
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    public org.springframework.http.ResponseEntity<Void> eliminar(
+            @org.springframework.web.bind.annotation.PathVariable String id) {
+        citaService.eliminarPago(id);
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
+
     @org.springframework.web.bind.annotation.DeleteMapping("/manual/{id}")
     public org.springframework.http.ResponseEntity<Void> eliminarManual(
             @org.springframework.web.bind.annotation.PathVariable Long id) {

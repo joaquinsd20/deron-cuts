@@ -36,12 +36,15 @@ public class CuentaService {
     private final PasswordEncoder passwordEncoder;
     private final CitaRepository citaRepository;
     private final com.deroncuts.barberia.repository.IngresoManualRepository ingresoManualRepository;
+    private final com.deroncuts.barberia.repository.PushSuscripcionRepository pushRepository;
 
     public CuentaService(ClienteRepository clienteRepository,
                          UsuarioAdminRepository usuarioAdminRepository,
                          PasswordEncoder passwordEncoder,
                          CitaRepository citaRepository,
-                         com.deroncuts.barberia.repository.IngresoManualRepository ingresoManualRepository) {
+                         com.deroncuts.barberia.repository.IngresoManualRepository ingresoManualRepository,
+                         com.deroncuts.barberia.repository.PushSuscripcionRepository pushRepository) {
+        this.pushRepository = pushRepository;
         this.citaRepository = citaRepository;
         this.ingresoManualRepository = ingresoManualRepository;
         this.clienteRepository = clienteRepository;
@@ -181,6 +184,32 @@ public class CuentaService {
         // A partir de ahora manda la del panel; APP_ADMIN_PASSWORD ya no la sobrescribe.
         admin.setPasswordDesdePanel(true);
         usuarioAdminRepository.save(admin);
+    }
+
+    /**
+     * Borra la ficha del cliente y su acceso a la web. Sus citas y pagos se conservan
+     * (con el nombre guardado en cada cita) para no alterar las ganancias ni el historial.
+     */
+    @Transactional
+    public void eliminarCliente(Long clienteId) {
+        Cliente cliente = clienteRepository.findById(clienteId)
+                .orElseThrow(() -> new NotFoundException("Cliente no encontrado"));
+        for (Cita cita : citaRepository.findByClienteIdOrderByFechaHoraInicioDesc(clienteId)) {
+            if (cita.getNombreCliente() == null || cita.getNombreCliente().isBlank()) {
+                cita.setNombreCliente(cliente.getNombre());
+            }
+            cita.setCliente(null);
+            citaRepository.save(cita);
+        }
+        for (var ingreso : ingresoManualRepository.findByClienteId(clienteId)) {
+            if (ingreso.getNombreCliente() == null || ingreso.getNombreCliente().isBlank()) {
+                ingreso.setNombreCliente(cliente.getNombre());
+            }
+            ingreso.setClienteId(null);
+            ingresoManualRepository.save(ingreso);
+        }
+        pushRepository.deleteAll(pushRepository.findByRolAndClienteId("CLIENTE", clienteId));
+        clienteRepository.delete(cliente);
     }
 
     private static boolean contiene(String valor, String filtro) {

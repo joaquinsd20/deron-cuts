@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
 import Toast from '../components/Toast.jsx'
-import { getClientes, restablecerPasswordCliente, crearClienteExterno, mensajeError } from '../services/api.js'
+import {
+  getClientes,
+  restablecerPasswordCliente,
+  crearClienteExterno,
+  actualizarCliente,
+  eliminarCliente,
+  mensajeError
+} from '../services/api.js'
 import { formatMoney } from '../services/format.js'
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
@@ -65,23 +72,68 @@ export default function Clientes() {
   const VACIO = { nombre: '', telefono: '', email: '', fechaNacimiento: '' }
   const [nuevo, setNuevo] = useState(VACIO)
 
+  // null = alta de cliente nuevo; si no, el cliente que se está editando.
+  const [editando, setEditando] = useState(null)
+
+  const abrirNuevo = () => {
+    setEditando(null)
+    setNuevo(VACIO)
+    setCreando(true)
+  }
+
+  const abrirEdicion = (c) => {
+    setEditando(c)
+    setNuevo({
+      nombre: c.nombre || '',
+      telefono: c.telefono || '',
+      email: c.email || '',
+      fechaNacimiento: c.fechaNacimiento ? String(c.fechaNacimiento).slice(0, 10) : ''
+    })
+    setCreando(true)
+  }
+
   const guardarNuevo = async () => {
     setGuardandoNuevo(true)
+    const datos = {
+      nombre: nuevo.nombre,
+      telefono: nuevo.telefono,
+      email: nuevo.email || null,
+      fechaNacimiento: nuevo.fechaNacimiento || null
+    }
     try {
-      const c = await crearClienteExterno({
-        nombre: nuevo.nombre,
-        telefono: nuevo.telefono,
-        email: nuevo.email || null,
-        fechaNacimiento: nuevo.fechaNacimiento || null
-      })
-      setLista((l) => [c, ...l])
+      if (editando) {
+        const c = await actualizarCliente(editando.id, datos)
+        setLista((l) => l.map((x) => (x.id === c.id ? c : x)))
+        setToast({ message: `Datos de ${c.nombre} actualizados` })
+      } else {
+        const c = await crearClienteExterno(datos)
+        setLista((l) => [c, ...l])
+        setToast({ message: `${c.nombre} agregado a tus clientes` })
+      }
       setNuevo(VACIO)
+      setEditando(null)
       setCreando(false)
-      setToast({ message: `${c.nombre} agregado a tus clientes` })
     } catch (err) {
-      setToast({ message: mensajeError(err, 'No se pudo crear el cliente'), tipo: 'error' })
+      setToast({ message: mensajeError(err, 'No se pudo guardar el cliente'), tipo: 'error' })
     } finally {
       setGuardandoNuevo(false)
+    }
+  }
+
+  const borrar = async (c) => {
+    const ok = window.confirm(
+      `¿Eliminar a ${c.nombre}?\n\n` +
+        'Se borra su ficha' +
+        (c.externo ? '' : ' y ya no podrá entrar a su cuenta en la web') +
+        '. Sus citas y pagos se conservan con su nombre, así que tus ganancias no cambian.'
+    )
+    if (!ok) return
+    try {
+      await eliminarCliente(c.id)
+      setLista((l) => l.filter((x) => x.id !== c.id))
+      setToast({ message: `${c.nombre} eliminado` })
+    } catch (err) {
+      setToast({ message: mensajeError(err, 'No se pudo eliminar el cliente'), tipo: 'error' })
     }
   }
 
@@ -132,7 +184,7 @@ export default function Clientes() {
                 Cumpleaños, cada cuánto vienen y cuánto han gastado. Toca un cliente para escribirle.
               </p>
             </div>
-            <button type="button" className="btn btn--primary" onClick={() => setCreando(true)}>
+            <button type="button" className="btn btn--primary" onClick={abrirNuevo}>
               + Nuevo cliente
             </button>
           </header>
@@ -140,15 +192,18 @@ export default function Clientes() {
           {creando && (
             <div className="modal" role="presentation" onClick={() => !guardandoNuevo && setCreando(false)}>
               <div className="modal__panel" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-                <div className="card__title">Nuevo cliente</div>
+                <div className="card__title">{editando ? `Editar a ${editando.nombre}` : 'Nuevo cliente'}</div>
                 <p className="modal__sub">
-                  Para clientes que llegan por WhatsApp o en persona. Si luego se registra en la web con este
-                  teléfono, recupera su historial.
+                  {editando
+                    ? editando.externo
+                      ? 'Corrige sus datos. Sus citas y pagos siguen vinculados.'
+                      : 'Ojo: tiene cuenta web y entra con su correo; si lo cambias, debe usar el nuevo para iniciar sesión.'
+                    : 'Para clientes que llegan por WhatsApp o en persona. Si luego se registra en la web con este teléfono, recupera su historial.'}
                 </p>
                 {[
                   ['nombre', 'Nombre', 'text'],
                   ['telefono', 'Teléfono / WhatsApp', 'tel'],
-                  ['email', 'Correo (opcional)', 'email'],
+                  ['email', editando && !editando.externo ? 'Correo' : 'Correo (opcional)', 'email'],
                   ['fechaNacimiento', 'Cumpleaños (opcional)', 'date']
                 ].map(([k, label, tipo]) => (
                   <div className="field" key={k}>
@@ -164,7 +219,7 @@ export default function Clientes() {
                 ))}
                 <div className="modal__acciones">
                   <button type="button" className="btn btn--primary" onClick={guardarNuevo} disabled={guardandoNuevo}>
-                    {guardandoNuevo ? 'Guardando…' : 'Guardar cliente'}
+                    {guardandoNuevo ? 'Guardando…' : editando ? 'Guardar cambios' : 'Guardar cliente'}
                   </button>
                   <button type="button" className="btn btn--outline" onClick={() => setCreando(false)}>
                     Cancelar
@@ -317,6 +372,12 @@ export default function Clientes() {
                           Clave temporal
                         </button>
                       )}
+                      <button className="btn btn--sm btn--outline" onClick={() => abrirEdicion(c)}>
+                        Editar
+                      </button>
+                      <button className="btn btn--sm btn--danger" onClick={() => borrar(c)}>
+                        Eliminar
+                      </button>
                       <span className="ficha__desde">
                         Cliente desde {c.registradoEn ? fechaCorta(c.registradoEn) : '—'} ·{' '}
                         {c.externo

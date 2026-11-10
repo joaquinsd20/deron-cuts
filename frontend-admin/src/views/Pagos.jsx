@@ -7,10 +7,11 @@ import {
   getPagos,
   descargarReporte,
   enviarReporte,
-  eliminarIngresoManual,
+  eliminarPago,
   mensajeError
 } from '../services/api.js'
 import NuevoIngreso from '../components/NuevoIngreso.jsx'
+import EditarPago from '../components/EditarPago.jsx'
 import { subscribeCitas } from '../services/websocket.js'
 import { formatMoneyLargo, formatFechaHora, fechaLocal } from '../services/format.js'
 
@@ -91,14 +92,23 @@ export default function Pagos() {
     }
   }
 
+  const [editandoPago, setEditandoPago] = useState(null)
+
   const borrarIngreso = async (p) => {
-    if (!window.confirm(`¿Borrar el ingreso "${p.nombreServicio}" de ${formatMoneyLargo(p.montoPagado)}?`)) return
+    const monto = formatMoneyLargo(p.montoPagado)
+    const texto =
+      p.concepto === 'MANUAL'
+        ? `¿Borrar el ingreso "${p.nombreServicio}" de ${monto}?`
+        : p.concepto === 'ADELANTO'
+          ? `¿Borrar el adelanto de ${monto} de ${p.nombreCliente}?\n\nLa cita quedará con el adelanto sin pagar.`
+          : `¿Borrar el cobro de ${monto} de ${p.nombreCliente}?\n\nLa cita volverá a quedar por cobrar.`
+    if (!window.confirm(texto)) return
     try {
-      await eliminarIngresoManual(p.id.replace('M-', ''))
-      setToast({ message: 'Ingreso borrado' })
+      await eliminarPago(p.id)
+      setToast({ message: 'Pago borrado' })
       cargar()
-    } catch {
-      setToast({ message: 'No se pudo borrar el ingreso', tipo: 'error' })
+    } catch (err) {
+      setToast({ message: mensajeError(err, 'No se pudo borrar el pago'), tipo: 'error' })
     }
   }
 
@@ -132,6 +142,16 @@ export default function Pagos() {
             <NuevoIngreso
               metodos={metodos}
               onCerrar={() => setNuevoIngreso(false)}
+              onGuardado={() => cargar()}
+              avisar={setToast}
+            />
+          )}
+
+          {editandoPago && (
+            <EditarPago
+              pago={editandoPago}
+              metodos={metodos}
+              onCerrar={() => setEditandoPago(null)}
               onGuardado={() => cargar()}
               avisar={setToast}
             />
@@ -235,16 +255,26 @@ export default function Pagos() {
                       </span>
                     </div>
                     <div className="ingreso__monto">{formatMoneyLargo(p.montoPagado)}</div>
-                    {p.concepto === 'MANUAL' && (
+                    <div className="ingreso__botones">
+                      <button
+                        type="button"
+                        className="ingreso__borrar ingreso__editar"
+                        aria-label="Editar pago"
+                        title="Editar"
+                        onClick={() => setEditandoPago(p)}
+                      >
+                        ✎
+                      </button>
                       <button
                         type="button"
                         className="ingreso__borrar"
-                        aria-label="Borrar ingreso manual"
+                        aria-label="Borrar pago"
+                        title="Borrar"
                         onClick={() => borrarIngreso(p)}
                       >
                         ×
                       </button>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>

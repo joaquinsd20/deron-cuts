@@ -63,6 +63,23 @@ export function eliminarIngresoManual(id) {
   return api.delete(`/api/admin/pagos/manual/${id}`)
 }
 
+export function actualizarCliente(id, payload) {
+  return api.put(`/api/admin/clientes/${id}`, payload).then((r) => r.data)
+}
+
+export function eliminarCliente(id) {
+  return api.delete(`/api/admin/clientes/${id}`)
+}
+
+/** id con prefijo del movimiento: "A-12" adelanto, "S-12" saldo, "M-5" manual. */
+export function editarPago(id, payload) {
+  return api.put(`/api/admin/pagos/${id}`, payload)
+}
+
+export function eliminarPago(id) {
+  return api.delete(`/api/admin/pagos/${id}`)
+}
+
 /** Devuelve un blob URL para mostrar la captura del pago (la ruta exige token). */
 export function urlComprobante(citaId) {
   return api

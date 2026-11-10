@@ -193,6 +193,89 @@ public class CitaService {
         messagingTemplate.convertAndSend("/topic/citas", Map.of("accion", "INGRESO"));
     }
 
+    // ---------- Editar / borrar cualquier movimiento de la lista de ingresos ----------
+
+    /** id con prefijo: "A-<cita>" adelanto, "S-<cita>" saldo, "M-<ingreso>" manual. */
+    @Transactional
+    public void editarPago(String id, BigDecimal monto, String metodo, LocalDateTime fecha, String concepto) {
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("El monto debe ser mayor a cero");
+        }
+        String medio = parseMetodoPago(metodo);
+        if (fecha != null && fecha.isAfter(LocalDateTime.now().plusMinutes(5))) {
+            throw new BusinessException("La fecha del pago no puede ser futura");
+        }
+        BigDecimal valor = monto.setScale(2, RoundingMode.HALF_UP);
+        long ref = idDePago(id);
+        switch (id.charAt(0)) {
+            case 'A' -> {
+                Cita c = obtenerEntity(ref);
+                if (!c.isAdelantoPagado()) throw new NotFoundException("Ese adelanto ya no está registrado");
+                c.setAdelantoMonto(valor);
+                c.setMetodoAdelanto(medio);
+                if (fecha != null) c.setFechaAdelanto(fecha);
+                citaRepository.save(c);
+            }
+            case 'S' -> {
+                Cita c = obtenerEntity(ref);
+                if (!c.isPagada()) throw new NotFoundException("Ese cobro ya no está registrado");
+                c.setMontoPagado(valor);
+                c.setMetodoPago(medio);
+                if (fecha != null) c.setFechaPago(fecha);
+                citaRepository.save(c);
+            }
+            default -> {
+                IngresoManual i = ingresoManualRepository.findById(ref)
+                        .orElseThrow(() -> new NotFoundException("Ingreso no encontrado"));
+                if (concepto == null || concepto.isBlank()) {
+                    throw new BusinessException("Escribe un concepto");
+                }
+                i.setMonto(valor);
+                i.setMetodo(medio);
+                i.setConcepto(concepto.trim().length() > 120 ? concepto.trim().substring(0, 120) : concepto.trim());
+                if (fecha != null) i.setFecha(fecha);
+                ingresoManualRepository.save(i);
+            }
+        }
+        messagingTemplate.convertAndSend("/topic/citas", Map.of("accion", "INGRESO"));
+    }
+
+    /** Quita el movimiento de las ganancias. En citas, la cita vuelve a quedar "por cobrar". */
+    @Transactional
+    public void eliminarPago(String id) {
+        long ref = idDePago(id);
+        switch (id.charAt(0)) {
+            case 'A' -> {
+                Cita c = obtenerEntity(ref);
+                c.setAdelantoPagado(false);
+                c.setAdelantoAplicado(false);
+                c.setMetodoAdelanto(null);
+                c.setFechaAdelanto(null);
+                citaRepository.save(c);
+            }
+            case 'S' -> {
+                Cita c = obtenerEntity(ref);
+                c.setPagada(false);
+                c.setMontoPagado(null);
+                c.setMetodoPago(null);
+                c.setFechaPago(null);
+                citaRepository.save(c);
+            }
+            default -> {
+                eliminarIngresoManual(ref);
+                return;
+            }
+        }
+        messagingTemplate.convertAndSend("/topic/citas", Map.of("accion", "INGRESO"));
+    }
+
+    private static long idDePago(String id) {
+        if (id == null || !id.matches("[ASM]-\\d+")) {
+            throw new BusinessException("Movimiento no válido");
+        }
+        return Long.parseLong(id.substring(2));
+    }
+
     private static PagoDto aPago(IngresoManual i) {
         return PagoDto.manual(i.getId(), i.getFecha(), i.getMetodo(), i.getMonto(),
                 i.getNombreCliente() != null ? i.getNombreCliente() : i.getConcepto(), i.getConcepto());
