@@ -40,6 +40,10 @@ export function cambiarPassword(actual, nueva) {
   return api.put('/api/cliente/password', { actual, nueva })
 }
 
+export function reportarPago(citaId, payload) {
+  return api.post(`/api/cliente/citas/${citaId}/pago`, payload).then((r) => r.data)
+}
+
 export function cancelarCita(id) {
   return api.patch(`/api/cliente/citas/${id}/cancelar`).then((r) => r.data)
 }

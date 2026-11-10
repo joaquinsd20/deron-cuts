@@ -4,7 +4,8 @@ import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import AvisosCita from '../components/AvisosCita.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getMisCitas, cancelarCita, cambiarPassword } from '../services/api.js'
+import { getMisCitas, cancelarCita, cambiarPassword, getConfiguracion, reportarPago } from '../services/api.js'
+import PagoAdelanto from '../components/PagoAdelanto.jsx'
 import { formatCurrency, formatFechaLarga } from '../config.js'
 
 export default function Cuenta() {
@@ -19,6 +20,44 @@ export default function Cuenta() {
       .catch(() => setCitas([]))
       .finally(() => setCargando(false))
   }, [])
+
+  // Pagar el adelanto de una cita ya creada (o reenviar la captura).
+  const [config, setConfig] = useState(null)
+  const [pagando, setPagando] = useState(null)
+  const [pagoCita, setPagoCita] = useState({ metodo: 'YAPE', operacion: '', comprobante: null })
+  const [errorPagoCita, setErrorPagoCita] = useState(null)
+  const [enviandoPago, setEnviandoPago] = useState(false)
+
+  useEffect(() => {
+    getConfiguracion().then(setConfig).catch(() => {})
+  }, [])
+
+  const necesitaPago = (cita) =>
+    (cita.estado === 'PENDIENTE' || cita.estado === 'CONFIRMADA') &&
+    !cita.adelantoPagado &&
+    Number(cita.adelantoMonto) > 0 &&
+    new Date(cita.fechaHoraInicio) > new Date()
+
+  const enviarPagoCita = async (cita) => {
+    if (!pagoCita.operacion.trim() && !pagoCita.comprobante) {
+      setErrorPagoCita('Sube la captura o escribe el número de operación.')
+      return
+    }
+    setEnviandoPago(true)
+    try {
+      const actualizada = await reportarPago(cita.id, {
+        metodoPago: pagoCita.metodo,
+        numeroOperacion: pagoCita.operacion.trim() || null,
+        comprobante: pagoCita.comprobante
+      })
+      setCitas((lista) => lista.map((c) => (c.id === actualizada.id ? actualizada : c)))
+      setPagando(null)
+    } catch (err) {
+      setErrorPagoCita(err?.response?.data?.message || 'No pudimos enviar tu pago. Inténtalo de nuevo.')
+    } finally {
+      setEnviandoPago(false)
+    }
+  }
 
   const [cancelando, setCancelando] = useState(null)
   const [errorCancelar, setErrorCancelar] = useState(null)
@@ -213,6 +252,48 @@ export default function Cuenta() {
                           </>
                         )}
                       </div>
+                      {necesitaPago(cita) && pagando !== cita.id && (
+                        <button
+                          type="button"
+                          className="btn btn--primary account__pagar"
+                          onClick={() => {
+                            setPagando(cita.id)
+                            setPagoCita({ metodo: 'YAPE', operacion: '', comprobante: null })
+                            setErrorPagoCita(null)
+                          }}
+                        >
+                          {cita.pagoOperacion || cita.comprobanteEnviado
+                            ? 'Reenviar pago'
+                            : `Pagar adelanto (${formatCurrency(cita.adelantoMonto)})`}
+                        </button>
+                      )}
+                      {pagando === cita.id && config && (
+                        <>
+                          <PagoAdelanto
+                            monto={cita.adelantoMonto}
+                            config={config}
+                            valor={pagoCita}
+                            onChange={(v) => {
+                              setPagoCita(v)
+                              setErrorPagoCita(null)
+                            }}
+                            error={errorPagoCita}
+                          />
+                          <div className="account__actions">
+                            <button
+                              type="button"
+                              className="btn btn--primary"
+                              onClick={() => enviarPagoCita(cita)}
+                              disabled={enviandoPago}
+                            >
+                              {enviandoPago ? 'Enviando…' : 'Ya pagué, enviar'}
+                            </button>
+                            <button type="button" className="btn btn--outline" onClick={() => setPagando(null)}>
+                              Cerrar
+                            </button>
+                          </div>
+                        </>
+                      )}
                       {puedeCancelar(cita) && (
                         <button
                           type="button"

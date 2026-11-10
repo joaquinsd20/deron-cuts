@@ -511,6 +511,51 @@ public class CitaService {
         return CitaDto.from(guardada);
     }
 
+    /**
+     * El cliente reporta (o vuelve a enviar) el pago del adelanto de una cita ya creada,
+     * desde "Mi cuenta": n.º de operación y/o captura. El barbero lo verifica en el panel.
+     */
+    @Transactional
+    public CitaDto reportarPagoCliente(Cliente cliente, Long citaId, String metodo,
+                                       String numeroOperacion, String comprobante) {
+        Cita cita = obtenerEntity(citaId);
+        if (cita.getCliente() == null || !cita.getCliente().getId().equals(cliente.getId())) {
+            throw new NotFoundException("Cita no encontrada");
+        }
+        if (cita.getEstado() != EstadoCita.PENDIENTE && cita.getEstado() != EstadoCita.CONFIRMADA) {
+            throw new BusinessException("Esta cita ya no admite pagos");
+        }
+        if (cita.isAdelantoPagado()) {
+            throw new BusinessException("El adelanto de esta cita ya fue confirmado");
+        }
+        if (cita.getAdelantoMonto() == null || cita.getAdelantoMonto().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Esta cita no requiere adelanto");
+        }
+        String operacion = numeroOperacion == null ? "" : numeroOperacion.trim();
+        boolean hayCaptura = comprobante != null && !comprobante.isBlank();
+        if (operacion.isEmpty() && !hayCaptura) {
+            throw new BusinessException("Escribe el número de operación o sube la captura del pago");
+        }
+        if (operacion.length() > 40) {
+            throw new BusinessException("El número de operación es demasiado largo");
+        }
+        cita.setPagoMetodoReportado(parseMetodoPago(metodo == null || metodo.isBlank() ? "YAPE" : metodo));
+        if (!operacion.isEmpty()) cita.setPagoOperacion(operacion);
+        if (hayCaptura) {
+            archivoService.guardarDataUrl(ArchivoBinario.comprobante(cita.getId()), comprobante);
+            cita.setComprobanteEnviado(true);
+        }
+        cita.setPagoReportadoEn(LocalDateTime.now());
+        Cita guardada = citaRepository.save(cita);
+        publicarEvento("PAGO_REPORTADO", guardada);
+        notificaciones.avisarAdmins("💳 Pago reportado · verifícalo",
+                guardada.getNombreCliente() + " envió el adelanto de " + formatoSoles(guardada.getAdelantoMonto())
+                        + " por " + guardada.getPagoMetodoReportado() + " · cita del "
+                        + fechaTexto(guardada.getFechaHoraInicio()),
+                "/citas");
+        return CitaDto.from(guardada);
+    }
+
     // ---------- Avisos push ----------
 
     private static final java.time.format.DateTimeFormatter FMT_AVISO =

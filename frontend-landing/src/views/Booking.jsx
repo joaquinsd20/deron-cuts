@@ -95,6 +95,15 @@ export default function Booking() {
   const saldo = Math.max(0, Number((precioFinal - adelanto).toFixed(2)))
   const requierePago = !cumpleBeneficio && adelanto > 0
 
+  // Al llegar al paso de pago, llevar la vista al QR (en celular quedaba muy abajo).
+  useEffect(() => {
+    if (step !== 3 || !requierePago) return
+    const id = window.setTimeout(() => {
+      document.getElementById("pago-titulo")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    }, 150)
+    return () => window.clearTimeout(id)
+  }, [step, requierePago])
+
   const validarPaso = () => {
     const nuevosErrores = {}
 
@@ -408,11 +417,13 @@ export default function Booking() {
                 {step === 3 && (
                   <>
                     <span className="wizard__label">Paso 3 de 3</span>
-                    <h2 className="wizard__title">Revisa y confirma</h2>
-                    <div className="summary">
+                    <h2 className="wizard__title">{requierePago ? 'Paga y confirma' : 'Revisa y confirma'}</h2>
+                    <div className="summary summary--compacto">
                       <div className="summary__row">
-                        <span className="k">Servicio</span>
-                        <span className="v">{servicio?.nombre}</span>
+                        <span className="k">Tu cita</span>
+                        <span className="v">
+                          {servicio?.nombre} · {fechaObj ? formatFecha(fecha) : '—'} · {hora || '—'}
+                        </span>
                       </div>
                       <div className="summary__row">
                         <span className="k">Precio</span>
@@ -420,57 +431,14 @@ export default function Booking() {
                           {cumpleBeneficio ? 'Gratis por cumpleaños' : formatCurrency(precioFinal)}
                         </span>
                       </div>
-                      <div className="summary__row">
-                        <span className="k">Fecha</span>
-                        <span className="v">{fechaObj ? formatFecha(fecha) : '—'}</span>
-                      </div>
-                      <div className="summary__row">
-                        <span className="k">Hora</span>
-                        <span className="v">{hora || '—'}</span>
-                      </div>
-                      <div className="summary__row">
-                        <span className="k">Duración</span>
-                        <span className="v">{servicio?.duracionMinutos} minutos</span>
-                      </div>
-                      <div className="summary__row summary__row--accent">
-                        <span className="k">Adelanto 50%</span>
-                        <span className="v">
-                          {cumpleBeneficio ? 'No requiere' : formatCurrency(adelanto)}
-                        </span>
-                      </div>
-                      <div className="summary__row summary__row--accent">
-                        <span className="k">Resto al llegar</span>
-                        <span className="v">
-                          {cumpleBeneficio ? 'S/ 0.00' : formatCurrency(saldo)}
-                        </span>
-                      </div>
-                      <div className="summary__row summary__row--accent">
-                        <span className="k">Cliente</span>
-                        <span className="v">{cuenta?.nombre}</span>
-                      </div>
-                      <div className="summary__row summary__row--accent">
-                        <span className="k">Contacto</span>
-                        <span className="v">{cuenta?.telefono}</span>
-                      </div>
-                      <div className="summary__row summary__row--accent">
-                        <span className="k">Barbero</span>
-                        <span className="v">{config.nombreBarbero}</span>
-                      </div>
-                      <div className="summary__row summary__row--accent">
-                        <span className="k">Ubicación</span>
-                        <span className="v">{config.direccion}</span>
-                      </div>
-                    </div>
-                    <div className={`field${errores.notas ? ' field--error' : ''}`}>
-                      <label htmlFor="notas">Notas para {config.nombreBarbero} (opcional)</label>
-                      <textarea
-                        id="notas"
-                        rows="3"
-                        placeholder="Cuéntale qué estilo quieres…"
-                        value={notas}
-                        onChange={(e) => setNotas(e.target.value)}
-                      />
-                      {errores.notas && <span className="field__error">{errores.notas}</span>}
+                      {!cumpleBeneficio && (
+                        <div className="summary__row summary__row--accent">
+                          <span className="k">Adelanto ahora / resto al llegar</span>
+                          <span className="v">
+                            {formatCurrency(adelanto)} / {formatCurrency(saldo)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     {requierePago ? (
                       <PagoAdelanto
@@ -488,6 +456,17 @@ export default function Booking() {
                         Tu cita cae en la semana de tu cumpleaños: el corte es gratis y no pagas adelanto.
                       </div>
                     )}
+                    <div className={`field${errores.notas ? ' field--error' : ''}`}>
+                      <label htmlFor="notas">Notas para {config.nombreBarbero} (opcional)</label>
+                      <textarea
+                        id="notas"
+                        rows="2"
+                        placeholder="Cuéntale qué estilo quieres…"
+                        value={notas}
+                        onChange={(e) => setNotas(e.target.value)}
+                      />
+                      {errores.notas && <span className="field__error">{errores.notas}</span>}
+                    </div>
                     <div className="policy">
                       <b>Política:</b> el adelanto (50%) guarda tu horario y se descuenta del total.
                       Tolerancia de 15 minutos; si llegas tarde pierdes el adelanto y se suman S/ 10.

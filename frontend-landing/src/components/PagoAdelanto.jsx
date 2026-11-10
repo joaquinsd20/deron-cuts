@@ -105,8 +105,38 @@ export default function PagoAdelanto({ monto, config, valor, onChange, error }) 
           ))}
         </div>
 
+        <div className="pago__captura">
+          <span className="pago__etiqueta">Foto de tu pago</span>
+          {valor.comprobante ? (
+            <div className="pago__preview">
+              <img src={valor.comprobante} alt="Tu captura del pago" />
+              <div>
+                <strong>✓ Captura lista</strong>
+                <button type="button" className="pago__quitar" onClick={() => onChange({ ...valor, comprobante: null })}>
+                  Cambiar foto
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label className="pago__zona">
+              <input
+                type="file"
+                accept="image/*"
+                className="pago__archivo"
+                onChange={elegirCaptura}
+                disabled={procesando}
+              />
+              <span className="pago__zona-icono" aria-hidden="true">
+                📷
+              </span>
+              <strong>{procesando ? 'Procesando foto…' : 'Sube la captura de tu Yape o Plin'}</strong>
+              <span>Toca aquí y elige la foto del pago desde tu galería</span>
+            </label>
+          )}
+        </div>
+
         <div className="field">
-          <label htmlFor="pago-op">Número de operación</label>
+          <label htmlFor="pago-op">o escribe el número de operación</label>
           <input
             id="pago-op"
             inputMode="numeric"
@@ -115,23 +145,7 @@ export default function PagoAdelanto({ monto, config, valor, onChange, error }) 
             value={valor.operacion}
             onChange={(e) => onChange({ ...valor, operacion: e.target.value })}
           />
-        </div>
-
-        <div className="pago__captura">
-          {valor.comprobante ? (
-            <div className="pago__preview">
-              <img src={valor.comprobante} alt="Tu captura del pago" />
-              <button type="button" className="btn btn--outline" onClick={() => onChange({ ...valor, comprobante: null })}>
-                Quitar captura
-              </button>
-            </div>
-          ) : (
-            <label className="btn btn--outline pago__subir">
-              {procesando ? 'Procesando…' : '📷 Subir captura del pago'}
-              <input type="file" accept="image/*" hidden onChange={elegirCaptura} disabled={procesando} />
-            </label>
-          )}
-          <span className="pago__ayuda">Con el número de operación o la captura basta; mejor si mandas ambos.</span>
+          <span className="pago__ayuda">Con uno de los dos basta; si puedes, manda ambos.</span>
         </div>
 
         {error && <div className="alert">{error}</div>}
