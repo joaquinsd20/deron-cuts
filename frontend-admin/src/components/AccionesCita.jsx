@@ -123,6 +123,17 @@ export function useAccionesCita({ alCambiar, avisar }) {
           </div>
         </div>
         {c.comprobanteEnviado &&
+          (c.pagoMontoLeido != null ? (
+            <p className="monto-leido monto-leido--ok">
+              ✓ La captura muestra {formatMoney(c.pagoMontoLeido)}: coincide con el adelanto. Revisa igual que el
+              pago haya llegado a tu Yape/Plin.
+            </p>
+          ) : (
+            <p className="monto-leido monto-leido--aviso">
+              ⚠ No se pudo leer el monto de esta captura automáticamente: revísalo tú en la imagen.
+            </p>
+          ))}
+        {c.comprobanteEnviado &&
           (captura && captura !== 'error' ? (
             <a href={captura} target="_blank" rel="noreferrer" className="captura">
               <img src={captura} alt="Captura del pago enviada por el cliente" />

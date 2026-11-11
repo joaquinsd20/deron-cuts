@@ -322,10 +322,11 @@ public class CitaService {
         String operacion = request.getNumeroOperacion() == null ? "" : request.getNumeroOperacion().trim();
         boolean hayCaptura = request.getComprobante() != null && !request.getComprobante().isBlank();
         if (requierePago) {
-            if (operacion.isEmpty() && !hayCaptura) {
-                throw new BusinessException(
-                        "Para reservar paga el adelanto y escribe el número de operación o sube la captura del pago");
+            if (!hayCaptura) {
+                throw new BusinessException("Para reservar paga el adelanto y sube la captura del pago");
             }
+            validarMontoLeido(request.getMontoLeido(), cita.getAdelantoMonto());
+            cita.setPagoMontoLeido(request.getMontoLeido());
             cita.setPagoMetodoReportado(parseMetodoPago(
                     request.getMetodoPago() == null || request.getMetodoPago().isBlank() ? "YAPE" : request.getMetodoPago()));
             cita.setPagoOperacion(operacion.isEmpty() ? null : operacion);
@@ -594,13 +595,26 @@ public class CitaService {
         return CitaDto.from(guardada);
     }
 
+    /** Si la captura se pudo leer, su monto tiene que ser exactamente el adelanto. */
+    private static void validarMontoLeido(BigDecimal leido, BigDecimal adelanto) {
+        if (leido != null && adelanto != null && leido.compareTo(adelanto) != 0) {
+            throw new BusinessException("La captura muestra " + formatoSoles(leido)
+                    + " pero el adelanto es " + formatoSoles(adelanto) + ". Paga el monto exacto y sube esa captura.");
+        }
+    }
+
+    public CitaDto reportarPagoCliente(Cliente cliente, Long citaId, String metodo,
+                                       String numeroOperacion, String comprobante) {
+        return reportarPagoCliente(cliente, citaId, metodo, numeroOperacion, comprobante, null);
+    }
+
     /**
      * El cliente reporta (o vuelve a enviar) el pago del adelanto de una cita ya creada,
-     * desde "Mi cuenta": n.º de operación y/o captura. El barbero lo verifica en el panel.
+     * desde "Mi cuenta": captura obligatoria (+ n.º de operación opcional). El barbero lo verifica.
      */
     @Transactional
     public CitaDto reportarPagoCliente(Cliente cliente, Long citaId, String metodo,
-                                       String numeroOperacion, String comprobante) {
+                                       String numeroOperacion, String comprobante, BigDecimal montoLeido) {
         Cita cita = obtenerEntity(citaId);
         if (cita.getCliente() == null || !cita.getCliente().getId().equals(cliente.getId())) {
             throw new NotFoundException("Cita no encontrada");
@@ -616,9 +630,11 @@ public class CitaService {
         }
         String operacion = numeroOperacion == null ? "" : numeroOperacion.trim();
         boolean hayCaptura = comprobante != null && !comprobante.isBlank();
-        if (operacion.isEmpty() && !hayCaptura) {
-            throw new BusinessException("Escribe el número de operación o sube la captura del pago");
+        if (!hayCaptura) {
+            throw new BusinessException("Sube la captura del pago");
         }
+        validarMontoLeido(montoLeido, cita.getAdelantoMonto());
+        cita.setPagoMontoLeido(montoLeido);
         if (operacion.length() > 40) {
             throw new BusinessException("El número de operación es demasiado largo");
         }

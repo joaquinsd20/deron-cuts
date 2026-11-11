@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import AvisosCita from '../components/AvisosCita.jsx'
-import PagoAdelanto from '../components/PagoAdelanto.jsx'
+import PagoAdelanto, { pagoListo, motivoPagoPendiente } from '../components/PagoAdelanto.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import {
   getConfiguracion,
@@ -138,8 +138,8 @@ export default function Booking() {
   }
 
   const enviar = () => {
-    if (requierePago && !pago.operacion.trim() && !pago.comprobante) {
-      setErrorPago('Paga el adelanto y escribe el número de operación o sube la captura para guardar tu cita.')
+    if (requierePago && !pagoListo(pago)) {
+      setErrorPago(motivoPagoPendiente(pago, adelanto))
       document.getElementById('pago-titulo')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
@@ -154,7 +154,8 @@ export default function Booking() {
         ? {
             metodoPago: pago.metodo,
             numeroOperacion: pago.operacion.trim() || null,
-            comprobante: pago.comprobante
+            comprobante: pago.comprobante,
+            montoLeido: pago.verificacion?.estado === 'ok' ? pago.verificacion.monto : null
           }
         : {})
     })
@@ -491,7 +492,9 @@ export default function Booking() {
                       ? 'Guardando tu cita…'
                       : step === 3
                         ? requierePago
-                          ? 'Ya pagué, reservar'
+                          ? pago.verificacion?.estado === 'leyendo'
+                            ? 'Revisando tu captura…'
+                            : 'Ya pagué, reservar'
                           : 'Confirmar mi cita'
                         : 'Continuar'}
                   </button>

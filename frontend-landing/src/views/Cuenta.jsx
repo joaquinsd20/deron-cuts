@@ -5,7 +5,7 @@ import Footer from '../components/Footer.jsx'
 import AvisosCita from '../components/AvisosCita.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { getMisCitas, cancelarCita, cambiarPassword, getConfiguracion, reportarPago } from '../services/api.js'
-import PagoAdelanto from '../components/PagoAdelanto.jsx'
+import PagoAdelanto, { pagoListo, motivoPagoPendiente } from '../components/PagoAdelanto.jsx'
 import { formatCurrency, formatFechaLarga } from '../config.js'
 
 export default function Cuenta() {
@@ -39,8 +39,8 @@ export default function Cuenta() {
     new Date(cita.fechaHoraInicio) > new Date()
 
   const enviarPagoCita = async (cita) => {
-    if (!pagoCita.operacion.trim() && !pagoCita.comprobante) {
-      setErrorPagoCita('Sube la captura o escribe el número de operación.')
+    if (!pagoListo(pagoCita)) {
+      setErrorPagoCita(motivoPagoPendiente(pagoCita, cita.adelantoMonto))
       return
     }
     setEnviandoPago(true)
@@ -48,7 +48,8 @@ export default function Cuenta() {
       const actualizada = await reportarPago(cita.id, {
         metodoPago: pagoCita.metodo,
         numeroOperacion: pagoCita.operacion.trim() || null,
-        comprobante: pagoCita.comprobante
+        comprobante: pagoCita.comprobante,
+        montoLeido: pagoCita.verificacion?.estado === 'ok' ? pagoCita.verificacion.monto : null
       })
       setCitas((lista) => lista.map((c) => (c.id === actualizada.id ? actualizada : c)))
       setPagando(null)

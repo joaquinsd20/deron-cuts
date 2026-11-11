@@ -3441,3 +3441,17 @@ ul {
 .account__pagar {
   margin-top: 10px;
 }
+
+/* Resultado de la lectura del monto en la captura */
+.pago__verif {
+  display: block;
+  line-height: 1.35;
+}
+
+.pago__verif--ok {
+  color: #4ade80;
+}
+
+.pago__verif--mal {
+  color: #f87171;
+}

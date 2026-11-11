@@ -332,6 +332,13 @@ public class Cita {
     @Column(name = "comprobante_enviado", nullable = false, columnDefinition = "boolean default false")
     private boolean comprobanteEnviado = false;
 
+    /** Monto que el navegador leyó en la captura (OCR). Null = no se pudo leer. */
+    @Column(name = "pago_monto_leido", precision = 10, scale = 2)
+    private java.math.BigDecimal pagoMontoLeido;
+
+    public java.math.BigDecimal getPagoMontoLeido() { return pagoMontoLeido; }
+    public void setPagoMontoLeido(java.math.BigDecimal pagoMontoLeido) { this.pagoMontoLeido = pagoMontoLeido; }
+
     public String getPagoOperacion() { return pagoOperacion; }
     public void setPagoOperacion(String pagoOperacion) { this.pagoOperacion = pagoOperacion; }
     public String getPagoMetodoReportado() { return pagoMetodoReportado; }

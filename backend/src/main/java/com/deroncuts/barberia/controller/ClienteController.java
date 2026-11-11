@@ -59,7 +59,8 @@ public class ClienteController {
         return ResponseEntity.noContent().build();
     }
 
-    public record ReportePago(String metodoPago, String numeroOperacion, String comprobante) {
+    public record ReportePago(String metodoPago, String numeroOperacion, String comprobante,
+                              java.math.BigDecimal montoLeido) {
     }
 
     /** Pagar (o reenviar el pago de) el adelanto de una cita ya creada. */
@@ -68,7 +69,8 @@ public class ClienteController {
                                 @org.springframework.web.bind.annotation.PathVariable Long id,
                                 @RequestBody ReportePago r) {
         Cliente cliente = clienteService.obtenerPorEmail(authentication.getName());
-        return citaService.reportarPagoCliente(cliente, id, r.metodoPago(), r.numeroOperacion(), r.comprobante());
+        return citaService.reportarPagoCliente(cliente, id, r.metodoPago(), r.numeroOperacion(), r.comprobante(),
+                r.montoLeido());
     }
 
     @org.springframework.web.bind.annotation.PatchMapping("/citas/{id}/cancelar")

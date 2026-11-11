@@ -85,6 +85,7 @@ public class CitaDto {
         dto.pagoMetodoReportado = cita.getPagoMetodoReportado();
         dto.pagoReportadoEn = cita.getPagoReportadoEn();
         dto.comprobanteEnviado = cita.isComprobanteEnviado();
+        dto.pagoMontoLeido = cita.getPagoMontoLeido();
         dto.setFechaAdelanto(cita.getFechaAdelanto());
         dto.setTardanzaAplicada(cita.isTardanzaAplicada());
         dto.setPenalidadTardanza(penalidad);
@@ -348,6 +349,9 @@ public class CitaDto {
     private String pagoMetodoReportado;
     private java.time.LocalDateTime pagoReportadoEn;
     private boolean comprobanteEnviado;
+    private java.math.BigDecimal pagoMontoLeido;
+
+    public java.math.BigDecimal getPagoMontoLeido() { return pagoMontoLeido; }
 
     public String getPagoOperacion() { return pagoOperacion; }
     public String getPagoMetodoReportado() { return pagoMetodoReportado; }

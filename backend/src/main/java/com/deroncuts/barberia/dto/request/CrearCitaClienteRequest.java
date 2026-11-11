@@ -53,6 +53,12 @@ public class CrearCitaClienteRequest {
     /** Captura del pago como data URL (image/jpeg;base64,…), ya reducida en el navegador. */
     private String comprobante;
 
+    /** Monto leído en la captura por el navegador (null si no se pudo leer). */
+    private java.math.BigDecimal montoLeido;
+
+    public java.math.BigDecimal getMontoLeido() { return montoLeido; }
+    public void setMontoLeido(java.math.BigDecimal montoLeido) { this.montoLeido = montoLeido; }
+
     public String getMetodoPago() { return metodoPago; }
     public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
     public String getNumeroOperacion() { return numeroOperacion; }
